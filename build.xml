@@ -1,10 +1,4 @@
 <project name="appscansaasdeployplugin" default="bluemix" basedir=".">
-	<taskdef resource="net/sf/antcontrib/antcontrib.properties">
-		<classpath>
-			<pathelement location="ant-contrib-0.6/lib/ant-contrib-0.6.jar" />
-		</classpath>
-	</taskdef>
-
 	<resources id="release.jar.files">
 		<string value="**/commons-beanutils-1.9.2.jar" />
 		<string value="**/commons-collections-3.2.1.jar" />
