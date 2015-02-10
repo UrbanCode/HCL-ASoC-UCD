@@ -27,7 +27,7 @@
       </property>
 	  <property name="reportIssueCountValidation" required="false">
         <property-ui type="textBox"
-                     label=" Fail condition threshold"
+                     label="Fail condition threshold (H, M, L, I)"
                      description="Fail condition threshold in High,Medium,Low,Informational format. Leave empty for no threshold"
                      default-value="0,5,10,20" />
       </property>
@@ -41,12 +41,6 @@
         <property-ui type="textBox"
                      label="Original scan ID"
                      description="If this is a rescan please enter the original scan id"/>
-      </property>
-      <property name="environment" required="true">
-        <property-ui type="textBox"
-                     label="Service Environment"
-                     description="Bluemix/SCX service environment"
-                     default-value="SCX"/>
       </property>
     </properties>
     <post-processing>

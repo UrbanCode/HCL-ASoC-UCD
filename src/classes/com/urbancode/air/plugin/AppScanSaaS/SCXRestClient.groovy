@@ -11,7 +11,7 @@ import java.util.Properties;
 
 public class SCXRestClient extends RestClient {
 	public SCXRestClient(Properties props) {
-		super(props);
+		super(props, true);
 	}
 	
 	@Override

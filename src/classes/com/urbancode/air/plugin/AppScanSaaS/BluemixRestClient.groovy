@@ -11,7 +11,7 @@ import java.util.Properties;
 
 public class BluemixRestClient extends RestClient {
 	public BluemixRestClient(Properties props) {
-		super(props);
+		super(props, true);
 	}
 	
 	@Override
