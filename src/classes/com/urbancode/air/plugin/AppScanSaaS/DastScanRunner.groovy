@@ -7,7 +7,6 @@
 
 package com.urbancode.air.plugin.AppScanSaaS
 import java.util.concurrent.TimeUnit;
-import com.urbancode.air.plugin.AppScanSaaS.Environment;
 import com.urbancode.air.plugin.AppScanSaaS.RestClient
 import com.urbancode.air.plugin.AppScanSaaS.ScanType
 

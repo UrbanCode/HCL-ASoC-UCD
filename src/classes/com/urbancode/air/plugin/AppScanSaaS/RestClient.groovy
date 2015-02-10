@@ -21,6 +21,7 @@ import org.apache.http.entity.mime.content.InputStreamBody
 import org.apache.http.entity.mime.content.StringBody
 
 public abstract class RestClient {
+	protected boolean validateSSL;
 	protected String token
 	protected String authHeader
 
@@ -41,8 +42,9 @@ public abstract class RestClient {
 	private static final String API_DOWNLOAD_LIBRARY = "DownloadLibrary"
 	public static final String REPORT_DIR = "Report"
 
-	public RestClient(Properties props) {
-		String userServer = props.containsKey("userServer") ? props["userServer"] : "appscan-test.bluemix.net";
+	public RestClient(Properties props, boolean validateSSL) {
+		this.validateSSL = validateSSL;
+		String userServer = props.containsKey("userServer") ? props["userServer"] : "appscan.bluemix.net";
 		String userServerPort = props.containsKey("userServerPort") ? props["userServerPort"] : "443";
 		
 		this.baseUrl = "https://" + userServer + ":" +  userServerPort
@@ -57,7 +59,7 @@ public abstract class RestClient {
 
 		MultipartEntity multiPartContent = new MultipartEntity(HttpMultipartMode.BROWSER_COMPATIBLE)
 		multiPartContent.addPart("ContentApk", new InputStreamBody(apkStream, "application/zip", apkFile.getName()))
-		multiPartContent.addPart("ScanName", new StringBody("Groovy scan for: " + apkFile.getName()))
+		multiPartContent.addPart("ScanName", new StringBody(apkFile.getName()))
 		multiPartContent.addPart("userAgreeToPay", new StringBody("true"))
 		
 		if (parentjobid != null && !parentjobid.isEmpty()) {
@@ -95,7 +97,7 @@ public abstract class RestClient {
 
 		MultipartEntity multiPartContent = new MultipartEntity(HttpMultipartMode.BROWSER_COMPATIBLE)
 		multiPartContent.addPart("ContentArsa", new InputStreamBody(arsaStream, "application/zip", arsaFile.getName()))
-		multiPartContent.addPart("ScanName", new StringBody("Groovy scan for: " + arsaFile.getName()))
+		multiPartContent.addPart("ScanName", new StringBody(arsaFile.getName()))
 		multiPartContent.addPart("userAgreeToPay", new StringBody("true"))
 		
 		if (parentjobid != null && !parentjobid.isEmpty()) {
@@ -135,7 +137,7 @@ public abstract class RestClient {
 
 		MultipartEntity multiPartContent = new MultipartEntity(HttpMultipartMode.BROWSER_COMPATIBLE)
 		multiPartContent.addPart("ContentIPAX", new InputStreamBody(ipaxStream, "application/zip", ipaxFile.getName()))
-		multiPartContent.addPart("ScanName", new StringBody("Groovy scan for: " + ipaFile.getName()))
+		multiPartContent.addPart("ScanName", new StringBody(ipaFile.getName()))
 		multiPartContent.addPart("userAgreeToPay", new StringBody("true"))
 		
 		if (appUsername != null) {
@@ -220,7 +222,7 @@ public abstract class RestClient {
 
 
 	public String startDastScan(String startingUrl, String loginUsername, String loginPassword, String parentjobid){
-		Map<String, Serializable> params = [ ScanName : "Groovy Scan for ${startingUrl}", StartingUrl : startingUrl, 
+		Map<String, Serializable> params = [ ScanName : startingUrl, StartingUrl : startingUrl, 
 											 LoginUser : loginUsername, LoginPassword : loginPassword, 
 											 userAgreeToPay : true, parentjobid : parentjobid]
 
@@ -526,7 +528,10 @@ public abstract class RestClient {
 
 	protected HTTPBuilder initializeHttpBuilder(String baseUrl) {
 		def httpBuilder = new HTTPBuilder(baseUrl)
-		httpBuilder.ignoreSSLIssues()
+		
+		if (!validateSSL) {
+			httpBuilder.ignoreSSLIssues()
+		}
 
 		return httpBuilder
 	}

@@ -1,0 +1,43 @@
+/**
+ * © Copyright IBM Corporation 2014.  
+ * This is licensed under the following license.
+ * The Eclipse Public 1.0 License (http://www.eclipse.org/legal/epl-v10.html)
+ * U.S. Government Users Restricted Rights:  Use, duplication or disclosure restricted by GSA ADP Schedule Contract with IBM Corp. 
+ */
+
+This plugin contains only two steps at the moment, one for scanning Web applications and one for scanning Android applications.
+
+"Start Mobile Analyzer Scan" Step:
+This step allows you to run a security scan on your Android application using IBM Security Testing services on Bluemix
+
+To setup the scan step load the plugin to UrbanCode and drag the "Start Mobile Analyzer Scan" to the designer.
+The step has the following properties:
+1. Name: The name for your step in UrbanCode deploy (e.g. "My test app security scan"). 
+2. APK file location: Location of the APK file you want to scan (e.g. "c:\build_output\testapp.apk").
+3. Bluemix Binding ID: After creating an application in Bluemix and binding it to our service, you'll receive the application credentials. This is the "bindingid" field in these credentials.
+4. Bluemix Binding Password: After creating an application in Bluemix and binding it to our service, you'll receive the application credentials. This is the "password" field in these credentials.
+5. Fail condition threshold (H, M, L, I): Fail condition for the result of the scan in High, Medium, Low, Information issue count format. 
+   For example 0,5,10,20 will cause the step to fail if the resulting scan has more than 0 High issues, 5 Medium issue etc.
+   Leave empty for no validation of results.
+6. Scan Timeout (minutes): The time in minutes to wait for the scan to end before failing.
+7. Original scan ID: In case you want to perform a rescan add the original scan id here.
+8. Working Directory: The report of the scan will be saved to this directory.
+
+
+"Start DAST Scan" Step:
+This step allows you to run a security scan on your Web application using IBM Security Testing services on Bluemix
+
+To setup the scan step load the plugin to UrbanCode and drag the "Start DAST Scan" to the designer.
+The step has the following properties:
+1. Name: The name for your step in UrbanCode deploy (e.g. "My test web app security scan"). 
+2. Starting url: The url of your Bluemix application (e.g. "http://mytestapp.mybluemix.net/").
+3. Application Username: If your application contains login credentials enter the username here (e.g. "adminUser"). Leave blank otherwise.
+4. Application Password: If your application contains login credentials enter the password here (e.g. "adminPassword"). Leave blank otherwise.
+5. Bluemix Binding ID: After creating an application in Bluemix and binding it to our service, you'll receive the application credentials. This is the "bindingid" field in these credentials.
+6. Bluemix Binding Password: After creating an application in Bluemix and binding it to our service, you'll receive the application credentials. This is the "password" field in these credentials.
+7. Fail condition threshold (H, M, L, I): Fail condition for the result of the scan in High, Medium, Low, Information issue count format. 
+   For example 0,5,10,20 will cause the step to fail if the resulting scan has more than 0 High issues, 5 Medium issue etc.
+   Leave empty for no validation of results.
+8. Scan Timeout (minutes): The time in minutes to wait for the scan to end before failing.
+9. Original scan ID: In case you want to perform a rescan add the original scan id here.
+10. Working Directory: The report of the scan will be saved to this directory.

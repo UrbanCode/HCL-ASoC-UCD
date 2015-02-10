@@ -22,12 +22,12 @@
       </property>
 	  <property name="loginPassword" required="true">
         <property-ui type="secureBox"
-                     label="Bluemix Binding password"
+                     label="Bluemix Binding Password"
                      description="Please Specify you Bluemix Binding password" />
       </property>
 	  <property name="reportIssueCountValidation" required="false">
         <property-ui type="textBox"
-                     label="Fail condition threshold"
+                     label="Fail condition threshold (H, M, L, I)"
                      description="Fail condition threshold in High,Medium,Low,Informational format. Leave empty for no threshold"
                      default-value="0,5,10,20" />
       </property>
@@ -41,12 +41,6 @@
         <property-ui type="textBox"
                      label="Original scan ID"
                      description="If this is a rescan please enter the original scan id"/>
-      </property>
-      <property name="environment" required="true">
-        <property-ui type="textBox"
-                     label="Service Environment"
-                     description="Bluemix/SCX service environment"
-                     default-value="Bluemix"/>
       </property>
     </properties>
     <post-processing>
@@ -78,12 +72,12 @@
       </property> 
       <property name="scanUser" required="false">
         <property-ui type="textBox"
-                     label="Application username"
+                     label="Application Username"
                      description="Username for the scanned application if contains login" />
       </property> 
       <property name="scanPassword" required="false">
         <property-ui type="secureBox"
-                     label="Application password"
+                     label="Application Password"
                      description="Password for the scanned application if contains login" />
       </property> 
 	  <property name="loginUsername" required="true">
@@ -93,12 +87,12 @@
       </property>
 	  <property name="loginPassword" required="true">
         <property-ui type="secureBox"
-                     label="Bluemix Binding password"
+                     label="Bluemix Binding Password"
                      description="Please Specify you Bluemix Binding password" />
       </property>
 	  <property name="reportIssueCountValidation" required="false">
         <property-ui type="textBox"
-                     label="Fail condition threshold"
+                     label="Fail condition threshold (H, M, L, I)"
                      description="Fail condition threshold in High,Medium,Low,Informational format. Leave empty for no threshold"
                      default-value="0,5,10,20" />
       </property>
@@ -112,12 +106,6 @@
         <property-ui type="textBox"
                      label="Original scan ID"
                      description="If this is a rescan please enter the original scan id"/>
-      </property>
-      <property name="environment" required="true">
-        <property-ui type="textBox"
-                     label="Service Environment"
-                     description="Bluemix/SCX service environment"
-                     default-value="Bluemix"/>
       </property>
     </properties>
     <post-processing>

@@ -18,7 +18,6 @@
 		<string value="**/AirPluginTool.groovy" />
 		<string value="**/RestClient.groovy" />
 		<string value="**/ScanType.groovy" />
-		<string value="**/Environment.groovy" />
 	</resources>
 
 	<resources id="bluemix.release.src.files">
@@ -91,8 +90,8 @@
 		<mkdir dir="${build.dir}/doc" />
 		<!-- copy doc -->
 		<copy todir="${build.dir}/doc" description="Copying doc dir">
-			<fileset dir="${doc.dir}">
-				<include name="HowTo.html" />
+			<fileset dir="${doc.dir}/${build.type}">
+				<include name="HowTo.txt" />
 			</fileset>
 		</copy>
 	</target>
