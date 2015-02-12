@@ -527,10 +527,10 @@ public abstract class RestClient {
 	}
 
 	protected HTTPBuilder initializeHttpBuilder(String baseUrl) {
-		def httpBuilder = new HTTPBuilder(baseUrl)
-		
+		HTTPBuilder httpBuilder = new HTTPBuilder(baseUrl)
+
 		if (!validateSSL) {
-			httpBuilder.ignoreSSLIssues()
+			HttpBuilderUtils.ignoreSSLErrors(httpBuilder)
 		}
 
 		return httpBuilder
