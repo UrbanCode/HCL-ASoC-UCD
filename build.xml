@@ -67,7 +67,7 @@
 
 			<fileset dir="${src.dir}" includes="${src.includes}" />
 		</copy>
-		
+
 		<!-- move runnable scripts from sub directory to main dir -->
 		<copy todir="${build.dir}" description="Copying source files">
 			<fileset dir="${build.dir}/${build.type}" />
@@ -117,7 +117,8 @@
 		<property name="doc.dir" value="${basedir}/doc" />
 		<property name="lib.dir" value="${basedir}/lib" />
 		<property name="res.dir" value="${basedir}/res" />
-		<property name="deployPluginArchiveName" value="releases/AppScanSaaSPlugin.${build.type}.zip" />
+		<property name="deployPluginArchiveName" value="releases/IBMSecurityTesting.${build.type}.zip" />
 	</target>
+
 </project>
 
