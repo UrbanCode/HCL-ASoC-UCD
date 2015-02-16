@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <plugin xmlns="http://www.urbancode.com/PluginXMLSchema_v1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <header>
-    <identifier id="com.urbancode.air.plugin.AppScanSaaS.bluemix" version="1" name="Application Security Testing (Bluemix)"/>
+    <identifier id="com.urbancode.air.plugin.IBMSecurity.bluemix" version="1" name="Application Security Testing (Bluemix)"/>
     <description>
     This plugin enables you to use IBM Application Security Testing services easily from UrbanCode
 </description>
-    <tag>Utilities/AppScanSaaS</tag>
+    <tag>Utilities/IBM Application Security</tag>
   </header>
   <step-type name="Start Mobile Analyzer Scan">
     <description>Starts a new Mobile Analyzer Scan</description>
