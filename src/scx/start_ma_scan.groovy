@@ -19,4 +19,3 @@ String scanId = MAScanRunner.runMAScan(props, new SCXRestClient(props))
 airHelper.setOutputProperty("ScanId", scanId)
 airHelper.storeOutputProperties()
 println "Exiting with success"
-System.exit 0

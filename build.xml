@@ -120,5 +120,76 @@
 		<property name="deployPluginArchiveName" value="releases/IBMSecurityTesting.${build.type}.zip" />
 	</target>
 
+	<target name="start_ma_scan_bluemix">
+		<clean_property_files />
+		<propertyfile file="in_props" comment="Input properties">
+			<entry key="apkFileLocation" value="res\test.apk" />
+		</propertyfile>
+
+		<run_groovy_script src="src/bluemix/start_ma_scan.groovy" loginusername="ffffffff-ffff-ffff-ffff-ffffffffffff" loginpassword="**********************************" />
+	</target>
+
+	<target name="start_dast_scan_bluemix">
+		<clean_property_files />
+		<propertyfile file="in_props" comment="Input properties">
+			<entry key="startingUrl" value="http://altoroj.mybluemix.net/" />
+			<entry key="scanUser" value="jsmith" />
+			<entry key="scanPassword" value="demo1234" />
+		</propertyfile>
+
+		<run_groovy_script src="src/bluemix/start_dast_scan.groovy" loginusername="ffffffff-ffff-ffff-ffff-ffffffffffff" loginpassword="**********************************" />
+	</target>
+
+	<target name="start_ma_scan_scx">
+		<clean_property_files />
+		<propertyfile file="in_props" comment="Input properties">
+			<entry key="apkFileLocation" value="res\test.apk" />
+		</propertyfile>
+
+		<run_groovy_script src="src/scx/start_ma_scan.groovy" loginusername="myIBMId@us.ibm.com" loginpassword="*************" />
+	</target>
+
+	<macrodef name="clean_property_files">
+		<sequential>
+			<delete file="in_props" />
+			<delete file="out_props" />
+		</sequential>
+	</macrodef>
+
+	<macrodef name="run_groovy_script">
+		<attribute name="src" />
+		<attribute name="loginUsername" />
+		<attribute name="loginPassword" />
+		<attribute name="scanTimeout" default="360" />
+		<attribute name="reportIssueCountValidation" default="0,5,10,20" />
+		<attribute name="parentScanId" default="" />
+		<sequential>
+			<echo message="Running groovy script @{src}" />
+			<taskdef name="groovy" classname="org.codehaus.groovy.ant.Groovy" classpath="lib/groovy-all-2.4.0.jar" />
+
+			<propertyfile file="in_props" comment="Input properties">
+				<entry key="loginUsername" value="@{loginUsername}" />
+				<entry key="loginPassword" value="@{loginPassword}" />
+				<entry key="scanTimeout" value="@{scanTimeout}" />
+				<entry key="reportIssueCountValidation" value="@{reportIssueCountValidation}" />
+				<entry key="parentScanId" value="@{parentScanId}" />
+			</propertyfile>
+			<propertyfile file="out_props" comment="Output properties">
+			</propertyfile>
+
+			<groovy src="@{src}">
+				<classpath>
+					<pathelement location="src/classes" />
+					<fileset dir="lib" includes="*.jar" />
+				</classpath>
+				<arg value="in_props" />
+				<arg value="out_props" />
+			</groovy>
+
+			<echo message="Finished Running groovy script @{src}" />
+			<delete file="in_props" />
+		</sequential>
+	</macrodef>
+
 </project>
 
