@@ -5,18 +5,22 @@
  * U.S. Government Users Restricted Rights:  Use, duplication or disclosure restricted by GSA ADP Schedule Contract with IBM Corp. 
  */
 
-This plugin contains only one step at the moment.
-This step allows you to run a security scan on your Android application using IBM Security Testing services on Smartcloud Exchange.
+This plugin currently contains one step only.
+This step lets you run a security scan on your Android application using IBM Security Testing services on Smartcloud Exchange.
 
-To setup the scan step load the plugin to UrbanCode and drag the "Start Mobile Analyzer Scan" to the designer.
-The step has the following properties:
-1. Name: The name for your step in UrbanCode deploy (e.g. "My test app security scan"). 
-2. APK file location: Location of the APK file you want to scan (e.g. "c:\build_output\testapp.apk").
-3. IBM ID Username: Your IBM Id login username (e.g. "myibmid@gmail.com").
-4. IBM ID Password: Your IBM Id login password.
-5. Fail condition threshold (H, M, L, I): Fail condition for the result of the scan in High, Medium, Low, Information issue count format. 
-   For example 0,5,10,20 will cause the step to fail if the resulting scan has more than 0 High issues, 5 Medium issue etc.
-   Leave empty for no validation of results.
-6. Scan Timeout (minutes): The time in minutes to wait for the scan to end before failing.
-7. Original scan ID: In case you want to perform a rescan add the original scan id here.
-8. Working Directory: The report of the scan will be saved to this directory.
+To setup the scan step:
+1. Load the plugin to UrbanCode
+2. Drag the "Start Mobile Analyzer Scan" to the designer.
+3. Supply the following properties (as needed):
+	- Name: The name for your step in UrbanCode deploy (e.g. "My test app security scan"). 
+	- APK file location: Location of the APK file you want to scan (e.g. "c:\build_output\testapp.apk").
+	- IBM ID Username: Your IBM ID login username (e.g. "myibmid@gmail.com").
+	- IBM ID Password: Your IBM ID login password.
+	- Fail condition threshold (H, M, L, I): Fail condition for the result of the scan in High, Medium, Low, Informational issue count format. 
+		For example 0,5,10,20 will cause the step to fail if the scan finds more than 0 High issues, 5 Medium issue etc.
+		Leave empty for no validation of results.
+	- Scan Timeout (minutes): The time in minutes to wait for the scan to end before failing.
+	- Original Scan ID: To perform a rescan, add the original scan ID here.
+	- Working Directory: The directory you want the scan report saved to.
+	
+	
