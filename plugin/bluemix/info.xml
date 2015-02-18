@@ -134,5 +134,8 @@
 	  <release-note plugin-version="1">
 Initial version
 	  </release-note>
+	 	  <release-note plugin-version="2">
+Rename DAST Scan step name to Dynamic Analyzer
+	  </release-note>
   </release-notes>
 </pluginInfo>
