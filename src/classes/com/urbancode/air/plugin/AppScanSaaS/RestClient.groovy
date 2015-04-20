@@ -10,6 +10,7 @@ package com.urbancode.air.plugin.AppScanSaaS
 import groovy.json.JsonSlurper
 import groovyx.net.http.*
 
+import java.io.InputStream;
 import java.util.concurrent.TimeUnit
 import java.util.zip.ZipEntry
 import java.util.zip.ZipInputStream
@@ -37,14 +38,16 @@ public abstract class RestClient {
 	private static final String DAST_API_PATH = "/api/%s/DynamicAnalyzer/"
 	private static final String IOS_API_PATH = "/api/%s/iOS/"
 	private static final String API_METHOD_SCAN = "Scan"
+	private static final String API_METHOD_DOWNLOAD_TOOL = "DownloadTool"
 	private static final String API_METHOD_DOWNLOAD_REPORT = "DownloadReport"
+	private static final String API_METHOD_ARSATOOL = "ARSATool"
 	private static final String API_METHOD_SCANS = "Scans"
 	private static final String API_DOWNLOAD_LIBRARY = "DownloadLibrary"
 	public static final String REPORT_DIR = "Report"
 
 	public RestClient(Properties props, boolean validateSSL) {
 		this.validateSSL = validateSSL;
-		String userServer = props.containsKey("userServer") ? props["userServer"] : "appscan.bluemix.net";
+		String userServer = props.containsKey("userServer") ? props["userServer"] : "appscan.ibmcloud.com";
 		String userServerPort = props.containsKey("userServerPort") ? props["userServerPort"] : "443";
 		
 		this.baseUrl = "https://" + userServer + ":" +  userServerPort
@@ -54,6 +57,10 @@ public abstract class RestClient {
 		login()		
 	}
 
+	public getBaseUrl() {
+		return this.baseUrl
+	}
+	
 	public String uploadAPK(File apkFile, String parentjobid) {
 		FileInputStream apkStream = new FileInputStream(apkFile)
 
@@ -119,25 +126,44 @@ public abstract class RestClient {
 			response.success = { HttpResponseDecorator resp, json ->
 				println "Response status line: ${resp.statusLine}"
 
-				assert resp.statusLine.statusCode == 201, "ARSA was not uploaded successfuly"
+				assert resp.statusLine.statusCode == 201, "IRX file was not uploaded successfuly"
 				scanId = json.JobId
-				assert  scanId != null && scanId.length() >= 10, "ARSA was not uploaded successfuly"
+				assert  scanId != null && scanId.length() >= 10, "IRX file was not uploaded successfuly"
 			}
 		}
 
-		println "Arsa was uploaded successfuly. Job Id: " + scanId
+		println "IRX file was uploaded successfuly. Job Id: " + scanId
 
 		return scanId
 	}
 	
+	public File getIPAXGenerator() {
+		String apiPath = getApiPath(ScanType.IOS);
+		String url = "${apiPath}${API_METHOD_DOWNLOAD_TOOL}"
+		println "Send GET request to ${this.baseUrl}$url"
+		
+		httpBuilder.request(Method.GET){ req ->
+			uri.path = url
+			headers["Authorization"] = authHeader
+			headers["Accept"] = "application/zip"
+			response.success = { HttpResponseDecorator resp, zip ->
+				println "Response status line: ${resp.statusLine}"
+
+				assert resp.statusLine.statusCode == 200, "Failed downloading IPAX generator"
+				(new File("IPAX_Generator")).deleteDir()
+				unzip(zip, "", "IPAX_Generator")
+			}
+		}
+		
+		return new File("IPAX_Generator", "IPAX_Generator.sh")
+	}
 	
-	public String uploadIPAX(File ipaFile, String appUsername, String appPassword, String parentjobid) {
-		File ipaxFile = getIPAXFile(ipaFile);
+	public String uploadIPAX(File ipaxFile, String appUsername, String appPassword, String parentjobid) {
 		FileInputStream ipaxStream = new FileInputStream(ipaxFile)
 
 		MultipartEntity multiPartContent = new MultipartEntity(HttpMultipartMode.BROWSER_COMPATIBLE)
 		multiPartContent.addPart("ContentIPAX", new InputStreamBody(ipaxStream, "application/zip", ipaxFile.getName()))
-		multiPartContent.addPart("ScanName", new StringBody(ipaFile.getName()))
+		multiPartContent.addPart("ScanName", new StringBody(ipaxFile.getName()))
 		multiPartContent.addPart("userAgreeToPay", new StringBody("true"))
 		
 		if (appUsername != null) {
@@ -174,51 +200,7 @@ public abstract class RestClient {
 		println "IPA was uploaded successfuly. Job Id: " + scanId
 
 		return scanId
-	}
-	
-	protected File getIPAXFile(File ipaFile) {
-		//the server supports only IPAX file (Zip file with IPA and version.txt inside so we need to simulate it)
-		String apiPath = getApiPath(ScanType.IOS);
-		String url = "${apiPath}${API_DOWNLOAD_LIBRARY}"
-		
-		println "Send GET request to ${this.baseUrl}$url"
-		
-		def libraryWrapper = null
-		
-		httpBuilder.request(Method.GET){ req ->
-				uri.path = url
-				headers["Authorization"] = authHeader
-		
-				response.success = { HttpResponseDecorator resp, json ->
-					println "Response status line: ${resp.statusLine}"
-		
-					libraryWrapper = json
-					assert resp.statusLine.statusCode == 200, "Could not download iOS library"
-				}
-			}
-		
-		String version = libraryWrapper.VersionNumber
-		println "iOS library retreived successfuly. Version number is: ${version}"
-		
-		File versionFile = new File("version.txt")
-		versionFile.write(version)
-		
-		File ipaxFile = new File(ipaFile.getName().replaceAll("\\.ipa\$", "") + ".ipax")
-		ZipOutputStream zipFile = new ZipOutputStream(new FileOutputStream(ipaxFile.getName()))
-		
-		[ versionFile, ipaFile ].each { 
-			zipFile.putNextEntry(new ZipEntry(it.name))
-			it.withInputStream { i ->
-				zipFile << i
-				}
-			
-			zipFile.closeEntry()
-		}
-		
-		zipFile.finish()
-		
-		return ipaxFile;
-	} 
+	}	
 
 
 	public String startDastScan(String startingUrl, String loginUsername, String loginPassword, String parentjobid){
@@ -320,10 +302,15 @@ public abstract class RestClient {
 
 				assert resp.statusLine.statusCode == 200, "Report was not downloaded successfuly"
 
-				unzip(zip, "(\\.pdf|\\.xml)\$", REPORT_DIR)
+				unzip(zip, "(\\.pdf|\\.xml|\\.html)\$", REPORT_DIR)
 
 				assert (new File(REPORT_DIR + File.separator + "${scanId}-final.xml")).exists(), "Xml report file is missing"
-				assert (new File(REPORT_DIR + File.separator + "${scanId}.pdf")).exists(), "Pdf report file is missing"
+				
+				if (scanType == ScanType.SAST) {
+					assert (new File(REPORT_DIR + File.separator + "${scanId}.html")).exists(), "Html report file is missing"
+				} else {
+					assert (new File(REPORT_DIR + File.separator + "${scanId}.pdf")).exists(), "Pdf report file is missing"
+				}
 			}
 		}
 
@@ -373,6 +360,11 @@ public abstract class RestClient {
 				String fileName = ze.getName()
 				if (fileName =~ filePattern) {
 					File newFile = new File(targetDir + File.separator + fileName)
+					if (ze.isDirectory()) {
+						newFile.mkdirs();
+						ze = zis.getNextEntry()
+						continue
+					}
 
 					println "Unzipping file: ${newFile.getAbsoluteFile()}"
 					new File(newFile.getParent()).mkdirs()

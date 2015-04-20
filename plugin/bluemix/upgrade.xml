@@ -4,5 +4,10 @@
 	
 	<migrate to-version="2">	
 		<migrate-command name="Start Dynamic Analyzer Scan" old="Start DAST Scan" />
+		<migrate-command name="Start Mobile Analyzer Scan" />
+	</migrate>
+	<migrate to-version="3">	
+		<migrate-command name="Start Dynamic Analyzer Scan" />
+		<migrate-command name="Start Mobile Analyzer Scan" />
 	</migrate>
 </plugin-upgrade>
