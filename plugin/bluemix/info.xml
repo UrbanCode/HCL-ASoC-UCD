@@ -140,5 +140,8 @@ Rename DAST Scan step name to Dynamic Analyzer
 	  <release-note plugin-version="3">
 Changing our portal domain from appscan.bluemix.net to appscan.ibmcloud.com
 	  </release-note>
+	  <release-note plugin-version="4">
+Added step Start Static Analyzer Scan
+	  </release-note>
   </release-notes>
 </pluginInfo>

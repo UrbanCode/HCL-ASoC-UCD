@@ -10,4 +10,9 @@
 		<migrate-command name="Start Dynamic Analyzer Scan" />
 		<migrate-command name="Start Mobile Analyzer Scan" />
 	</migrate>
+	<migrate to-version="4">	
+		<migrate-command name="Start Dynamic Analyzer Scan" />
+		<migrate-command name="Start Mobile Analyzer Scan" />
+		<migrate-command name="Start Static Analyzer Scan" />
+	</migrate>
 </plugin-upgrade>

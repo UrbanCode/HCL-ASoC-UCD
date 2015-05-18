@@ -26,6 +26,7 @@
 		<string value="**/BluemixRestClient.groovy" />
 		<string value="**/DastScanRunner.groovy" />
 		<string value="**/MAScanRunner.groovy" />
+		<string value="**/SastScanRunner.groovy" />
 		<string value="bluemix/**" />
 	</resources>
 
@@ -138,6 +139,16 @@
 		</propertyfile>
 
 		<run_groovy_script src="src/bluemix/start_dast_scan.groovy" loginusername="ffffffff-ffff-ffff-ffff-ffffffffffff" loginpassword="**********************************" />
+	</target>
+
+	<target name="start_sast_scan_bluemix">
+		<clean_property_files />
+		<propertyfile file="in_props" comment="Input properties">
+			<entry key="sastFileLocation" value="res" />
+			<entry key="arsaToolDir" value="C:\SAClientUtil" />
+		</propertyfile>
+
+		<run_groovy_script src="src/bluemix/start_sast_scan.groovy" loginusername="ffffffff-ffff-ffff-ffff-ffffffffffff" loginpassword="**********************************" />
 	</target>
 
 	<target name="start_ma_scan_scx">
