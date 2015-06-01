@@ -38,6 +38,7 @@ public abstract class RestClient {
 	private static final String DAST_API_PATH = "/api/%s/DynamicAnalyzer/"
 	private static final String IOS_API_PATH = "/api/%s/iOS/"
 	private static final String API_METHOD_SCAN = "Scan"
+	private static final String API_METHOD_RE_SCAN = "ReScan"
 	private static final String API_METHOD_DOWNLOAD_TOOL = "DownloadTool"
 	private static final String API_METHOD_DOWNLOAD_REPORT = "DownloadReport"
 	private static final String API_METHOD_ARSATOOL = "ARSATool"
@@ -209,7 +210,12 @@ public abstract class RestClient {
 											 userAgreeToPay : true, parentjobid : parentjobid]
 
 		String apiPath = getApiPath(ScanType.DAST);
-		String url = "${apiPath}${API_METHOD_SCAN}"
+		String url = null;
+		if (parentjobid == null || parentjobid.isEmpty()) {
+			url = "${apiPath}${API_METHOD_SCAN}"
+		} else {
+			url = "${apiPath}${API_METHOD_RE_SCAN}"
+		}
 		println "Send POST request to ${this.baseUrl}$url: ${params}"
 
 		String scanId = null
