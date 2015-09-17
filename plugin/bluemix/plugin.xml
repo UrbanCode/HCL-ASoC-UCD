@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <plugin xmlns="http://www.urbancode.com/PluginXMLSchema_v1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <header>
-    <identifier id="com.urbancode.air.plugin.IBMSecurity.bluemix" version="4" name="Application Security Testing (Bluemix)"/>
+    <identifier id="com.urbancode.air.plugin.IBMSecurity.bluemix" version="5" name="Application Security Testing (Bluemix)"/>
     <description>
     This plugin enables you to use IBM Application Security Testing services easily from UrbanCode
 </description>

@@ -21,516 +21,281 @@ import org.apache.http.entity.mime.MultipartEntity
 import org.apache.http.entity.mime.content.InputStreamBody
 import org.apache.http.entity.mime.content.StringBody
 
-public abstract class RestClient {
-	protected boolean validateSSL;
-	protected String token
-	protected String authHeader
+public abstract class RestClient extends RestClientBase {
 
-	protected String baseUrl
-	protected String username
-	protected String password
-	protected HTTPBuilder httpBuilder
-
-	protected String apiEnvironment;
-	
-	private static final String MOBILE_API_PATH = "/api/%s/MobileAnalyzer/"
-	private static final String SAST_API_PATH = "/api/%s/StaticAnalyzer/"
-	private static final String DAST_API_PATH = "/api/%s/DynamicAnalyzer/"
-	private static final String IOS_API_PATH = "/api/%s/iOS/"
-	private static final String API_METHOD_SCAN = "Scan"
-	private static final String API_METHOD_RE_SCAN = "ReScan"
-	private static final String API_METHOD_DOWNLOAD_TOOL = "DownloadTool"
-	private static final String API_METHOD_DOWNLOAD_REPORT = "DownloadReport"
-	private static final String API_METHOD_ARSATOOL = "ARSATool"
+	private static final String API_V2 = "/api/v2/%s"
+	private static final String API_BLUEMIX_LOGIN = "/api/V2/Account/BluemixLogin"
+	private static final String API_IBMID_LOGIN = "/api/V2/Account/IBMIdLogin"
+	private static final String REPORT_TYPE_XML = "Xml"
+	private static final String REPORT_TYPE_PDF = "Pdf"
+	private static final String REPORT_TYPE_HTML = "Html"
+	private static final String REPORT_TYPE_COMPLIANCE_PDF = "CompliancePdf"
+	private static final String API_DOWNLOAD_REPORT = "/api/v2/Scans/%s/Report/%s"
+	private static final String API_FILE_UPLOAD = "/api/v2/FileUpload"
+	private static final String MOBILE_API_PATH = "/api/v2/%s/MobileAnalyzer"
+	private static final String SAST_API_PATH = "/api/v2/%s/StaticAnalyzer"
+	private static final String DAST_API_PATH = "/api/v2/%s/DynamicAnalyzer"
 	private static final String API_METHOD_SCANS = "Scans"
-	private static final String API_DOWNLOAD_LIBRARY = "DownloadLibrary"
-	public static final String REPORT_DIR = "Report"
+	private static final String API_RE_SCAN = "/api/v2/Scans/%s/Executions"
 
+	private static final int MinReportSize = 1024
+	
 	public RestClient(Properties props, boolean validateSSL) {
-		this.validateSSL = validateSSL;
-		String userServer = props.containsKey("userServer") ? props["userServer"] : "appscan.ibmcloud.com";
-		String userServerPort = props.containsKey("userServerPort") ? props["userServerPort"] : "443";
-		
-		this.baseUrl = "https://" + userServer + ":" +  userServerPort
-		this.username = props["loginUsername"]
-		this.password = props["loginPassword"]
-		this.httpBuilder = initializeHttpBuilder(baseUrl)
-		login()		
+		super(props, validateSSL)
 	}
+	
+	private String uploadFile(File file) {
+		FileInputStream fileStream = new FileInputStream(file)
+		MultipartEntity multiPartContent = new MultipartEntity(HttpMultipartMode.BROWSER_COMPATIBLE)
+		multiPartContent.addPart("fileToUpload", new InputStreamBody(fileStream, "application/zip", file.getName()))
 
-	public getBaseUrl() {
-		return this.baseUrl
+		String fileId = null
+		String url = API_FILE_UPLOAD
+		println "Send POST request to ${this.baseUrl}$url"
+		httpBuilder.request(Method.POST){ req ->
+			uri.path = url
+			headers["Authorization"] = authHeader
+			requestContentType: "multipart/form-data"
+			req.setEntity(multiPartContent)
+
+			response.success = { HttpResponseDecorator resp, json ->
+				println "Response status line: ${resp.statusLine}"
+
+				assert resp.statusLine.statusCode == 201, "The file was NOT uploaded successfully"
+				fileId = json.FileId
+				assert  fileId != null && fileId.length() >= 10, "The file was NOT uploaded successfully"
+			}
+		}
+		return fileId
+	}
+	
+	private String fileBasedScan(String fileId, String fileName, ScanType scanType, String parentjobid) {
+		Map<String, Serializable> params = null
+		String url = null
+		String scanId = null
+		String lastExecutionId = null
+		String TechName = null
+		
+		if (parentjobid != null && !parentjobid.isEmpty()) {
+			params = [ FileId : fileId]
+			url = String.format(API_RE_SCAN, parentjobid);
+			scanId = parentjobid
+		}
+		else {
+			switch (scanType) {
+				case ScanType.IOS:
+					url = String.format(MOBILE_API_PATH, API_METHOD_SCANS);
+					params = [ ApplicationFileId : fileId, ScanName : fileName]
+					TechName = "iOS"
+					break
+				case ScanType.Mobile:
+					url = String.format(MOBILE_API_PATH, API_METHOD_SCANS);
+					params = [ ApplicationFileId : fileId, ScanName : fileName]
+					TechName = "MA Android"
+					break
+				case ScanType.SAST:
+					url = String.format(SAST_API_PATH, API_METHOD_SCANS);
+					params = [ ARSAFileId : fileId, ScanName : fileName]
+					TechName = "StaticAnalyzer"
+					break
+				default:
+					assert false , "FileBasedScan does not support scanType $scanType"
+			}
+		}
+		println "Send POST request to ${this.baseUrl}$url"
+		httpBuilder.request(Method.POST){ req ->
+			uri.path = url
+			headers["Authorization"] = authHeader
+			requestContentType = ContentType.JSON
+			body = params
+			
+			response.success = { HttpResponseDecorator resp, json ->
+				println "Response status line: ${resp.statusLine}"
+				assert resp.statusLine.statusCode == 201, "$TechName scan was NOT started successfully"
+				if (scanId == null) {
+					scanId = json.Id
+					assert  scanId != null && scanId.length() >= 10, "$TechName scan was NOT started successfully"
+					lastExecutionId = json.LatestExecution.Id
+				}
+				else {
+					lastExecutionId = json.Id
+				}
+				assert  lastExecutionId != null && lastExecutionId.length() >= 10, "$TechName lastExecutionID was NOT started successfully"
+			}
+		}
+		println "$TechName scan was started successfully. scanId=$scanId , executionId=$lastExecutionId"
+		return scanId
+	}
+	
+	public String startDastScan(String startingUrl, String loginUsername, String loginPassword, String parentjobid){
+		Map<String, Serializable> params = null
+		String url = null
+		String scanId = null
+		String lastExecutionId = null
+		
+		if (parentjobid != null && !parentjobid.isEmpty()) {
+			url = String.format(API_RE_SCAN, parentjobid);
+			scanId = parentjobid
+		}
+		else {
+			params = [ ScanName : startingUrl, StartingUrl : startingUrl,
+						LoginUser : loginUsername, LoginPassword : loginPassword]
+			url = String.format(DAST_API_PATH, API_METHOD_SCANS);
+		}
+		
+		println "Send POST request to ${this.baseUrl}$url"
+		httpBuilder.request(Method.POST){ req ->
+			uri.path = url
+			headers["Authorization"] = authHeader
+			requestContentType = ContentType.JSON
+			body = params
+			
+			response.success = { HttpResponseDecorator resp, json ->
+				println "Response status line: ${resp.statusLine}"
+				assert resp.statusLine.statusCode == 201, "DAST scan was NOT started successfully"
+				if (scanId == null) {
+					scanId = json.Id
+					assert  scanId != null && scanId.length() >= 10, "DAST scan was NOT started successfully"
+					lastExecutionId = json.LatestExecution.Id
+				}
+				else {
+					lastExecutionId = json.Id
+				}
+				assert  lastExecutionId != null && lastExecutionId.length() >= 10, "DAST lastExecutionID was NOT started successfully"
+			}
+		}
+		println "DAST scan was started successfully. scanId=$scanId , executionId=$lastExecutionId"
+		return scanId
 	}
 	
 	public String uploadAPK(File apkFile, String parentjobid) {
-		FileInputStream apkStream = new FileInputStream(apkFile)
-
-		MultipartEntity multiPartContent = new MultipartEntity(HttpMultipartMode.BROWSER_COMPATIBLE)
-		multiPartContent.addPart("ContentApk", new InputStreamBody(apkStream, "application/zip", apkFile.getName()))
-		multiPartContent.addPart("ScanName", new StringBody(apkFile.getName()))
-		multiPartContent.addPart("userAgreeToPay", new StringBody("true"))
-		
-		if (parentjobid != null && !parentjobid.isEmpty()) {
-			multiPartContent.addPart("parentjobid", new StringBody(parentjobid))
-		}
-
-		String apiPath = getApiPath(ScanType.Mobile);
-		String url = "${apiPath}${API_METHOD_SCAN}"
-		println "Send POST request to ${this.baseUrl}$url"
-
-		String scanId = null
-
-		httpBuilder.request(Method.POST){ req ->
-			uri.path = url
-			headers["Authorization"] = authHeader
-			requestContentType: "multipart/form-data"
-			req.setEntity(multiPartContent)
-
-			response.success = { HttpResponseDecorator resp, json ->
-				println "Response status line: ${resp.statusLine}"
-
-				assert resp.statusLine.statusCode == 201, "APK was not uploaded successfuly"
-				scanId = json.JobId
-				assert  scanId != null && scanId.length() >= 10, "APK was not uploaded successfuly"
-			}
-		}
-
-		println "APK was uploaded successfuly. Job Id: " + scanId
-
-		return scanId
+		String fileId = uploadFile(apkFile)
+		println "APK file was uploaded successfully. FileID: " + fileId
+		return fileBasedScan(fileId, apkFile.getName(), ScanType.Mobile, parentjobid)
 	}
 	
 	public String uploadARSA(File arsaFile, String parentjobid) {
-		FileInputStream arsaStream = new FileInputStream(arsaFile)
-
-		MultipartEntity multiPartContent = new MultipartEntity(HttpMultipartMode.BROWSER_COMPATIBLE)
-		multiPartContent.addPart("ContentArsa", new InputStreamBody(arsaStream, "application/zip", arsaFile.getName()))
-		multiPartContent.addPart("ScanName", new StringBody(arsaFile.getName()))
-		multiPartContent.addPart("userAgreeToPay", new StringBody("true"))
-		
-		if (parentjobid != null && !parentjobid.isEmpty()) {
-			multiPartContent.addPart("parentjobid", new StringBody(parentjobid))
-		}
-
-		String apiPath = getApiPath(ScanType.SAST);
-		String url = "${apiPath}${API_METHOD_SCAN}"
-		println "Send POST request to ${this.baseUrl}$url"
-
-		String scanId = null
-
-		httpBuilder.request(Method.POST){ req ->
-			uri.path = url
-			headers["Authorization"] = authHeader
-			requestContentType: "multipart/form-data"
-			req.setEntity(multiPartContent)
-
-			response.success = { HttpResponseDecorator resp, json ->
-				println "Response status line: ${resp.statusLine}"
-
-				assert resp.statusLine.statusCode == 201, "IRX file was not uploaded successfuly"
-				scanId = json.JobId
-				assert  scanId != null && scanId.length() >= 10, "IRX file was not uploaded successfuly"
-			}
-		}
-
-		println "IRX file was uploaded successfuly. Job Id: " + scanId
-
-		return scanId
-	}
-	
-	public File getIPAXGenerator() {
-		String apiPath = getApiPath(ScanType.IOS);
-		String url = "${apiPath}${API_METHOD_DOWNLOAD_TOOL}"
-		println "Send GET request to ${this.baseUrl}$url"
-		
-		httpBuilder.request(Method.GET){ req ->
-			uri.path = url
-			headers["Authorization"] = authHeader
-			headers["Accept"] = "application/zip"
-			response.success = { HttpResponseDecorator resp, zip ->
-				println "Response status line: ${resp.statusLine}"
-
-				assert resp.statusLine.statusCode == 200, "Failed downloading IPAX generator"
-				(new File("IPAX_Generator")).deleteDir()
-				unzip(zip, "", "IPAX_Generator")
-			}
-		}
-		
-		return new File("IPAX_Generator", "IPAX_Generator.sh")
+		String fileId = uploadFile(arsaFile)
+		println "IRX file was uploaded successfully. FileID: " + fileId
+		return fileBasedScan(fileId, arsaFile.getName(), ScanType.SAST, parentjobid)
 	}
 	
 	public String uploadIPAX(File ipaxFile, String appUsername, String appPassword, String parentjobid) {
-		FileInputStream ipaxStream = new FileInputStream(ipaxFile)
-
-		MultipartEntity multiPartContent = new MultipartEntity(HttpMultipartMode.BROWSER_COMPATIBLE)
-		multiPartContent.addPart("ContentIPAX", new InputStreamBody(ipaxStream, "application/zip", ipaxFile.getName()))
-		multiPartContent.addPart("ScanName", new StringBody(ipaxFile.getName()))
-		multiPartContent.addPart("userAgreeToPay", new StringBody("true"))
-		
-		if (appUsername != null) {
-			multiPartContent.addPart("appUsername", new StringBody(appUsername))
-		}
-		if (appPassword != null) {
-			multiPartContent.addPart("appPassword", new StringBody(appPassword))
-		}
-		if (parentjobid != null && !parentjobid.isEmpty()) {
-			multiPartContent.addPart("parentjobid", new StringBody(parentjobid))
-		}
-
-		String apiPath = getApiPath(ScanType.IOS);
-		String url = "${apiPath}${API_METHOD_SCAN}"
-		println "Send POST request to ${this.baseUrl}$url"
-
-		String scanId = null
-
-		httpBuilder.request(Method.POST){ req ->
-			uri.path = url
-			headers["Authorization"] = authHeader
-			requestContentType: "multipart/form-data"
-			req.setEntity(multiPartContent)
-
-			response.success = { HttpResponseDecorator resp, json ->
-				println "Response status line: ${resp.statusLine}"
-
-				assert resp.statusLine.statusCode == 201, "IPA was not uploaded successfuly"
-				scanId = json.JobId
-				assert  scanId != null && scanId.length() >= 10, "IPA was not uploaded successfuly"
-			}
-		}
-
-		println "IPA was uploaded successfuly. Job Id: " + scanId
-
-		return scanId
-	}	
-
-
-	public String startDastScan(String startingUrl, String loginUsername, String loginPassword, String parentjobid){
-		Map<String, Serializable> params = [ ScanName : startingUrl, StartingUrl : startingUrl, 
-											 LoginUser : loginUsername, LoginPassword : loginPassword, 
-											 userAgreeToPay : true, parentjobid : parentjobid]
-
-		String apiPath = getApiPath(ScanType.DAST);
-		String url = null;
-		if (parentjobid == null || parentjobid.isEmpty()) {
-			url = "${apiPath}${API_METHOD_SCAN}"
-		} else {
-			url = "${apiPath}${API_METHOD_RE_SCAN}"
-		}
-		println "Send POST request to ${this.baseUrl}$url: ${params}"
-
-		String scanId = null
-
-		httpBuilder.request(Method.POST){ req ->
-			uri.path = url
-			headers["Authorization"] = authHeader
-			requestContentType = ContentType.URLENC
-			body = params
-
-			response.success = { HttpResponseDecorator resp, json ->
-				println "Response status line: ${resp.statusLine}"
-
-				assert resp.statusLine.statusCode == 201, "DAST was not started successfuly"
-
-				scanId = json.JobId
-				assert scanId != null && scanId.length() >= 10, "DAST was not started successfuly"
-			}
-		}
-
-		println "DAST scan was started successfuly. Job Id: " + scanId
-
-		return scanId
+		String fileId = uploadFile(ipaxFile)
+		println "IPAX file was uploaded successfully. FileID: " + fileId
+		return fileBasedScan(fileId, ipaxFile.getName(), ScanType.IOS, parentjobid)
 	}
-
+	
 	public void waitForScan(String scanId, ScanType scanType, Long scanTimeout, Long startTime, String issueCountString) {
 		println "Waiting for scan with id '${scanId}'"
 
 		int iterations = 0
+		def scan = null
+		
 		while (true) {
 			iterations++
-
+			
 			Thread.sleep(TimeUnit.MINUTES.toMillis(1))
-
-			def scan = getScan(scanId, scanType)
-
-			println "Scan '${scan.Name}' with id '${scan.JobId}' status is '${scan.JobStatus}'"
-
-			if (scan.JobStatus >= 3) {
+			
+			scan = getScan(scanId, scanType)
+			String status = scan.LatestExecution.Status
+			println "Scan '${scan.Name}' with id '${scan.Id}' status is '$status'"
+			if (status.equalsIgnoreCase("Ready")) {
 				break
 			}
-			
 			assert !(System.currentTimeMillis() - startTime > scanTimeout), "Job running for more than ${TimeUnit.MILLISECONDS.toMinutes(scanTimeout)} minutes"
 		}
 
 		downloadReport(scanId, scanType)
-		validateScanIssues(scanId, scanType, issueCountString)
-	}
-
-	public def getScan(String scanId, ScanType scanType) {
-		String path = getApiPath(scanType)
-
-		String url = "${path}${API_METHOD_SCAN}/${scanId}"
-		println "Send GET request to ${this.baseUrl}$url"
-
-		def scan = null
-
-		httpBuilder.request(Method.GET){ req ->
-			uri.path = url
-			headers["Authorization"] = authHeader
-
-			response.success = { HttpResponseDecorator resp, json ->
-				println "Response status line: ${resp.statusLine}"
-
-				scan = json
-				assert resp.statusLine.statusCode == 200, "Scan was not retreived successfuly"
-			}
-		}
-
-		println "Scan retreived successfuly. Scan name is: ${scan.Name}"
-
-		return scan
-	}
-
-	public void downloadReport(String scanId, ScanType scanType) {
-		String path = getApiPath(scanType)
-
-		String url = "${path}${API_METHOD_DOWNLOAD_REPORT}/${scanId}/zip"
-		println "Send POST request to ${this.baseUrl}$url"
-
-		httpBuilder.request(Method.POST, ContentType.BINARY){ req ->
-			uri.path = url
-			requestContentType = ContentType.URLENC
-
-			headers["Authorization"] = authHeader
-			headers["Accept"] = "application/zip"
-
-			response.success = { HttpResponseDecorator resp, zip ->
-				println "Response status line: ${resp.statusLine}"
-
-				assert resp.statusLine.statusCode == 200, "Report was not downloaded successfuly"
-
-				unzip(zip, "(\\.pdf|\\.xml|\\.html)\$", REPORT_DIR)
-
-				assert (new File(REPORT_DIR + File.separator + "${scanId}-final.xml")).exists(), "Xml report file is missing"
-				
-				if (scanType == ScanType.SAST) {
-					assert (new File(REPORT_DIR + File.separator + "${scanId}.html")).exists(), "Html report file is missing"
-				} else {
-					assert (new File(REPORT_DIR + File.separator + "${scanId}.pdf")).exists(), "Pdf report file is missing"
-				}
-			}
-		}
-
-		println "Report downloaded successfuly"
+		validateScanIssues(scan.LastSuccessfulExecution, scan.Name, scanId, issueCountString)
 	}
 	
-	protected void validateScanIssues(String scanId, ScanType scanType, String issueCountString) {
-		if (issueCountString == null || issueCountString.isEmpty()) {
-			return
-		}
+	private void downloadSingleReportType(String scanId, String reportType) {
+		String url =  String.format(API_DOWNLOAD_REPORT, scanId, reportType)
 		
-		String[] issueCount = issueCountString.split(",");
-		
-		int maxHighSeverityIssues = issueCount.length > 0 ? Integer.parseInt(issueCount[0]) : Integer.MAX_VALUE;
-		int maxMediumSeverityIssues = issueCount.length > 1 ? Integer.parseInt(issueCount[1]) : Integer.MAX_VALUE;
-		int maxLowSeverityIssues = issueCount.length > 2 ? Integer.parseInt(issueCount[2]) : Integer.MAX_VALUE;
-		int maxInformationalSeverityIssues = issueCount.length > 3 ? Integer.parseInt(issueCount[3]) : Integer.MAX_VALUE;
-		
-		def scan = getScan(scanId, scanType)
-						
-		println "Scan ${scan.Name} with id ${scanId} has ${scan.NHighIssues} high severity issues"
-		assert scan.NHighIssues <= maxHighSeverityIssues, "Scan failed to meet high issue count. Result: ${scan.NHighIssues}. Max expected: ${maxHighSeverityIssues}"
-		
-		println "Scan ${scan.Name} with id ${scanId} has ${scan.NMediumIssues} medium severity issues"
-		assert scan.NMediumIssues <= maxMediumSeverityIssues, "Scan failed to meet medium issue count. Result: ${scan.NMediumIssues}. Max expected: ${maxMediumSeverityIssues}"
-		
-		println "Scan ${scan.Name} with id ${scanId} has ${scan.NLowIssues} low severity issues"
-		assert scan.NLowIssues <= maxLowSeverityIssues, "Scan failed to meet low issue count. Result: ${scan.NLowIssues}. Max expected: ${maxLowSeverityIssues}"
-		
-		println "Scan ${scan.Name} with id ${scanId} has ${scan.NInfoIssues} informational severity issues"
-		assert scan.NInfoIssues <= maxInformationalSeverityIssues, "Scan failed to meet informational issue count. Result: ${scan.NInfoIssues}. Max expected: ${maxInformationalSeverityIssues}"
-	}
-	
-	protected void unzip(InputStream inputStream, String filePattern, String targetDir) {
-		byte[] buffer = new byte[1024]
-
-		try{
-			File folder = new File(targetDir)
-
-			folder.deleteDir()
-			folder.mkdir()
-
-			ZipInputStream zis = new ZipInputStream(inputStream)
-			ZipEntry ze = zis.getNextEntry()
-
-			while(ze != null){
-				String fileName = ze.getName()
-				if (fileName =~ filePattern) {
-					File newFile = new File(targetDir + File.separator + fileName)
-					if (ze.isDirectory()) {
-						newFile.mkdirs();
-						ze = zis.getNextEntry()
-						continue
-					}
-
-					println "Unzipping file: ${newFile.getAbsoluteFile()}"
-					new File(newFile.getParent()).mkdirs()
-
-					FileOutputStream fos = new FileOutputStream(newFile)
-
-					int len
-					while ((len = zis.read(buffer)) > 0) {
-						fos.write(buffer, 0, len)
-					}
-
-					fos.close()
-				}
-
-				ze = zis.getNextEntry()
-			}
-
-			zis.closeEntry()
-			zis.close()
-
-			println "Done extracting zip"
-		} catch(IOException ex){
-			assert false, "Failed extracting zip filr to directory: ${targetDir}. Exception: ${ex.getMessage()}"
-		}
-	}
-
-	public def getAllScans(ScanType scanType) {
-		String path = getApiPath(scanType)
-
-		String url = "${path}${API_METHOD_SCANS}";
-				
 		println "Send GET request to ${this.baseUrl}$url"
-
-		def scans = null
-
-		httpBuilder.request(Method.GET){ req ->
-			uri.path = url
-			headers["Authorization"] = authHeader
-
-			response.success = { HttpResponseDecorator resp, json ->
-				println "Response status line: ${resp.statusLine}"
-
-				scans = json
-				assert resp.statusLine.statusCode == 200, "User scans were not retreived successfuly"
-			}
-		}
-
-		println "User scans retreived successfuly"
-
-		return scans
-	}
-
-	public void deleteScan(String scanId, ScanType scanType) {
-		String path = getApiPath(scanType)
-
-		String url = "${path}${API_METHOD_SCAN}/${scanId}"
-		println "Send DELETE request to ${this.baseUrl}$url"
-
-		httpBuilder.request(Method.DELETE){ req ->
+		httpBuilder.request(Method.GET, ContentType.BINARY){ req ->
 			uri.path = url
 			headers["Authorization"] = authHeader
 
 			response.success = { HttpResponseDecorator resp ->
+				ByteArrayOutputStream baos = new ByteArrayOutputStream()
+				resp.getEntity().writeTo(baos)
+				byte[] bytes = baos.toByteArray()
+				
 				println "Response status line: ${resp.statusLine}"
+				assert bytes.length > RestClient.MinReportSize, "Report size '${bytes.length}' is invalid"
+				assert resp.statusLine.statusCode == 200 , "Report type ${reportType} was not retrieved successfully"
+			}
+		}
+		println "Report type ${reportType} downloaded successfully"
+	}
 
-				assert resp.statusLine.statusCode == 204, "Failed deleting scan with id: ${scanId}"
+	public void downloadReport(String scanId, ScanType scanType) {
+		downloadSingleReportType(scanId, REPORT_TYPE_XML)
+		if (scanType == ScanType.SAST) {
+			downloadSingleReportType(scanId, REPORT_TYPE_HTML)
+		}
+		else {
+			downloadSingleReportType(scanId, REPORT_TYPE_PDF)
+			if (scanType == ScanType.DAST) {
+				downloadSingleReportType(scanId, REPORT_TYPE_COMPLIANCE_PDF)
 			}
 		}
 	}
 	
 	protected String getApiPath(ScanType scanType) {
-		String apiPathFormat = null;
+		String apiPath = null;
 		switch (scanType) {
 			case ScanType.Mobile:
-				apiPathFormat = MOBILE_API_PATH;
+				apiPath = MOBILE_API_PATH;
 				break
 			case ScanType.SAST:
-				apiPathFormat = SAST_API_PATH;
+				apiPath = SAST_API_PATH;
 				break
 			case ScanType.IOS:
-				apiPathFormat = IOS_API_PATH;
+				apiPath = MOBILE_API_PATH;
 				break
 			default:
-				apiPathFormat = DAST_API_PATH;
+				apiPath = DAST_API_PATH;
 		}
-		return String.format(apiPathFormat, apiEnvironment);
+		return apiPath
 	}
 	
-	protected abstract def login();
-
-	protected void assertLogin() {
-		assert token != null, "Login failed. Token is null"
-		authHeader = "Bearer " + token
-	}
-
-	protected void bluemixLogin() {
-		token = null
-		authHeader = null
-		apiEnvironment = "BlueMix";
-		
-		Map<String, Serializable> params = [ Bindingid : username, Password : password]
-				
-		String url = String.format("/api/%s/Account/BMAPILogin", apiEnvironment);
-		println "Send POST request to ${baseUrl}$url: $params"
-
-		httpBuilder = initializeHttpBuilder(baseUrl)
-		httpBuilder.request(Method.POST){ req ->
-			uri.path = url
-			requestContentType = ContentType.URLENC
-			body = params
-
-			response.success = { HttpResponseDecorator resp, json ->
-				println "Response status line: ${resp.statusLine}"
-				assert resp.status == 200, "Login failed"
-
-				token = json.Token
-				println "External Token: ${token}"
-			}
-			response.failure = { resp ->
-				println 'Bluemix authentication failed.'				
-			}
-		}
+	@Override
+	protected int getScanExpectedStatusCode()
+	{
+		return 201
 	}
 	
-	protected void scxLogin() {
-		token = null
-		authHeader = null
-		apiEnvironment = "SCX";
-		
-		Map<String, Serializable> params = [ Username : username, Password : password]
-				
-		String url = String.format("/api/%s/Account/LoginUsingIBMID", apiEnvironment);
-		println "Send POST request to ${baseUrl}$url: $params"
-
-		httpBuilder = initializeHttpBuilder(baseUrl)
-		httpBuilder.request(Method.POST){ req ->
-			uri.path = url
-			requestContentType = ContentType.URLENC
-			body = params
-
-			response.success = { HttpResponseDecorator resp, json ->
-				println "Response status line: ${resp.statusLine}"
-				assert resp.status == 200, "Login failed"
-
-				token = json.Token
-				println "External Token: ${token}"
-			}
-			response.failure = { resp ->
-				println 'SCX authentication failed.'
-			}
-		}
+	@Override
+	protected String getScanUrl(String scanId, ScanType scanType)
+	{
+		String path = String.format(getApiPath(scanType), API_METHOD_SCANS)
+		return "${path}/${scanId}"
+	}
+	
+	@Override
+	protected def getAllScansUrl(ScanType scanType)
+	{
+		return String.format(API_V2, API_METHOD_SCANS)
+	}
+	
+	@Override
+	protected String getDeleteScanUrl(String scanId, ScanType scanType)
+	{
+		return String.format(API_V2, API_METHOD_SCANS).concat("/${scanId}")
+	}
+	
+	@Override
+	protected String getBluemixLoginUrl()
+	{
+		return API_BLUEMIX_LOGIN
 	}
 
-	protected HTTPBuilder initializeHttpBuilder(String baseUrl) {
-		HTTPBuilder httpBuilder = new HTTPBuilder(baseUrl)
-
-		if (!validateSSL) {
-			HttpBuilderUtils.ignoreSSLErrors(httpBuilder)
-		}
-
-		return httpBuilder
+	@Override
+	protected String getScxLoginUrl()
+	{
+		return API_IBMID_LOGIN
 	}
 }

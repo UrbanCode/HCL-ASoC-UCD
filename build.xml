@@ -16,8 +16,10 @@
 
 	<resources id="base.release.src.files">
 		<string value="**/AirPluginTool.groovy" />
+		<string value="**/RestClientBase.groovy" />
 		<string value="**/RestClient.groovy" />
 		<string value="**/ScanType.groovy" />
+		<string value="**/ScanTechnology.groovy" />
 		<string value="**/HttpBuilderUtils.groovy" />
 	</resources>
 

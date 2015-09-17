@@ -143,5 +143,8 @@ Changing our portal domain from appscan.bluemix.net to appscan.ibmcloud.com
 	  <release-note plugin-version="4">
 Added step Start Static Analyzer Scan
 	  </release-note>
+	  <release-note plugin-version="5">
+Migrate internal logic to work with cloud V2 APIs
+	  </release-note>
   </release-notes>
 </pluginInfo>

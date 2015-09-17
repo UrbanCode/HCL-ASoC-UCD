@@ -15,4 +15,6 @@
 		<migrate-command name="Start Mobile Analyzer Scan" />
 		<migrate-command name="Start Static Analyzer Scan" />
 	</migrate>
+	<migrate to-version="5">	
+	</migrate>
 </plugin-upgrade>

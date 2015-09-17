@@ -10,11 +10,11 @@ package com.urbancode.air.plugin.AppScanSaaS
 import java.util.concurrent.TimeUnit;
 
 import com.urbancode.air.AirPluginTool;
-import com.urbancode.air.plugin.AppScanSaaS.RestClient
+import com.urbancode.air.plugin.AppScanSaaS.RestClientBase
 import com.urbancode.air.plugin.AppScanSaaS.ScanType
 
 public class SastScanRunner {
-	public static String runSastScan(Properties props, RestClient restClient) {
+	public static String runSastScan(Properties props, RestClientBase restClient) {
 		final def validateReport = false;
 		
 		String issueCountString = "";
