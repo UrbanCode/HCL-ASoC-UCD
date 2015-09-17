@@ -2,8 +2,6 @@
 <plugin-upgrade xmlns="http://www.urbancode.com/UpgradeXMLSchema_v1"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">	
 	
-	<migrate to-version="2">	
-		<migrate-command name="Start Dynamic Analyzer Scan" old="Start DAST Scan" />
-		<migrate-command name="Start Mobile Analyzer Scan" />
+	<migrate to-version="2">
 	</migrate>
 </plugin-upgrade>
