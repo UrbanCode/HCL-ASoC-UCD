@@ -44,7 +44,7 @@ public abstract class RestClientBase {
 	
 	public RestClientBase(Properties props, boolean validateSSL) {
 		this.validateSSL = validateSSL;
-		String userServer = props.containsKey("userServer") ? props["userServer"] : "appscan.ibmcloud.com";
+		String userServer = props.containsKey("userServer") ? props["userServer"] : "appscan.bluemix.net";
 		String userServerPort = props.containsKey("userServerPort") ? props["userServerPort"] : "443";
 		
 		this.baseUrl = "https://" + userServer + ":" +  userServerPort
@@ -302,4 +302,6 @@ public abstract class RestClientBase {
 	protected abstract String getScxLoginUrl()
 	protected abstract String getDeleteScanUrl(String scanId, ScanType scanType)
 	protected abstract def getAllScansUrl(ScanType scanType)
+	public abstract void waitForScan(String scanId, ScanType scanType, Long scanTimeout, Long startTime, String issueCountString)
+	public abstract String startDastScan(String startingUrl, String loginUsername, String loginPassword, String parentjobid, String presenceId)
 }

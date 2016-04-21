@@ -105,7 +105,8 @@ public class SastScanRunner {
 		if (!encrypt) {
 			command.add('-ne')
 		}
-		
+			
+		println "Running the following command arguments: $command"
 		def process = command.execute(System.getenv().collect { k, v -> "$k=$v" }, scanDirectory)
 		process.waitFor()
 		

@@ -137,5 +137,8 @@ Initial version
 	  <release-note plugin-version="2">
 Migrate internal logic to work with cloud V2 APIs
 	  </release-note>
+	  <release-note plugin-version="3">
+Changing our portal domain from appscan.ibmcloud.com to appscan.bluemix.net (and adding hidden experimental feature 'PSS')
+	  </release-note>
   </release-notes>
 </pluginInfo>

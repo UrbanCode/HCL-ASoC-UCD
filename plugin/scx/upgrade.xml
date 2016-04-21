@@ -4,4 +4,6 @@
 	
 	<migrate to-version="2">
 	</migrate>
+	<migrate to-version="3">
+	</migrate>
 </plugin-upgrade>

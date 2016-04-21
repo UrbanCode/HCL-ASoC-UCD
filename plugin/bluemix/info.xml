@@ -146,5 +146,8 @@ Added step Start Static Analyzer Scan
 	  <release-note plugin-version="5">
 Migrate internal logic to work with cloud V2 APIs
 	  </release-note>
+	  <release-note plugin-version="6">
+Changing our portal domain from appscan.ibmcloud.com to appscan.bluemix.net (and adding hidden experimental feature 'PSS')
+	  </release-note>
   </release-notes>
 </pluginInfo>
