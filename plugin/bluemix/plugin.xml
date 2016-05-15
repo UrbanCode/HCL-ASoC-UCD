@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <plugin xmlns="http://www.urbancode.com/PluginXMLSchema_v1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <header>
-    <identifier id="com.urbancode.air.plugin.IBMSecurity.bluemix" version="6" name="Application Security Testing (Bluemix)"/>
+    <identifier id="com.urbancode.air.plugin.IBMSecurity.bluemix" version="7" name="Application Security Testing (Bluemix)"/>
     <description>
     This plugin enables you to use IBM Application Security Testing services easily from UrbanCode
 </description>
@@ -56,7 +56,7 @@
 
     <command program="${GROOVY_HOME}/bin/groovy">
 	  <arg value="-cp"/>
-      <arg path="classes:lib/commons-beanutils-1.9.2:lib/commons-collections-3.2.1.jar:lib/commons-fileupload-1.3.1.jar:lib/commons-logging-1.1.3.jar:lib/groovy-json-2.1.7.jar:lib/http-builder-0.7-uc.jar:lib/httpclient-4.3.5.jar:lib/httpclient-cache-4.3.5.jar:lib/httpcore-4.3.2.jar:lib/httpmime-4.3.5.jar:lib/json-lib-2.4-jdk15.jar:lib/resolver.jar" />
+      <arg path="classes:lib/commons-beanutils-1.9.2:lib/commons-collections-3.2.1.jar:lib/commons-fileupload-1.3.1.jar:lib/commons-logging-1.1.3.jar:lib/groovy-json-2.1.7.jar:lib/http-builder-0.7.2-uc.jar:lib/httpclient-4.3.5.jar:lib/httpclient-cache-4.3.5.jar:lib/httpcore-4.3.2.jar:lib/httpmime-4.3.5.jar:lib/json-lib-2.4-jdk15.jar:lib/resolver.jar" />
       <arg file="start_ma_scan.groovy"/>
       <arg file="${PLUGIN_INPUT_PROPS}"/>
       <arg file="${PLUGIN_OUTPUT_PROPS}"/>
@@ -121,7 +121,7 @@
 
     <command program="${GROOVY_HOME}/bin/groovy">
 	  <arg value="-cp"/>
-      <arg path="classes:lib/commons-beanutils-1.9.2:lib/commons-collections-3.2.1.jar:lib/commons-fileupload-1.3.1.jar:lib/commons-logging-1.1.3.jar:lib/groovy-json-2.1.7.jar:lib/http-builder-0.7-uc.jar:lib/httpclient-4.3.5.jar:lib/httpclient-cache-4.3.5.jar:lib/httpcore-4.3.2.jar:lib/httpmime-4.3.5.jar:lib/json-lib-2.4-jdk15.jar:lib/resolver.jar" />
+      <arg path="classes:lib/commons-beanutils-1.9.2:lib/commons-collections-3.2.1.jar:lib/commons-fileupload-1.3.1.jar:lib/commons-logging-1.1.3.jar:lib/groovy-json-2.1.7.jar:lib/http-builder-0.7.2-uc.jar:lib/httpclient-4.3.5.jar:lib/httpclient-cache-4.3.5.jar:lib/httpcore-4.3.2.jar:lib/httpmime-4.3.5.jar:lib/json-lib-2.4-jdk15.jar:lib/resolver.jar" />
       <arg file="start_dast_scan.groovy"/>
       <arg file="${PLUGIN_INPUT_PROPS}"/>
       <arg file="${PLUGIN_OUTPUT_PROPS}"/>
@@ -168,7 +168,7 @@
 
     <command program="${GROOVY_HOME}/bin/groovy">
 	  <arg value="-cp"/>
-      <arg path="classes:lib/commons-beanutils-1.9.2:lib/commons-collections-3.2.1.jar:lib/commons-fileupload-1.3.1.jar:lib/commons-logging-1.1.3.jar:lib/groovy-json-2.1.7.jar:lib/http-builder-0.7-uc.jar:lib/httpclient-4.3.5.jar:lib/httpclient-cache-4.3.5.jar:lib/httpcore-4.3.2.jar:lib/httpmime-4.3.5.jar:lib/json-lib-2.4-jdk15.jar:lib/resolver.jar" />
+      <arg path="classes:lib/commons-beanutils-1.9.2:lib/commons-collections-3.2.1.jar:lib/commons-fileupload-1.3.1.jar:lib/commons-logging-1.1.3.jar:lib/groovy-json-2.1.7.jar:lib/http-builder-0.7.2-uc.jar:lib/httpclient-4.3.5.jar:lib/httpclient-cache-4.3.5.jar:lib/httpcore-4.3.2.jar:lib/httpmime-4.3.5.jar:lib/json-lib-2.4-jdk15.jar:lib/resolver.jar" />
       <arg file="start_sast_scan.groovy"/>
       <arg file="${PLUGIN_INPUT_PROPS}"/>
       <arg file="${PLUGIN_OUTPUT_PROPS}"/>

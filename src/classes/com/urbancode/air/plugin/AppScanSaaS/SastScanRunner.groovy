@@ -110,10 +110,11 @@ public class SastScanRunner {
 		def process = command.execute(System.getenv().collect { k, v -> "$k=$v" }, scanDirectory)
 		process.waitFor()
 		
-		if (process.exitValue()) {
-			println process.text
+		def exitVal = process.exitValue()
+		if (exitVal) {
+			println "Command ended with exitValue = $exitVal , process.text = ${process.text}"
 		} else {
-			println process.err.text
+			println "Command failed with exitValue = $exitVal , process.err.text = ${process.err.text}"
 		}
 		
 		return arsaFile

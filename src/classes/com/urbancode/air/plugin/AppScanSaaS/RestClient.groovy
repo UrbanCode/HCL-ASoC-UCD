@@ -48,8 +48,8 @@ public abstract class RestClient extends RestClientBase {
 
 	private static final int MinReportSize = 1024
 	
-	public RestClient(Properties props, boolean validateSSL) {
-		super(props, validateSSL)
+	public RestClient(Properties props, boolean validateSSL, boolean useAsmGatewayAsDefault) {
+		super(props, validateSSL, useAsmGatewayAsDefault)
 	}
 	
 	private String uploadFile(File file) {
@@ -60,16 +60,17 @@ public abstract class RestClient extends RestClientBase {
 		String fileId = null
 		String url = API_FILE_UPLOAD
 		println "Send POST request to ${this.baseUrl}$url"
-		httpBuilder.request(Method.POST){ req ->
+		httpBuilder.request(Method.POST, ContentType.JSON){ req ->
 			uri.path = url
 			headers["Authorization"] = authHeader
 			requestContentType: "multipart/form-data"
 			req.setEntity(multiPartContent)
 
-			response.success = { HttpResponseDecorator resp, json ->
+			response.success = { HttpResponseDecorator resp ->
 				println "Response status line: ${resp.statusLine}"
 
 				assert resp.statusLine.statusCode == 201, "The file was NOT uploaded successfully"
+				def json = parseJsonFromResponseText(resp, "The file was NOT uploaded successfully")
 				fileId = json.FileId
 				assert  fileId != null && fileId.length() >= 10, "The file was NOT uploaded successfully"
 			}
@@ -111,15 +112,16 @@ public abstract class RestClient extends RestClientBase {
 			}
 		}
 		println "Send POST request to ${this.baseUrl}$url"
-		httpBuilder.request(Method.POST){ req ->
+		httpBuilder.request(Method.POST, ContentType.JSON){ req ->
 			uri.path = url
 			headers["Authorization"] = authHeader
 			requestContentType = ContentType.JSON
 			body = params
 			
-			response.success = { HttpResponseDecorator resp, json ->
+			response.success = { HttpResponseDecorator resp ->
 				println "Response status line: ${resp.statusLine}"
 				assert resp.statusLine.statusCode == 201, "$TechName scan was NOT started successfully"
+				def json = parseJsonFromResponseText(resp, "fileBasedScan was NOT started successfully")
 				if (scanId == null) {
 					scanId = json.Id
 					assert  scanId != null && scanId.length() >= 10, "$TechName scan was NOT started successfully"
@@ -175,11 +177,11 @@ public abstract class RestClient extends RestClientBase {
 			uri.path = url
 			headers["Authorization"] = authHeader
 			
-			response.success = { HttpResponseDecorator resp, json ->
+			response.success = { HttpResponseDecorator resp ->
 				println "Response status line: ${resp.statusLine}"
 				
 				assert resp.statusLine.statusCode == 200, "Get Presences failed"
-				presencesData = json
+				presencesData = parseJsonFromResponseText(resp, "Get Presences failed")
 			}
 		}
 		
@@ -206,15 +208,16 @@ public abstract class RestClient extends RestClientBase {
 		}
 		
 		println "Send POST request to ${this.baseUrl}$url"
-		httpBuilder.request(Method.POST){ req ->
+		httpBuilder.request(Method.POST, ContentType.JSON){ req ->
 			uri.path = url
 			headers["Authorization"] = authHeader
 			requestContentType = ContentType.JSON
 			body = params
 			
-			response.success = { HttpResponseDecorator resp, json ->
+			response.success = { HttpResponseDecorator resp ->
 				println "Response status line: ${resp.statusLine}"
 				assert resp.statusLine.statusCode == 201, "DAST scan was NOT started successfully"
+				def json = parseJsonFromResponseText(resp, "DAST scan was NOT started successfully")
 				if (scanId == null) {
 					scanId = json.Id
 					assert  scanId != null && scanId.length() >= 10, "DAST scan was NOT started successfully"
@@ -373,15 +376,15 @@ public abstract class RestClient extends RestClientBase {
 		
 		presencesData.each { presence -> 
 			println "Deleting presence with id: " + presence.Id
-			httpBuilder.request(Method.DELETE) { req -> 
+			httpBuilder.request(Method.DELETE, ContentType.JSON) { req -> 
 				uri.path = url + "/" + presence.Id
 				headers["Authorization"] = authHeader
 				
-				response.success = { HttpResponseDecorator resp, json ->
+				response.success = { HttpResponseDecorator resp ->
 					println "Response status line: ${resp.statusLine}"
 					
 					assert resp.statusLine.statusCode == 204, "Delete presence failed for id: " + presence.Id
-					presencesData = json
+					presencesData = parseJsonFromResponseText(resp, "Delete presence failed for id: " + presence.Id)
 				}
 			}
 		}
@@ -404,11 +407,11 @@ public abstract class RestClient extends RestClientBase {
 			requestContentType = ContentType.JSON
 			body = [ PresenceName : "Grovvy Presence: " + currentTime]
 			
-			response.success = { HttpResponseDecorator resp, json ->
+			response.success = { HttpResponseDecorator resp ->
 				println "Response status line: ${resp.statusLine}"
 				
 				assert resp.statusLine.statusCode == 201, "Failed creating new presence"
-				
+				def json = parseJsonFromResponseText(resp, "Failed creating new presence")
 				presenceId = json.Id
 			}
 		}

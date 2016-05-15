@@ -150,4 +150,7 @@ Migrate internal logic to work with cloud V2 APIs
 Changing our portal domain from appscan.ibmcloud.com to appscan.bluemix.net (and adding hidden experimental feature 'PSS')
 	  </release-note>
   </release-notes>
+	  <release-note plugin-version="7">
+Upgrade to http-builder-0.7.2-uc.jar
+	  </release-note>
 </pluginInfo>

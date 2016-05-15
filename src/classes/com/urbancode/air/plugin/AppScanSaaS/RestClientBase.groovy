@@ -18,9 +18,13 @@ import java.util.zip.ZipInputStream
 import java.util.zip.ZipOutputStream
 
 import org.apache.http.entity.mime.HttpMultipartMode
-import org.apache.http.entity.mime.MultipartEntity
 import org.apache.http.entity.mime.content.InputStreamBody
 import org.apache.http.entity.mime.content.StringBody
+import org.apache.http.conn.ssl.SSLContextBuilder
+import org.apache.http.conn.ssl.TrustSelfSignedStrategy
+import org.apache.http.conn.ssl.SSLConnectionSocketFactory
+import org.apache.http.impl.client.CloseableHttpClient
+import org.apache.http.impl.client.HttpClients;
 
 public abstract class RestClientBase {
 	
@@ -35,6 +39,8 @@ public abstract class RestClientBase {
 
 	protected HTTPBuilder httpBuilder
 	
+	protected static final String ANALYZERS_API_BM_DOMAIN = "appscan.bluemix.net"
+	protected static final String ASM_API_GATEWAY_DOMAIN = "appscan.ibmcloud.com"
 	protected static final String MOBILE_API_PATH_V1 = "/api/%s/MobileAnalyzer/"
 	protected static final String SAST_API_PATH_V1 = "/api/%s/StaticAnalyzer/"
 	protected static final String DAST_API_PATH_V1 = "/api/%s/DynamicAnalyzer/"
@@ -42,9 +48,9 @@ public abstract class RestClientBase {
 	
 	protected static final String API_METHOD_DOWNLOAD_TOOL_V1 = "DownloadTool"
 	
-	public RestClientBase(Properties props, boolean validateSSL) {
+	public RestClientBase(Properties props, boolean validateSSL, boolean useAsmGatewayAsDefault) {
 		this.validateSSL = validateSSL;
-		String userServer = props.containsKey("userServer") ? props["userServer"] : "appscan.bluemix.net";
+		String userServer = props.containsKey("userServer") ? props["userServer"] : (useAsmGatewayAsDefault ? ASM_API_GATEWAY_DOMAIN : ANALYZERS_API_BM_DOMAIN);
 		String userServerPort = props.containsKey("userServerPort") ? props["userServerPort"] : "443";
 		
 		this.baseUrl = "https://" + userServer + ":" +  userServerPort
@@ -75,6 +81,13 @@ public abstract class RestClientBase {
 				println "IPAX generator tool successfully received. Deleting ${dirName} before extracting it."
 				(new File(dirName)).deleteDir()
 				unzip(zip, "", dirName)
+				
+				File offlineFile = new File(dirName, "json.data")
+				if (offlineFile.exists())
+				{
+					println "After extracting - Deleting ${offlineFile.name} in order to prevent IPAX generator tool from working offline (We want it to fail in this case)."
+					offlineFile.delete()
+				}
 			}
 		}
 		return new File(dirName, "IPAX_Generator.sh")
@@ -86,14 +99,14 @@ public abstract class RestClientBase {
 		int expectedStatusCode = getScanExpectedStatusCode()
 		def scan = null
 
-		httpBuilder.request(Method.GET){ req ->
+		httpBuilder.request(Method.GET, ContentType.JSON){ req ->
 			uri.path = url
 			headers["Authorization"] = authHeader
 
-			response.success = { HttpResponseDecorator resp, json ->
+			response.success = { HttpResponseDecorator resp ->
 				println "Response status line: ${resp.statusLine}"
 
-				scan = json
+				scan = parseJsonFromResponseText(resp, "getScan was not retrieved successfully")
 				assert resp.statusLine.statusCode == expectedStatusCode, "Scan was not retrieved successfully"
 			}
 		}
@@ -106,14 +119,14 @@ public abstract class RestClientBase {
 		def scans = null
 		
 		println "Send GET request to ${this.baseUrl}$url"
-		httpBuilder.request(Method.GET){ req ->
+		httpBuilder.request(Method.GET, ContentType.JSON){ req ->
 			uri.path = url
 			headers["Authorization"] = authHeader
 
-			response.success = { HttpResponseDecorator resp, json ->
+			response.success = { HttpResponseDecorator resp ->
 				println "Response status line: ${resp.statusLine}"
 
-				scans = json
+				scans = parseJsonFromResponseText(resp, "getAllScans were not retrieved successfully")
 				assert resp.statusLine.statusCode == 200, "User scans were not retrieved successfully"
 			}
 		}
@@ -239,21 +252,26 @@ public abstract class RestClientBase {
 		println "Send POST request to ${baseUrl}$url: $params"
 
 		httpBuilder = initializeHttpBuilder(baseUrl)
-		httpBuilder.request(Method.POST){ req ->
-			uri.path = url
-			requestContentType = ContentType.URLENC
-			body = params
-
-			response.success = { HttpResponseDecorator resp, json ->
-				println "Response status line: ${resp.statusLine}"
-				assert resp.status == 200, "Login failed"
-
-				token = json.Token
-				println "External Token: ${token}"
+		try{
+			httpBuilder.request(Method.POST, ContentType.JSON){ req ->
+				uri.path = url
+				requestContentType = ContentType.URLENC
+				body = params
+	
+				response.success = { HttpResponseDecorator resp ->
+					println "Response status line: ${resp.statusLine}"
+					assert resp.status == 200, "Login failed"
+					def json = parseJsonFromResponseText(resp, "Bluemix authentication failed")
+					token = json.Token
+					println "External Token: ${token}"
+				}
+				response.failure = { resp ->
+					println 'Bluemix authentication failed.'
+				}
 			}
-			response.failure = { resp ->
-				println 'Bluemix authentication failed.'
-			}
+		}
+		catch (Exception e) {
+			println "Failed bluemixLogin with exception: ${e.getMessage()}"
 		}
 	}
 
@@ -268,32 +286,57 @@ public abstract class RestClientBase {
 		println "Send POST request to ${baseUrl}$url: $params"
 
 		httpBuilder = initializeHttpBuilder(baseUrl)
-		httpBuilder.request(Method.POST){ req ->
-			uri.path = url
-			requestContentType = ContentType.URLENC
-			body = params
-
-			response.success = { HttpResponseDecorator resp, json ->
-				println "Response status line: ${resp.statusLine}"
-				assert resp.status == 200, "Login failed"
-
-				token = json.Token
-				println "External Token: ${token}"
-			}
-			response.failure = { resp ->
-				println 'SCX authentication failed.'
+		try{
+			httpBuilder.request(Method.POST, ContentType.JSON){ req ->
+				uri.path = url
+				requestContentType = ContentType.URLENC
+				body = params
+	
+				response.success = { HttpResponseDecorator resp ->
+					println "Response status line: ${resp.statusLine}"
+					assert resp.status == 200, "Login failed"
+					def json = parseJsonFromResponseText(resp, "SCX authentication failed")
+					token = json.Token
+					println "External Token: ${token}"
+				}
+				response.failure = { resp ->
+					println 'SCX authentication failed.'
+				}
 			}
 		}
+		catch (Exception e) {
+			println "Failed scxLogin with exception: ${e.getMessage()}"
+		}
+	}
+	
+	protected def parseJsonFromResponseText(HttpResponseDecorator resp, String errorMessage) {
+		def json;
+		try{
+			String text = resp.entity.content.text
+			String contentType = resp.headers."Content-Type"
+			assert  contentType?.startsWith("application/json"), "${errorMessage} -> the response headers did not have content-Type application/json"
+			json = new JsonSlurper().parseText(text)
+		}
+		catch (Exception e) {
+			println "${errorMessage} -> parseJsonFromResponseText failed, with this exception: ${e.getMessage()}"
+		}
+		return json
 	}
 	
 	protected HTTPBuilder initializeHttpBuilder(String baseUrl) {
 		HTTPBuilder httpBuilder = new HTTPBuilder(baseUrl)
+		
+		SSLContextBuilder sslContextBuilder = new SSLContextBuilder();
 		if (!validateSSL) {
-			HttpBuilderUtils.ignoreSSLErrors(httpBuilder)
+			sslContextBuilder.loadTrustMaterial(null, new TrustSelfSignedStrategy());
 		}
-
+		SSLConnectionSocketFactory sslcsf = new SSLConnectionSocketFactory(sslContextBuilder.build())
+		CloseableHttpClient httpclient = HttpClients.custom().setSSLSocketFactory(sslcsf).build();
+		
+		httpBuilder.setClient(httpclient);
 		return httpBuilder
 	}
+
 	
 	protected abstract int getScanExpectedStatusCode()
 	protected abstract String getScanUrl(String scanId, ScanType scanType)
@@ -302,6 +345,7 @@ public abstract class RestClientBase {
 	protected abstract String getScxLoginUrl()
 	protected abstract String getDeleteScanUrl(String scanId, ScanType scanType)
 	protected abstract def getAllScansUrl(ScanType scanType)
+	protected abstract String uploadARSA(File arsaFile, String parentjobid)
 	public abstract void waitForScan(String scanId, ScanType scanType, Long scanTimeout, Long startTime, String issueCountString)
 	public abstract String startDastScan(String startingUrl, String loginUsername, String loginPassword, String parentjobid, String presenceId)
 }
