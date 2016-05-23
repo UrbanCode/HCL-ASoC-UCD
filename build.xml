@@ -35,7 +35,9 @@
 	<resources id="scx.release.src.files">
 		<resources refid="base.release.src.files" />
 		<string value="**/SCXRestClient.groovy" />
+		<string value="**/DastScanRunner.groovy" />
 		<string value="**/MAScanRunner.groovy" />
+		<string value="**/SastScanRunner.groovy" />
 		<string value="scx/**" />
 	</resources>
 
@@ -160,6 +162,27 @@
 		</propertyfile>
 
 		<run_groovy_script src="src/scx/start_ma_scan.groovy" loginusername="myIBMId@us.ibm.com" loginpassword="*************" />
+	</target>
+	
+	<target name="start_dast_scan_scx">
+		<clean_property_files />
+		<propertyfile file="in_props" comment="Input properties">
+			<entry key="startingUrl" value="http://altoroj.mybluemix.net/" />
+			<entry key="scanUser" value="jsmith" />
+			<entry key="scanPassword" value="demo1234" />
+		</propertyfile>
+
+		<run_groovy_script src="src/scx/start_dast_scan.groovy" loginusername="myIBMId@us.ibm.com" loginpassword="*************" />
+	</target>
+
+	<target name="start_sast_scan_scx">
+		<clean_property_files />
+		<propertyfile file="in_props" comment="Input properties">
+			<entry key="sastFileLocation" value="res" />
+			<entry key="arsaToolDir" value="C:\SAClientUtil" />
+		</propertyfile>
+
+		<run_groovy_script src="src/scx/start_sast_scan.groovy" loginusername="myIBMId@us.ibm.com" loginpassword="*************" />
 	</target>
 
 	<macrodef name="clean_property_files">

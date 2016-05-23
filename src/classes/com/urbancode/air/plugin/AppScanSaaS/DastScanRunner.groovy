@@ -39,8 +39,11 @@ public class DastScanRunner {
 		String scanPassword = props["scanPassword"]
 		String parentjobid = props["parentScanId"]
 
-		String presenceId = props["presenceId"]
-
+		String presenceId = ""
+		if (props.containsKey("presenceId")) {
+			presenceId = props["presenceId"]
+		}
+		
 		String scanId = restClient.startDastScan(startingUrl, scanUser, scanPassword, parentjobid, presenceId)
 
 		Long startTime = System.currentTimeMillis()

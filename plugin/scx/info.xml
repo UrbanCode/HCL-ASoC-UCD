@@ -70,7 +70,7 @@
   called to execute the targets in the build.xml.
   -->
   
-  <tool-description>This plugin enables you to use IBM Application Security Testing services easily from UrbanCode.</tool-description>
+  <tool-description>This plugin enables you to use IBM Application Security on Cloud (ASoC) easily from UrbanCode.</tool-description>
   
   <!-- 
   **related-info is NOT required**
@@ -142,6 +142,12 @@ Changing our portal domain from appscan.ibmcloud.com to appscan.bluemix.net (and
 	  </release-note>
 	  <release-note plugin-version="4">
 Upgrade to http-builder-0.7.2-uc.jar, and change our portal domain from appscan.bluemix.net to appscan.ibmcloud.com
+	  </release-note>
+	  <release-note plugin-version="5">
+Rename plugin from "Application Security Testing (Smartcloud Exchange)" to "IBM Application Security on Cloud" and add  support for running a DAST(Domain Verification not supported) and SAST scans
+	  </release-note>
+	  <release-note plugin-version="6">
+Rename the step "Start Mobile Analyzer Scan" into "Start Android Mobile Analyzer ASoC Scan"
 	  </release-note>
   </release-notes>
 </pluginInfo>

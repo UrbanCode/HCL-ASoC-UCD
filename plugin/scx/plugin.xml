@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <plugin xmlns="http://www.urbancode.com/PluginXMLSchema_v1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <header>
-    <identifier id="com.urbancode.air.plugin.IBMSecurity.scx" version="4" name="Application Security Testing (Smartcloud Exchange)"/>
+    <identifier id="com.urbancode.air.plugin.IBMSecurity.scx" version="6" name="IBM Application Security on Cloud"/>
     <description>
-    This plugin enables you to use IBM Application Security Testing services easily from UrbanCode
+    This plugin enables you to use IBM Application Security on Cloud (ASoC) easily from UrbanCode
 </description>
-    <tag>Utilities/IBM Application Security</tag>
+    <tag>Utilities/IBM Application Security on Cloud</tag>
   </header>
-  <step-type name="Start Mobile Analyzer Scan">
-    <description>Starts a new Mobile Analyzer Scan</description>
+  <step-type name="Start Android Mobile Analyzer ASoC Scan">
+    <description>Starts a new Android Mobile Analyzer ASoC Scan, using IBM Application Security on Cloud</description>
     <properties>
       <property name="apkFileLocation" required="true">
         <property-ui type="textBox"
@@ -27,9 +27,9 @@
       </property>
 	  <property name="reportIssueCountValidation" required="false">
         <property-ui type="textBox"
-                     label="Fail condition threshold (H, M, L, I)"
-                     description="Fail condition threshold in High,Medium,Low,Informational format. Leave empty for no threshold"
-                     default-value="0,5,10,20" />
+        			 label="Fail condition threshold (H, M, L, I)"
+        			 description="Please set the number of issues found (by severity) in a comma-separated list. If the threshold is reached during the scan, the scan will fail. In this field, you can specify the numbers for these severity levels: High (H), Medium (M), Low (L), and Informational (I). For example, a fail condition of '0,5,10,20' will cause the step to fail if the resulting scan has more than 0 High issues, 5 Medium issues, and so on. If this field is left empty, there will be no validation of results and the scan will not fail as a result of a fail condition."
+        			 default-value="0,5,10,20" />
       </property>
 	  <property name="scanTimeout" required="false">
         <property-ui type="textBox"
@@ -58,6 +58,136 @@
 	  <arg value="-cp"/>
       <arg path="classes:lib/commons-beanutils-1.9.2:lib/commons-collections-3.2.1.jar:lib/commons-fileupload-1.3.1.jar:lib/commons-logging-1.1.3.jar:lib/groovy-json-2.1.7.jar:lib/http-builder-0.7.2-uc.jar:lib/httpclient-4.3.5.jar:lib/httpclient-cache-4.3.5.jar:lib/httpcore-4.3.2.jar:lib/httpmime-4.3.5.jar:lib/json-lib-2.4-jdk15.jar:lib/resolver.jar" />
       <arg file="start_ma_scan.groovy"/>
+      <arg file="${PLUGIN_INPUT_PROPS}"/>
+      <arg file="${PLUGIN_OUTPUT_PROPS}"/>
+    </command>
+  </step-type>
+  <step-type name="Start Dynamic Analyzer ASoC Scan">
+    <description>Starts a new Dynamic Analyzer Scan, using IBM Application Security on Cloud</description>
+    <properties>
+      <property name="startingUrl" required="true">
+        <property-ui type="textBox"
+                     label="Starting url"
+                     description="Please enter a url to scan. (You must complete Domain Verification through the UI, as it is not currently supported by this plugin.)" />
+      </property> 
+      <property name="scanUser" required="false">
+        <property-ui type="textBox"
+                     label="Application Username"
+                     description="Username for the scanned application if contains login" />
+      </property> 
+      <property name="scanPassword" required="false">
+        <property-ui type="secureBox"
+                     label="Application Password"
+                     description="Password for the scanned application if contains login" />
+      </property> 
+	  <property name="loginUsername" required="true">
+        <property-ui type="textBox"
+                     label="IBM ID Username"
+                     description="Please Specify you IBM ID Username" />
+      </property>
+	  <property name="loginPassword" required="true">
+        <property-ui type="secureBox"
+                     label="IBM ID Password"
+                     description="Please Specify you IBM ID password" />
+      </property>
+	  <property name="reportIssueCountValidation" required="false">
+        <property-ui type="textBox"
+        			 label="Fail condition threshold (H, M, L, I)"
+        			 description="Please set the number of issues found (by severity) in a comma-separated list. If the threshold is reached during the scan, the scan will fail. In this field, you can specify the numbers for these severity levels: High (H), Medium (M), Low (L), and Informational (I). For example, a fail condition of '0,5,10,20' will cause the step to fail if the resulting scan has more than 0 High issues, 5 Medium issues, and so on. If this field is left empty, there will be no validation of results and the scan will not fail as a result of a fail condition."
+        			 default-value="0,5,10,20" />
+      </property>
+	  <property name="scanTimeout" required="false">
+        <property-ui type="textBox"
+                     label="Scan Timeout (minutes)"
+                     description="Please enter a timeout for the scan (relevant for only when validating report)"
+					 default-value="360"/>
+      </property>
+      <property name="parentScanId" required="false">
+        <property-ui type="textBox"
+                     label="Original scan ID"
+                     description="If this is a rescan please enter the original scan id"/>
+      </property>
+    </properties>
+    <post-processing>
+      <![CDATA[
+        if (properties.get("exitCode") != 0) {
+            properties.put("Status", "Failure");
+        }
+        else {
+            properties.put("Status", "Success");
+        }
+     ]]>
+    </post-processing>
+
+    <command program="${GROOVY_HOME}/bin/groovy">
+	  <arg value="-cp"/>
+      <arg path="classes:lib/commons-beanutils-1.9.2:lib/commons-collections-3.2.1.jar:lib/commons-fileupload-1.3.1.jar:lib/commons-logging-1.1.3.jar:lib/groovy-json-2.1.7.jar:lib/http-builder-0.7.2-uc.jar:lib/httpclient-4.3.5.jar:lib/httpclient-cache-4.3.5.jar:lib/httpcore-4.3.2.jar:lib/httpmime-4.3.5.jar:lib/json-lib-2.4-jdk15.jar:lib/resolver.jar" />
+      <arg file="start_dast_scan.groovy"/>
+      <arg file="${PLUGIN_INPUT_PROPS}"/>
+      <arg file="${PLUGIN_OUTPUT_PROPS}"/>
+    </command>
+  </step-type>
+    <step-type name="Start Static Analyzer ASoC Scan">
+    <description>Starts a new Static Analyzer ASoC Scan, using IBM Application Security on Cloud</description>
+    <properties>
+      <property name="sastFileLocation" required="true">
+        <property-ui type="textBox"
+			         label="IRX file/Scan directory"
+			         description="Please point to the IRX file to be uploaded for scanning, or the directory that contains the files or other locations to scan. The files and locations that can be specified in this field include: .jar files, .war files, .ear files, Eclipse workspaces, and scan configuration files. For example, 'c:\build_output\testapp.irx' or 'c:\build_output'." />
+      </property> 
+      <property name="sastConfigFile" required="false">
+        <property-ui type="textBox"
+        			 label="Scan configuration file"
+        			 description="Please point to the path and file name of a scan configuration file. This overrides any scan configuration files which may exist in the scan directory. For example, 'c:\build_output\appscan-config.xml'." />
+      </property> 
+	  <property name="arsaToolDir" required="true">
+        <property-ui type="textBox"
+        			 label="Static Analyzer Client Tool location"
+        			 description="Please point to the directory that the client tool was unzipped to. For example, C:\SAClientUtil." />
+      </property>
+	  <property name="loginUsername" required="true">
+        <property-ui type="textBox"
+                     label="IBM ID Username"
+                     description="Please Specify you IBM ID Username" />
+      </property>
+	  <property name="loginPassword" required="true">
+        <property-ui type="secureBox"
+        			 label="IBM ID Password"
+        			 description="Please Specify you IBM ID password" />
+      </property>
+	  <property name="reportIssueCountValidation" required="false">
+        <property-ui type="textBox"
+        			 label="Fail condition threshold (H, M, L, I)"
+        			 description="Please set the number of issues found (by severity) in a comma-separated list. If the threshold is reached during the scan, the scan will fail. In this field, you can specify the numbers for these severity levels: High (H), Medium (M), Low (L), and Informational (I). For example, a fail condition of '0,5,10,20' will cause the step to fail if the resulting scan has more than 0 High issues, 5 Medium issues, and so on. If this field is left empty, there will be no validation of results and the scan will not fail as a result of a fail condition."
+        			 default-value="0,5,10,20" />
+      </property>
+	  <property name="scanTimeout" required="false">
+        <property-ui type="textBox"
+        			 label="Scan Timeout (minutes)"
+        			 description="Please enter the time in minutes to wait for the scan to end before it fails."
+        			 default-value="360" />
+      </property>
+      <property name="parentScanId" required="false">
+        <property-ui type="textBox"
+        			 label="Original scan ID"
+        			 description="If you have previously scanned the application, please enter the original scan ID here if you want to rescan it." />
+      </property>
+    </properties>
+    <post-processing>
+      <![CDATA[
+        if (properties.get("exitCode") != 0) {
+            properties.put("Status", "Failure");
+        }
+        else {
+            properties.put("Status", "Success");
+        }
+     ]]>
+    </post-processing>
+
+    <command program="${GROOVY_HOME}/bin/groovy">
+	  <arg value="-cp"/>
+      <arg path="classes:lib/commons-beanutils-1.9.2:lib/commons-collections-3.2.1.jar:lib/commons-fileupload-1.3.1.jar:lib/commons-logging-1.1.3.jar:lib/groovy-json-2.1.7.jar:lib/http-builder-0.7.2-uc.jar:lib/httpclient-4.3.5.jar:lib/httpclient-cache-4.3.5.jar:lib/httpcore-4.3.2.jar:lib/httpmime-4.3.5.jar:lib/json-lib-2.4-jdk15.jar:lib/resolver.jar" />
+      <arg file="start_sast_scan.groovy"/>
       <arg file="${PLUGIN_INPUT_PROPS}"/>
       <arg file="${PLUGIN_OUTPUT_PROPS}"/>
     </command>

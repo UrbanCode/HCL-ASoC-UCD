@@ -8,4 +8,13 @@
 	</migrate>
 	<migrate to-version="4">
 	</migrate>
+	<migrate to-version="5">
+		<migrate-command name="Start Dynamic Analyzer ASoC Scan" />
+		<migrate-command name="Start Static Analyzer ASoC Scan" />
+	</migrate>
+	<migrate to-version="6">
+		<migrate-command name="Start Dynamic Analyzer ASoC Scan" />
+		<migrate-command name="Start Static Analyzer ASoC Scan" />
+		<migrate-command name="Start Android Mobile Analyzer ASoC Scan" old="Start Mobile Analyzer Scan" />
+	</migrate>
 </plugin-upgrade>
