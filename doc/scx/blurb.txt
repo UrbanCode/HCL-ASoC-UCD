@@ -1,4 +1,4 @@
-IBM Application Security on Cloud allows you to run security scans on your web applications, Android applications or Java applications.
+IBM Application Security on Cloud allows you to run security scans on your web applications, iOS applications, Android applications or Java applications.
 
 Upload this plugin to IBM UrbanCode Deploy to get access to steps for working with IBM Application Security on Cloud.
 

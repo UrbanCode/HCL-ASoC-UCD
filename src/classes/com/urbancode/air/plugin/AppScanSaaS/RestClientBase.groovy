@@ -81,13 +81,6 @@ public abstract class RestClientBase {
 				println "IPAX generator tool successfully received. Deleting ${dirName} before extracting it."
 				(new File(dirName)).deleteDir()
 				unzip(zip, "", dirName)
-				
-				File offlineFile = new File(dirName, "json.data")
-				if (offlineFile.exists())
-				{
-					println "After extracting - Deleting ${offlineFile.name} in order to prevent IPAX generator tool from working offline (We want it to fail in this case)."
-					offlineFile.delete()
-				}
 			}
 		}
 		return new File(dirName, "IPAX_Generator.sh")
@@ -96,7 +89,7 @@ public abstract class RestClientBase {
 	public def getScan(String scanId, ScanType scanType) {
 		String url = getScanUrl(scanId, scanType)
 		println "Send GET request to ${this.baseUrl}$url"
-		int expectedStatusCode = getScanExpectedStatusCode()
+		
 		def scan = null
 
 		httpBuilder.request(Method.GET, ContentType.JSON){ req ->
@@ -107,7 +100,7 @@ public abstract class RestClientBase {
 				println "Response status line: ${resp.statusLine}"
 
 				scan = parseJsonFromResponseText(resp, "getScan was not retrieved successfully")
-				assert resp.statusLine.statusCode == expectedStatusCode, "Scan was not retrieved successfully"
+				assert resp.statusLine.statusCode == 200 || resp.statusLine.statusCode == 201, "Scan was not retrieved successfully" //201 is only temporary supported
 			}
 		}
 		println "Scan retrieved successfully. Scan name is: ${scan.Name}"
@@ -336,9 +329,7 @@ public abstract class RestClientBase {
 		httpBuilder.setClient(httpclient);
 		return httpBuilder
 	}
-
 	
-	protected abstract int getScanExpectedStatusCode()
 	protected abstract String getScanUrl(String scanId, ScanType scanType)
 	protected abstract def login()
 	protected abstract String getBluemixLoginUrl()

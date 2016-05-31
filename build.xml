@@ -38,6 +38,7 @@
 		<string value="**/DastScanRunner.groovy" />
 		<string value="**/MAScanRunner.groovy" />
 		<string value="**/SastScanRunner.groovy" />
+		<string value="**/iOSScanRunner.groovy" />
 		<string value="scx/**" />
 	</resources>
 
@@ -183,6 +184,15 @@
 		</propertyfile>
 
 		<run_groovy_script src="src/scx/start_sast_scan.groovy" loginusername="myIBMId@us.ibm.com" loginpassword="*************" />
+	</target>
+	
+	<target name="start_ios_scan_scx">
+		<clean_property_files />
+		<propertyfile file="in_props" comment="Input properties">
+			<entry key="projectLocation" value="res/iOSTestApp/testapp.xcodeproj" />
+		</propertyfile>
+
+		<run_groovy_script src="src/scx/start_ios_scan.groovy" loginusername="myIBMId@us.ibm.com" loginpassword="*************" />
 	</target>
 
 	<macrodef name="clean_property_files">

@@ -327,13 +327,7 @@ public abstract class RestClient extends RestClientBase {
 		}
 		return apiPath
 	}
-	
-	@Override
-	protected int getScanExpectedStatusCode()
-	{
-		return 201
-	}
-	
+
 	@Override
 	protected String getScanUrl(String scanId, ScanType scanType)
 	{
