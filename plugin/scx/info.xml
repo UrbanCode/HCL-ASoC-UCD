@@ -152,5 +152,8 @@ Rename the step "Start Mobile Analyzer Scan" into "Start Android Mobile Analyzer
 	  <release-note plugin-version="7">
 Add step "Start iOS Analyzer ASoC Scan"
 	  </release-note>
+	  <release-note plugin-version="8">
+Add "testPolicy" to "Start Dynamic Analyzer ASoC Scan" step. Migrate the "Start iOS Analyzer ASoC Scan" from working with IPAX generator, to working with "ipa" file
+	  </release-note>
   </release-notes>
 </pluginInfo>

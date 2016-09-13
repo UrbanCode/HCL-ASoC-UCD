@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <plugin xmlns="http://www.urbancode.com/PluginXMLSchema_v1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <header>
-    <identifier id="com.urbancode.air.plugin.IBMSecurity.scx" version="7" name="IBM Application Security on Cloud"/>
+    <identifier id="com.urbancode.air.plugin.IBMSecurity.scx" version="8" name="IBM Application Security on Cloud"/>
     <description>
     This plugin enables you to use IBM Application Security on Cloud (ASoC) easily from UrbanCode
 </description>
@@ -107,6 +107,15 @@
                      label="Original scan ID"
                      description="If this is a rescan please enter the original scan id"/>
       </property>
+      <property name="testPolicy" required="false">
+        <property-ui type="selectBox"
+          default-value="Default"
+          description="A predefined set of tests for AppScan to use. Here is a short description for each option: Comprehensive (Default) -> This is the most thorough Test Set and is used by default. Application-Only -> This Test Set includes all application level tests except invasive and port listener tests. The Vital Few -> This Test Set includes a selection of tests that have a high probability of success. This can be useful for evaluating a site when time is limited."
+          label="Test Policy"/>
+        <value label="Comprehensive (Default)">Default</value>
+        <value label="Application-Only">Application-Only</value>
+        <value label="The Vital Few">The Vital Few</value>
+      </property>
     </properties>
     <post-processing>
       <![CDATA[
@@ -195,15 +204,20 @@
   <step-type name="Start iOS Analyzer ASoC Scan">
 	<description>Starts a new iOS Analyzer ASoC Scan, using IBM Application Security on Cloud</description>
     <properties>
-      <property name="projectLocation" required="true">
+      <property name="ipaFileLocation" required="true">
         <property-ui type="textBox"
-                     label="Xcode project or workspace location"
-                     description="Please point to xcode project or workspace" />
+                     label="IPA file location"
+                     description="Please point to the ipa file" />
+      </property>
+      <property name="projectLocation" required="false">
+        <property-ui type="textBox"
+                     label="Deprecated - please ignore"
+                     description="This deprecated field was used to point to xcode project or workspace, when the IPAX generate tool was in use. It should not be used anymore, instead use the field IPA file location" />
       </property> 
       <property name="workspaceScheme" required="false">
         <property-ui type="textBox"
-                     label="Workspace Scheme"
-                     description="When using a workspace, please specify a workspace scheme" />
+                     label="Deprecated - please ignore"
+                     description="This deprecated field was used to point to a workspace scheme, when the IPAX generate tool was in use. It should not be used anymore, instead use the field IPA file location" />
       </property> 	  
 	  <property name="loginUsername" required="true">
         <property-ui type="textBox"

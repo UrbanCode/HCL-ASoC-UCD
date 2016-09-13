@@ -7,6 +7,7 @@
 
 package com.urbancode.air.plugin.AppScanSaaS
 
+import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
 import com.urbancode.air.AirPluginTool;
@@ -62,7 +63,12 @@ public class SastScanRunner {
 			assert arsaFile.exists(), 'IRX file generation failed.'
 		}
 		
-		String scanId = restClient.uploadARSA(arsaFile, parentjobid)
+		String appId = ""
+		if (props.containsKey("applicationId")) {
+			appId = props["applicationId"]
+		}
+		
+		String scanId = restClient.uploadARSA(arsaFile, parentjobid, appId)
 		
 		if (isGenerateARSA) {
 			arsaFile.delete()
@@ -76,7 +82,7 @@ public class SastScanRunner {
 				
 			} catch (NumberFormatException){}
 			
-			restClient.waitForScan(scanId, ScanType.SAST, TimeUnit.MINUTES.toMillis(scanTimeout), startTime, issueCountString)
+			restClient.waitForScan(scanId, ScanType.SAST, TimeUnit.MINUTES.toMillis(scanTimeout), startTime, issueCountString, props)
 		}
 		
 		return scanId
@@ -111,7 +117,7 @@ public class SastScanRunner {
 		process.waitFor()
 		
 		def exitVal = process.exitValue()
-		if (exitVal) {
+		if (!exitVal) {
 			println "Command ended with exitValue = $exitVal , process.text = ${process.text}"
 		} else {
 			println "Command failed with exitValue = $exitVal , process.err.text = ${process.err.text}"

@@ -44,7 +44,17 @@ public class DastScanRunner {
 			presenceId = props["presenceId"]
 		}
 		
-		String scanId = restClient.startDastScan(startingUrl, scanUser, scanPassword, parentjobid, presenceId)
+		String testPolicy = ""
+		if (props.containsKey("testPolicy")) {
+			testPolicy = props["testPolicy"]
+		}
+		
+		String appId = ""
+		if (props.containsKey("applicationId")) {
+			appId = props["applicationId"]
+		}
+		
+		String scanId = restClient.startDastScan(startingUrl, scanUser, scanPassword, parentjobid, presenceId, testPolicy, appId)
 
 		Long startTime = System.currentTimeMillis()
 		if (validateReport){
@@ -54,7 +64,7 @@ public class DastScanRunner {
 			} catch (NumberFormatException){
 			}
 
-			restClient.waitForScan(scanId, ScanType.DAST, TimeUnit.MINUTES.toMillis(scanTimeout), startTime, issueCountString)
+			restClient.waitForScan(scanId, ScanType.DAST, TimeUnit.MINUTES.toMillis(scanTimeout), startTime, issueCountString, props)
 		}
 
 		return scanId;

@@ -12,11 +12,18 @@ import groovyx.net.http.*
 
 import java.io.File;
 import java.io.InputStream;
+import java.util.Properties;
 import java.util.concurrent.TimeUnit
 import java.util.zip.ZipEntry
 import java.util.zip.ZipInputStream
 import java.util.zip.ZipOutputStream
 
+import org.apache.http.HttpHost
+import org.apache.http.HttpRequest;
+import org.apache.http.HttpResponse;
+import org.apache.http.ProtocolException;
+import org.apache.http.client.RedirectStrategy
+import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.entity.mime.HttpMultipartMode
 import org.apache.http.entity.mime.content.InputStreamBody
 import org.apache.http.entity.mime.content.StringBody
@@ -24,7 +31,9 @@ import org.apache.http.conn.ssl.SSLContextBuilder
 import org.apache.http.conn.ssl.TrustSelfSignedStrategy
 import org.apache.http.conn.ssl.SSLConnectionSocketFactory
 import org.apache.http.impl.client.CloseableHttpClient
-import org.apache.http.impl.client.HttpClients;
+import org.apache.http.impl.client.DefaultRedirectStrategy
+import org.apache.http.impl.client.HttpClients
+import org.apache.http.protocol.HttpContext;
 
 public abstract class RestClientBase {
 	
@@ -64,10 +73,9 @@ public abstract class RestClientBase {
 		return this.baseUrl
 	}
 	
-	public File getIPAXGenerator() {
+	public File getIPAXGenerator(String dirName) {
 		String apiPath = getApiPath_V1(ScanType.IOS);
 		String url = "${apiPath}${API_METHOD_DOWNLOAD_TOOL_V1}"
-		String dirName = "IPAX_Generator_for_${this.username}"
 		println "Send POST request to ${this.baseUrl}$url"
 		
 		httpBuilder.request(Method.POST){ req ->
@@ -316,18 +324,37 @@ public abstract class RestClientBase {
 		return json
 	}
 	
-	protected HTTPBuilder initializeHttpBuilder(String baseUrl) {
+	protected HTTPBuilder initializeHttpBuilder(String baseUrl, boolean followRedirects = true) {
 		HTTPBuilder httpBuilder = new HTTPBuilder(baseUrl)
 		
 		SSLContextBuilder sslContextBuilder = new SSLContextBuilder();
 		if (!validateSSL) {
 			sslContextBuilder.loadTrustMaterial(null, new TrustSelfSignedStrategy());
+		}				
+		
+		RedirectStrategy redirectStrategy = new DefaultRedirectStrategy()
+		if (followRedirects == false) {
+			redirectStrategy = new NeverRedirectStrategy()
 		}
+		
 		SSLConnectionSocketFactory sslcsf = new SSLConnectionSocketFactory(sslContextBuilder.build())
-		CloseableHttpClient httpclient = HttpClients.custom().setSSLSocketFactory(sslcsf).build();
+		CloseableHttpClient httpclient = HttpClients.custom().setSSLSocketFactory(sslcsf).setRedirectStrategy(redirectStrategy).build();
 		
 		httpBuilder.setClient(httpclient);
+		
 		return httpBuilder
+	}
+	
+	private static class NeverRedirectStrategy implements RedirectStrategy {
+		@Override
+		public HttpUriRequest getRedirect(HttpRequest arg0, HttpResponse arg1, HttpContext arg2) throws ProtocolException {
+			return null;
+		}
+
+		@Override
+		public boolean isRedirected(HttpRequest arg0, HttpResponse arg1, HttpContext arg2) throws ProtocolException {
+			return false;
+		}		
 	}
 	
 	protected abstract String getScanUrl(String scanId, ScanType scanType)
@@ -336,7 +363,9 @@ public abstract class RestClientBase {
 	protected abstract String getScxLoginUrl()
 	protected abstract String getDeleteScanUrl(String scanId, ScanType scanType)
 	protected abstract def getAllScansUrl(ScanType scanType)
-	protected abstract String uploadARSA(File arsaFile, String parentjobid)
-	public abstract void waitForScan(String scanId, ScanType scanType, Long scanTimeout, Long startTime, String issueCountString)
-	public abstract String startDastScan(String startingUrl, String loginUsername, String loginPassword, String parentjobid, String presenceId)
+	protected abstract String uploadAPK(File apkFile, String parentjobid, String appId)
+	protected abstract String uploadARSA(File arsaFile, String parentjobid, String appId)
+	protected abstract String uploadIPAX(File ipaxFile, String appUsername, String appPassword, String parentjobid, String appId)
+	public abstract void waitForScan(String scanId, ScanType scanType, Long scanTimeout, Long startTime, String issueCountString, Properties props)
+	public abstract String startDastScan(String startingUrl, String loginUsername, String loginPassword, String parentjobid, String presenceId, String testPolicy, String appId)
 }

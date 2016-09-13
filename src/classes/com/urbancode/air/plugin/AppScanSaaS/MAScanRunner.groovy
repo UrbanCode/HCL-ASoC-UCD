@@ -30,7 +30,12 @@ public class MAScanRunner {
 		
 		String parentjobid = props["parentScanId"]
 		
-		String scanId = restClient.uploadAPK(apkFile, parentjobid)
+		String appId = ""
+		if (props.containsKey("applicationId")) {
+			appId = props["applicationId"]
+		}
+		
+		String scanId = restClient.uploadAPK(apkFile, parentjobid, appId)
 		
 		
 		Long startTime = System.currentTimeMillis()
@@ -41,7 +46,7 @@ public class MAScanRunner {
 				
 			} catch (NumberFormatException){}
 			
-			restClient.waitForScan(scanId, ScanType.Mobile, TimeUnit.MINUTES.toMillis(scanTimeout), startTime, issueCountString)
+			restClient.waitForScan(scanId, ScanType.Mobile, TimeUnit.MINUTES.toMillis(scanTimeout), startTime, issueCountString, props)
 		}
 		
 		return scanId;

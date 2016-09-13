@@ -23,4 +23,18 @@
 		<migrate-command name="Start Android Mobile Analyzer ASoC Scan" />
 		<migrate-command name="Start iOS Analyzer ASoC Scan" />
 	</migrate>
+	<migrate to-version="8">
+		<migrate-command name="Start Dynamic Analyzer ASoC Scan" >
+			<migrate-properties>
+         		<migrate-property name="testPolicy" default="Default" />
+      		</migrate-properties>
+		</migrate-command>
+		<migrate-command name="Start Static Analyzer ASoC Scan" />
+		<migrate-command name="Start Android Mobile Analyzer ASoC Scan" />
+		<migrate-command name="Start iOS Analyzer ASoC Scan" >
+			<migrate-properties>
+         		<migrate-property name="ipaFileLocation" default="Please place here the location of your ipa file" />
+      		</migrate-properties>
+		</migrate-command>
+	</migrate>
 </plugin-upgrade>
