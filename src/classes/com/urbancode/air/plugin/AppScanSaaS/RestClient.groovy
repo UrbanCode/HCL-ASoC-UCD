@@ -200,7 +200,7 @@ public abstract class RestClient extends RestClientBase {
 	}
 	
 	@Override
-	public String startDastScan(String startingUrl, String loginUsername, String loginPassword, String parentjobid, String presenceId, String testPolicy, String appId) {
+	public String startDastScan(String startingUrl, String loginUsername, String loginPassword, String parentjobid, String presenceId, String testPolicy, String appId, String scanType) {
 		Map<String, Serializable> params = null
 		String url = null
 		String scanId = null
@@ -234,7 +234,8 @@ public abstract class RestClient extends RestClientBase {
 			verifyPresenceId(presenceId)
 			url = String.format(DAST_API_PATH, API_METHOD_SCANS);
 			params = [ ScanName : startingUrl, StartingUrl : startingUrl,
-						LoginUser : loginUsername, LoginPassword : loginPassword, PresenceId : presenceId, testPolicy : testPolicyForPostRequest]
+						LoginUser : loginUsername, LoginPassword : loginPassword, PresenceId : presenceId, testPolicy : testPolicyForPostRequest,
+						ScanType: scanType]
 			
 			if (appId != null && !appId.isEmpty()) {
 				params.put("AppId", appId)

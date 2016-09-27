@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <plugin xmlns="http://www.urbancode.com/PluginXMLSchema_v1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <header>
-    <identifier id="com.urbancode.air.plugin.IBMSecurity.scx" version="8" name="IBM Application Security on Cloud"/>
+    <identifier id="com.urbancode.air.plugin.IBMSecurity.scx" version="9" name="IBM Application Security on Cloud"/>
     <description>
     This plugin enables you to use IBM Application Security on Cloud (ASoC) easily from UrbanCode
 </description>
@@ -208,17 +208,7 @@
         <property-ui type="textBox"
                      label="IPA file location"
                      description="Please point to the ipa file" />
-      </property>
-      <property name="projectLocation" required="false">
-        <property-ui type="textBox"
-                     label="Deprecated - please ignore"
-                     description="This deprecated field was used to point to xcode project or workspace, when the IPAX generate tool was in use. It should not be used anymore, instead use the field IPA file location" />
-      </property> 
-      <property name="workspaceScheme" required="false">
-        <property-ui type="textBox"
-                     label="Deprecated - please ignore"
-                     description="This deprecated field was used to point to a workspace scheme, when the IPAX generate tool was in use. It should not be used anymore, instead use the field IPA file location" />
-      </property> 	  
+      </property>  
 	  <property name="loginUsername" required="true">
         <property-ui type="textBox"
                      label="IBM ID Username"

@@ -367,5 +367,5 @@ public abstract class RestClientBase {
 	protected abstract String uploadARSA(File arsaFile, String parentjobid, String appId)
 	protected abstract String uploadIPAX(File ipaxFile, String appUsername, String appPassword, String parentjobid, String appId)
 	public abstract void waitForScan(String scanId, ScanType scanType, Long scanTimeout, Long startTime, String issueCountString, Properties props)
-	public abstract String startDastScan(String startingUrl, String loginUsername, String loginPassword, String parentjobid, String presenceId, String testPolicy, String appId)
+	public abstract String startDastScan(String startingUrl, String loginUsername, String loginPassword, String parentjobid, String presenceId, String testPolicy, String appId, String scanType)
 }

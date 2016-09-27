@@ -54,7 +54,12 @@ public class DastScanRunner {
 			appId = props["applicationId"]
 		}
 		
-		String scanId = restClient.startDastScan(startingUrl, scanUser, scanPassword, parentjobid, presenceId, testPolicy, appId)
+		String scanType = "Production"
+		if (props.containsKey("scanType")) {
+			scanType = props["scanType"]
+		}
+		
+		String scanId = restClient.startDastScan(startingUrl, scanUser, scanPassword, parentjobid, presenceId, testPolicy, appId, scanType)
 
 		Long startTime = System.currentTimeMillis()
 		if (validateReport){

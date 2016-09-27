@@ -44,7 +44,12 @@ public class iOSScanRunner {
 			}
 		}
 		else {
-			File projectFile = new File(props["projectLocation"])
+			String projectLocation = props["projectLocation"];
+			if (projectLocation==null || projectLocation.length() <= 0) {
+				println "Not enough input was provided for this step. Please add a value to the required 'IPA file location' field ('ipaFileLocation')"
+				System.exit 1
+			}
+			File projectFile = new File(projectLocation)
 			if (!projectFile.exists()){
 				println "Project/Workspace doesn't exist"
 				System.exit 1
