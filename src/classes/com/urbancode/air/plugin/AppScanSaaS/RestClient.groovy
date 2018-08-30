@@ -1,5 +1,5 @@
 /**
- * © Copyright IBM Corporation 2015.
+ * ï¿½ Copyright IBM Corporation 2015.
  * This is licensed under the following license.
  * The Eclipse Public 1.0 License (http://www.eclipse.org/legal/epl-v10.html)
  * U.S. Government Users Restricted Rights:  Use, duplication or disclosure restricted by GSA ADP Schedule Contract with IBM Corp.
@@ -10,655 +10,985 @@ package com.urbancode.air.plugin.AppScanSaaS
 import groovy.json.JsonSlurper
 import groovyx.net.http.*
 
+import java.io.File;
 import java.io.InputStream;
 import java.util.Properties;
-import java.util.Formatter.DateTime;
 import java.util.concurrent.TimeUnit
 import java.util.zip.ZipEntry
 import java.util.zip.ZipInputStream
 import java.util.zip.ZipOutputStream
 
+import org.apache.http.HttpHost
+import org.apache.http.HttpRequest;
+import org.apache.http.HttpResponse;
+import org.apache.http.ProtocolException;
+import org.apache.http.client.RedirectStrategy
+import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.entity.mime.HttpMultipartMode
-import org.apache.http.entity.mime.MultipartEntity
 import org.apache.http.entity.mime.content.InputStreamBody
 import org.apache.http.entity.mime.content.StringBody
+import org.apache.http.conn.ssl.SSLContextBuilder
+import org.apache.http.conn.ssl.TrustSelfSignedStrategy
+import org.apache.http.conn.ssl.SSLConnectionSocketFactory
+import org.apache.http.impl.client.CloseableHttpClient
+import org.apache.http.impl.client.DefaultRedirectStrategy
+import org.apache.http.impl.client.HttpClients
+import org.apache.http.protocol.HttpContext;
 
-public abstract class RestClient extends RestClientBase {
+public abstract class RestClient {
 
-	private static final String API_V2 = "/api/v2/%s"
-	private static final String API_BLUEMIX_LOGIN = "/api/V2/Account/BluemixLogin"
-	private static final String API_IBMID_LOGIN = "/api/V2/Account/IBMIdLogin"
-	private static final String REPORT_TYPE_XML = "Xml"
-	private static final String REPORT_TYPE_PDF = "Pdf"
-	private static final String REPORT_TYPE_HTML = "Html"
-	private static final String REPORT_TYPE_COMPLIANCE_PDF = "CompliancePdf"
-	private static final String API_DOWNLOAD_REPORT = "/api/v2/Scans/%s/Report/%s"
-	private static final String API_FILE_UPLOAD = "/api/v2/FileUpload"
-	private static final String MOBILE_API_PATH = "/api/v2/%s/MobileAnalyzer"
-	private static final String SAST_API_PATH = "/api/v2/%s/StaticAnalyzer"
-	private static final String DAST_API_PATH = "/api/v2/%s/DynamicAnalyzer"
-	private static final String API_METHOD_SCANS = "Scans"
-	private static final String API_RE_SCAN = "/api/v2/Scans/%s/Executions"	
-	private static final String API_PRESENCES = "/api/v2/Presences"
-	
-	private static final String API_DOMAIN_OWNERSHIP = "/api/v2/DomainOwnership"
-	private static final String Verify = "/Verify"
-	private static final String Register = "/Register/"
-	private static final String Confirm = "/Confirm/"
-	
-	private static final String NEW_KEY = "NewKey"
-	
-	private static final String API_TOOLS = "/api/v2/Tools"
-	private static final String ASPresence = "/ASPresence"
-	private static final String Linux_x86_64 = "/Linux_x86_64"
-	private static final String Win_x86_64 = "/Win_x86_64"
+	protected boolean validateSSL;
+	protected String token
+	protected String authHeader
 
-	private static final int MinReportSize = 1024
-	
+	protected String baseUrl
+	protected String username
+	protected String password
+	protected String apiEnvironment;
+
+	protected HTTPBuilder httpBuilder
+
+	protected static final String ANALYZERS_API_BM_DOMAIN = "appscan.bluemix.net"
+	protected static final String ASM_API_GATEWAY_DOMAIN = "appscan.ibmcloud.com"
+	protected static final String MOBILE_API_PATH_V1 = "/api/%s/MobileAnalyzer/"
+	protected static final String SAST_API_PATH_V1 = "/api/%s/StaticAnalyzer/"
+	protected static final String DAST_API_PATH_V1 = "/api/%s/DynamicAnalyzer/"
+	protected static final String IOS_API_PATH_V1 = "/api/%s/iOS/"
+
+	protected static final String API_METHOD_DOWNLOAD_TOOL_V1 = "DownloadTool"
+
+    private static final String API_V2 = "/api/v2/%s"
+    private static final String API_BLUEMIX_LOGIN = "/api/V2/Account/BluemixLogin"
+    private static final String API_IBMID_LOGIN = "/api/V2/Account/IBMIdLogin"
+    private static final String REPORT_TYPE_XML = "Xml"
+    private static final String REPORT_TYPE_PDF = "Pdf"
+    private static final String REPORT_TYPE_HTML = "Html"
+    private static final String REPORT_TYPE_COMPLIANCE_PDF = "CompliancePdf"
+    private static final String API_DOWNLOAD_REPORT = "/api/v2/Scans/%s/Report/%s"
+    private static final String API_FILE_UPLOAD = "/api/v2/FileUpload"
+    private static final String MOBILE_API_PATH = "/api/v2/%s/MobileAnalyzer"
+    private static final String SAST_API_PATH = "/api/v2/%s/StaticAnalyzer"
+    private static final String DAST_API_PATH = "/api/v2/%s/DynamicAnalyzer"
+    private static final String API_METHOD_SCANS = "Scans"
+    private static final String API_RE_SCAN = "/api/v2/Scans/%s/Executions"
+    private static final String API_PRESENCES = "/api/v2/Presences"
+
+    private static final String API_DOMAIN_OWNERSHIP = "/api/v2/DomainOwnership"
+    private static final String Verify = "/Verify"
+    private static final String Register = "/Register/"
+    private static final String Confirm = "/Confirm/"
+
+    private static final String NEW_KEY = "NewKey"
+
+    private static final String API_TOOLS = "/api/v2/Tools"
+    private static final String ASPresence = "/ASPresence"
+    private static final String Linux_x86_64 = "/Linux_x86_64"
+    private static final String Win_x86_64 = "/Win_x86_64"
+
+    private static final int MinReportSize = 1024
+
 	public RestClient(Properties props, boolean validateSSL, boolean useAsmGatewayAsDefault) {
-		super(props, validateSSL, useAsmGatewayAsDefault)
-	}
-	
-	private String uploadFile(File file) {
-		FileInputStream fileStream = new FileInputStream(file)
-		MultipartEntity multiPartContent = new MultipartEntity(HttpMultipartMode.BROWSER_COMPATIBLE)
-		multiPartContent.addPart("fileToUpload", new InputStreamBody(fileStream, "application/zip", file.getName()))
+		this.validateSSL = validateSSL;
+		String userServer = props.containsKey("userServer") ? props["userServer"] : (useAsmGatewayAsDefault ? ASM_API_GATEWAY_DOMAIN : ANALYZERS_API_BM_DOMAIN);
+		String userServerPort = props.containsKey("userServerPort") ? props["userServerPort"] : "443";
 
-		String fileId = null
-		String url = API_FILE_UPLOAD
+		this.baseUrl = "https://" + userServer + ":" +  userServerPort
+		this.username = props["loginUsername"]
+		this.password = props["loginPassword"]
+		this.httpBuilder = initializeHttpBuilder(baseUrl)
+		login()
+	}
+
+	public getBaseUrl() {
+		return this.baseUrl
+	}
+
+	public File getIPAXGenerator(String dirName) {
+		String apiPath = getApiPath_V1(ScanType.IOS);
+		String url = "${apiPath}${API_METHOD_DOWNLOAD_TOOL_V1}"
 		println "Send POST request to ${this.baseUrl}$url"
-		httpBuilder.request(Method.POST, ContentType.JSON){ req ->
-			uri.path = url
-			headers["Authorization"] = authHeader
-			requestContentType: "multipart/form-data"
-			req.setEntity(multiPartContent)
 
-			response.success = { HttpResponseDecorator resp ->
-				println "Response status line: ${resp.statusLine}"
-
-				assert resp.statusLine.statusCode == 201, "The file was NOT uploaded successfully"
-				def json = parseJsonFromResponseText(resp, "The file was NOT uploaded successfully")
-				fileId = json.FileId
-				assert  fileId != null && fileId.length() >= 10, "The file was NOT uploaded successfully"
-			}
-		}
-		return fileId
-	}
-	
-	private String fileBasedScan(String fileId, String fileName, ScanType scanType, String parentjobid, String appId) {
-		Map<String, Serializable> params = null
-		String url = null
-		String scanId = null
-		String lastExecutionId = null
-		String TechName = null
-		
-		if (parentjobid != null && !parentjobid.isEmpty()) {
-			params = [ FileId : fileId]
-			url = String.format(API_RE_SCAN, parentjobid);
-			scanId = parentjobid
-		}
-		else {
-			switch (scanType) {
-				case ScanType.IOS:
-					url = String.format(MOBILE_API_PATH, API_METHOD_SCANS);
-					params = [ ApplicationFileId : fileId, ScanName : fileName]
-					TechName = "iOS"
-					break
-				case ScanType.Mobile:
-					url = String.format(MOBILE_API_PATH, API_METHOD_SCANS);
-					params = [ ApplicationFileId : fileId, ScanName : fileName]
-					TechName = "MA Android"
-					break
-				case ScanType.SAST:
-					url = String.format(SAST_API_PATH, API_METHOD_SCANS);
-					params = [ ARSAFileId : fileId, ScanName : fileName]
-					TechName = "StaticAnalyzer"
-					break
-				default:
-					assert false , "FileBasedScan does not support scanType $scanType"
-			}
-		}
-		if (appId != null && !appId.isEmpty()) {
-			params.put("AppId", appId)
-		}
-		
-		println "Send POST request to ${this.baseUrl}$url , with the following parameters: $params"
-		httpBuilder.request(Method.POST, ContentType.JSON){ req ->
-			uri.path = url
-			headers["Authorization"] = authHeader
-			requestContentType = ContentType.JSON
-			body = params
-			
-			response.success = { HttpResponseDecorator resp ->
-				println "Response status line: ${resp.statusLine}"
-				assert resp.statusLine.statusCode == 201, "$TechName scan was NOT started successfully"
-				def json = parseJsonFromResponseText(resp, "fileBasedScan was NOT started successfully")
-				if (scanId == null) {
-					scanId = json.Id
-					assert  scanId != null && scanId.length() >= 10, "$TechName scan was NOT started successfully"
-					lastExecutionId = json.LatestExecution.Id
-				}
-				else {
-					lastExecutionId = json.Id
-				}
-				assert  lastExecutionId != null && lastExecutionId.length() >= 10, "$TechName lastExecutionID was NOT started successfully"
-			}
-		}
-		println "$TechName scan was started successfully. scanId=$scanId , executionId=$lastExecutionId"
-		return scanId
-	}
-	
-	protected void verifyPresenceId(String presenceId) {
-		if (presenceId == null || presenceId.trim().isEmpty()) {
-			return
-		}										
-		
-		println "Waiting for presence to be active. Presence id: " + presenceId
-		
-		Long waitTimeout = TimeUnit.MINUTES.toMillis(5)
-		Long startTime = System.currentTimeMillis()
-		
-		while (true) {						
-			Thread.sleep(TimeUnit.SECONDS.toMillis(30))
-			
-			def presencesData = getPresences()
-			
-			println "Current presences: " + presencesData
-			
-			//verify that expected presence exists and online
-			boolean idExists = presencesData.any( { presence -> return (presence.Id == presenceId && presence.Status == "Active") })
-			
-			if (idExists) {
-				println "Found active presence with id: " + presenceId
-				break;
-			}			
-		
-			assert !(System.currentTimeMillis() - startTime > waitTimeout), "Cannot find active presence with id: " + presenceId
-		}														
-	}
-	
-	protected def getPresences() {
-		String url = API_PRESENCES
-		
-		println "Send GET request to ${this.baseUrl}$url"
-		
-		def presencesData = null
-		
-		httpBuilder.request(Method.GET, ContentType.JSON){ req ->
-			uri.path = url
-			headers["Authorization"] = authHeader
-			
-			response.success = { HttpResponseDecorator resp ->
-				println "Response status line: ${resp.statusLine}"
-				
-				assert resp.statusLine.statusCode == 200, "Get Presences failed"
-				presencesData = parseJsonFromResponseText(resp, "Get Presences failed")
-			}
-		}
-		
-		return presencesData
-	}
-	
-	@Override
-	public String startDastScan(String startingUrl, String loginUsername, String loginPassword, String parentjobid, String presenceId, String testPolicy, String appId, String scanType) {
-		Map<String, Serializable> params = null
-		String url = null
-		String scanId = null
-		String lastExecutionId = null
-		String testPolicyForPostRequest;
-		
-		switch (testPolicy) {
-			case "Application-Only":
-				println "Test policy 'Application-Only' will be used."
-				testPolicyForPostRequest = "Application-Only.policy"
-				break
-			case "The Vital Few":
-				println "Test policy 'The Vital Few' will be used."
-				testPolicyForPostRequest = "The Vital Few.policy"
-				break
-			case "Default":
-				println "Test policy 'Default' will be used."
-				testPolicyForPostRequest = "Default.policy"
-				break
-			default:
-				println "Default test policy 'Default.policy' will be used."
-				testPolicyForPostRequest = "Default.policy"
-		}
-		
-		if (parentjobid != null && !parentjobid.isEmpty()) {
-			url = String.format(API_RE_SCAN, parentjobid);
-			scanId = parentjobid
-			params = [:]
-		}
-		else {
-			verifyPresenceId(presenceId)
-			url = String.format(DAST_API_PATH, API_METHOD_SCANS);
-			params = [ ScanName : startingUrl, StartingUrl : startingUrl,
-						LoginUser : loginUsername, LoginPassword : loginPassword, PresenceId : presenceId, testPolicy : testPolicyForPostRequest,
-						ScanType: scanType]
-			
-			if (appId != null && !appId.isEmpty()) {
-				params.put("AppId", appId)
-			}
-		}
-		
-		println "Send POST request to ${this.baseUrl}$url , with the following parameters: $params"
-		httpBuilder.request(Method.POST, ContentType.JSON){ req ->
-			uri.path = url
-			headers["Authorization"] = authHeader
-			requestContentType = ContentType.JSON
-			body = params
-			
-			response.success = { HttpResponseDecorator resp ->
-				println "Response status line: ${resp.statusLine}"
-				assert resp.statusLine.statusCode == 201, "DAST scan was NOT started successfully"
-				def json = parseJsonFromResponseText(resp, "DAST scan was NOT started successfully")
-				if (scanId == null) {
-					scanId = json.Id
-					assert  scanId != null && scanId.length() >= 10, "DAST scan was NOT started successfully"
-					lastExecutionId = json.LatestExecution.Id
-				}
-				else {
-					lastExecutionId = json.Id
-				}
-				assert  lastExecutionId != null && lastExecutionId.length() >= 10, "DAST lastExecutionID was NOT started successfully"
-			}
-		}
-		println "DAST scan was started successfully. scanId=$scanId , executionId=$lastExecutionId"
-		return scanId
-	}
-	
-	public String uploadAPK(File apkFile, String parentjobid, String appId) {
-		String fileId = uploadFile(apkFile)
-		println "APK file was uploaded successfully. FileID: " + fileId
-		return fileBasedScan(fileId, apkFile.getName(), ScanType.Mobile, parentjobid, appId)
-	}
-	
-	public String uploadARSA(File arsaFile, String parentjobid, String appId) {
-		String fileId = uploadFile(arsaFile)
-		println "IRX file was uploaded successfully. FileID: " + fileId
-		return fileBasedScan(fileId, arsaFile.getName(), ScanType.SAST, parentjobid, appId)
-	}
-	
-	public String uploadIPAX(File ipaxFile, String appUsername, String appPassword, String parentjobid, String appId) {
-		String fileId = uploadFile(ipaxFile)
-		println "iOS file was uploaded successfully. FileID: " + fileId
-		return fileBasedScan(fileId, ipaxFile.getName(), ScanType.IOS, parentjobid, appId)
-	}
-	
-	@Override
-	public void waitForScan(String scanId, ScanType scanType, Long scanTimeout, Long startTime, String issueCountString, Properties props) {
-		println "Waiting for scan with id '${scanId}'"
-		
-		def scan = null
-		String status = null
-		String executionProgress = null
-		
-		Boolean toleratePendingSupport = true;
-		String toleratePause = props['toleratePause'];
-		if (toleratePause != null && toleratePause.equalsIgnoreCase("false")) {
-			toleratePendingSupport = false;
-		}
-
-		while (true) {			
-			
-			Thread.sleep(TimeUnit.MINUTES.toMillis(1))
-			
-			scan = getScan(scanId, scanType)
-			status = scan.LatestExecution.Status
-			executionProgress = scan.LatestExecution.ExecutionProgress
-			println "Scan '${scan.Name}' , with id '${scan.Id}' , status is '$status' , ExecutionProgress is '$executionProgress'"
-			if (!status.equalsIgnoreCase("Running") || (!toleratePendingSupport && executionProgress.equalsIgnoreCase("Paused"))) {
-				break
-			}
-			assert !(System.currentTimeMillis() - startTime > scanTimeout), "Job running for more than ${TimeUnit.MILLISECONDS.toMinutes(scanTimeout)} minutes"
-		}
-		assert status.equalsIgnoreCase("Ready"), "Scan status is '$status' and not 'Ready'. (ExecutionProgress is '$executionProgress')"
-
-		downloadReport(scanId, scanType)
-		validateScanIssues(scan.LastSuccessfulExecution, scan.Name, scanId, issueCountString)
-	}
-	
-	private void downloadSingleReportType(String scanId, String reportType) {
-		String url =  String.format(API_DOWNLOAD_REPORT, scanId, reportType)
-		
-		println "Send GET request to ${this.baseUrl}$url"
-		httpBuilder.request(Method.GET, ContentType.BINARY){ req ->
-			uri.path = url
-			headers["Authorization"] = authHeader
-
-			response.success = { HttpResponseDecorator resp ->
-				ByteArrayOutputStream baos = new ByteArrayOutputStream()
-				resp.getEntity().writeTo(baos)
-				byte[] bytes = baos.toByteArray()
-				
-				println "Response status line: ${resp.statusLine}"
-				assert bytes.length > RestClient.MinReportSize, "Report size '${bytes.length}' is invalid"
-				assert resp.statusLine.statusCode == 200 , "Report type ${reportType} was not retrieved successfully"
-			}
-		}
-		println "Report type ${reportType} downloaded successfully"
-	}
-
-	public void downloadReport(String scanId, ScanType scanType) {
-		downloadSingleReportType(scanId, REPORT_TYPE_XML)
-		if (scanType == ScanType.SAST) {
-			downloadSingleReportType(scanId, REPORT_TYPE_HTML)
-		}
-		else {
-			downloadSingleReportType(scanId, REPORT_TYPE_PDF)
-			if (scanType == ScanType.DAST) {
-				downloadSingleReportType(scanId, REPORT_TYPE_COMPLIANCE_PDF)
-			}
-		}
-	}
-	
-	protected String getApiPath(ScanType scanType) {
-		String apiPath = null;
-		switch (scanType) {
-			case ScanType.Mobile:
-				apiPath = MOBILE_API_PATH;
-				break
-			case ScanType.SAST:
-				apiPath = SAST_API_PATH;
-				break
-			case ScanType.IOS:
-				apiPath = MOBILE_API_PATH;
-				break
-			default:
-				apiPath = DAST_API_PATH;
-		}
-		return apiPath
-	}
-
-	@Override
-	protected String getScanUrl(String scanId, ScanType scanType)
-	{
-		String path = String.format(getApiPath(scanType), API_METHOD_SCANS)
-		return "${path}/${scanId}"
-	}
-	
-	@Override
-	protected def getAllScansUrl(ScanType scanType)
-	{
-		return String.format(API_V2, API_METHOD_SCANS)
-	}
-	
-	@Override
-	protected String getDeleteScanUrl(String scanId, ScanType scanType)
-	{
-		return String.format(API_V2, API_METHOD_SCANS).concat("/${scanId}")
-	}
-	
-	@Override
-	protected String getBluemixLoginUrl()
-	{
-		return API_BLUEMIX_LOGIN
-	}
-
-	@Override
-	protected String getScxLoginUrl()
-	{
-		return API_IBMID_LOGIN
-	}
-	
-	public void deleteAllPresences() {
-		println "Deleting all existing presences"
-		
-		String url = API_PRESENCES
-		
-		def presencesData = getPresences()
-		
-		println "Current presences: " + presencesData
-		
-		presencesData.each { presence -> 
-			println "Deleting presence with id: " + presence.Id
-			httpBuilder.request(Method.DELETE, ContentType.JSON) { req -> 
-				uri.path = url + "/" + presence.Id
-				headers["Authorization"] = authHeader
-				
-				response.success = { HttpResponseDecorator resp ->
-					println "Response status line: ${resp.statusLine}"
-					
-					assert resp.statusLine.statusCode == 204, "Delete presence failed for id: " + presence.Id
-					presencesData = parseJsonFromResponseText(resp, "Delete presence failed for id: " + presence.Id)
-				}
-			}
-		}
-	}
-	
-	public String createNewPresence() {
-		println "Creating new presence"
-		
-		Date currentTime = new Date();
-		
-		String url = API_PRESENCES
-		
-		println "Send POST request to ${this.baseUrl}$url"
-		
-		String presenceId = null
-		
-		httpBuilder.request(Method.POST, ContentType.JSON){ req ->
-			uri.path = url
-			headers["Authorization"] = authHeader
-			requestContentType = ContentType.JSON
-			body = [ PresenceName : "Grovvy Presence: " + currentTime]
-			
-			response.success = { HttpResponseDecorator resp ->
-				println "Response status line: ${resp.statusLine}"
-				
-				assert resp.statusLine.statusCode == 201, "Failed creating new presence"
-				def json = parseJsonFromResponseText(resp, "Failed creating new presence")
-				presenceId = json.Id
-			}
-		}
-		
-		return presenceId
-	}
-	
-	public void downloadPresenceKeyFile(String serviceDirectory, String presenceId) {
-		println "Downloading new key file for presence with id: ${presenceId}"
-		
-		String url = API_PRESENCES + "/" + presenceId + "/" + NEW_KEY
-
-		println "Send POST request to ${this.baseUrl}$url"
-		
-		httpBuilder.request(Method.POST, ContentType.BINARY){ req ->
-			uri.path = url
-			headers["Authorization"] = authHeader
-			
-			response.success = { HttpResponseDecorator resp ->
-				println "Response status line: ${resp.statusLine}"							
-				
-				assert resp.statusLine.statusCode == 200, "Generate presence key failed"				
-
-				ByteArrayOutputStream baos = new ByteArrayOutputStream()
-				resp.getEntity().writeTo(baos)
-				byte[] bytes = baos.toByteArray()
-				
-				File keyFile = new File(serviceDirectory, "AppScanPresence.key")
-				try {
-					boolean deleted = keyFile.delete();
-					if (deleted) {
-						println "Deleted presence key file ${keyFile.getAbsolutePath()}"
-						keyFile.getParentFile().mkdirs(); 
-						keyFile.createNewFile();
-					}
-				} catch (Exception e) {
-					println "Failed deleting old presence key file ${keyFile.getAbsolutePath()} with exception: ${e.getMessage()}"
-				}
-				
-				(keyFile).withOutputStream {
-					it.write(bytes)
-				}
-			}
-		}				
-	}
-	
-	public void downloadAppscanPresence(String serviceDirectory, boolean isWindows) {
-		println "Downloading latest Appscan Presence"
-		
-		String url = API_TOOLS + ASPresence + (isWindows ? Win_x86_64 : Linux_x86_64)
-		
-		File serviceDir = new File(serviceDirectory)		
-		
-		println "Send GET request to ${this.baseUrl}$url"
-		
-		httpBuilder.request(Method.GET){ req ->
+		httpBuilder.request(Method.POST){ req ->
 			uri.path = url
 			headers["Authorization"] = authHeader
 			headers["Accept"] = "application/zip"
 			response.success = { HttpResponseDecorator resp, zip ->
 				println "Response status line: ${resp.statusLine}"
 
-				assert resp.statusLine.statusCode == 200, "Failed downloading Appscan Presence tool"
-				println "Appscan Presence tool successfully received. Deleting ${serviceDir.getName()} before extracting it."
-				
-				serviceDir.deleteDir()
-				unzip(zip, "", serviceDir.getName())
+				assert resp.statusLine.statusCode == 200, "Failed downloading IPAX generator"
+				println "IPAX generator tool successfully received. Deleting ${dirName} before extracting it."
+				(new File(dirName)).deleteDir()
+				unzip(zip, "", dirName)
 			}
-		}		
+		}
+		return new File(dirName, "IPAX_Generator.sh")
 	}
-	
-	public static enum DORegistrationType
-	{
-		Email,
-		Html
-	}
-	
-	public static enum AdminMailPrefix
-	{
-		Admin,
-		Administrator,
-		HostMaster,
-		Root,
-		WebMaster,
-		PostMaster
-	}
-	
-	public boolean isDomainVerified(String urlToVerify) {
-		println "Verifying domain for url: " + urlToVerify
 
-		String url = API_DOMAIN_OWNERSHIP + Verify
-		
-		def params = [ STP: urlToVerify ]
-		println "Send POST request to ${this.baseUrl}$url: $params"
-		
-		boolean result = false
-		
-		httpBuilder.request(Method.POST, ContentType.TEXT){ req ->
-			uri.path = url
-			headers["Authorization"] = authHeader
-			requestContentType = ContentType.JSON
-			body = params
-			
-			response.success = { HttpResponseDecorator resp ->
-				println "Response status line: ${resp.statusLine}"
-				
-				assert resp.statusLine.statusCode == 200, "Failed verifying domain for url: " + urlToVerify
-				
-				String responseText = resp.entity.content.text
-				println "Response for url verification is: " + responseText
-				
-				result = Boolean.parseBoolean(responseText)
-			}
-		}
-		
-		return result
-	}
-	
-	public void registerEmailDomain(String urlToRegister, AdminMailPrefix mailPrefix, String domainToRegister) {
-		println "Registering Email domain for url '${urlToRegister}' and domain '${domainToRegister}' with prefix '${mailPrefix}'" 
-		
-		String url = API_DOMAIN_OWNERSHIP + Register + DORegistrationType.Email
-		
-		def params = [ stp: urlToRegister, mailprefix: mailPrefix, domain: domainToRegister ]
-		println "Send POST request to ${this.baseUrl}$url: $params"
-		
-		httpBuilder.request(Method.POST, ContentType.TEXT){ req ->
-			uri.path = url
-			headers["Authorization"] = authHeader
-			requestContentType = ContentType.JSON
-			body = params
-			
-			response.success = { HttpResponseDecorator resp ->
-				println "Response status line: ${resp.statusLine}"
-				
-				assert resp.statusLine.statusCode == 200, "Failed registering Email domain for url: " + urlToRegister
-				
-				String responseText = resp.entity.content.text
-				println "Response for Email registration is: " + responseText
-			}
-		}		
-	}
-	
-	public File registerHtmlDomain(String urlToRegister, String domainToRegister) {
-		println "Registering Html domain for url '${urlToRegister}' and domain '${domainToRegister}'"
-		
-		String url = API_DOMAIN_OWNERSHIP + Register + DORegistrationType.Html
-		
-		def params = [ stp: urlToRegister, domain: domainToRegister ]
-		println "Send POST request to ${this.baseUrl}$url: $params"
-		
-		File domainVerificationHtml = null;
-		
-		httpBuilder.request(Method.POST, ContentType.BINARY){ req ->
-			uri.path = url
-			headers["Authorization"] = authHeader
-			requestContentType = ContentType.JSON
-			body = params
-			
-			response.success = { HttpResponseDecorator resp ->
-				println "Response status line: ${resp.statusLine}"
-				
-				assert resp.statusLine.statusCode == 200, "Failed registering Html domain for url: " + urlToRegister																	
-				
-				domainVerificationHtml = new File("IBMDomainVerification.html")
-				
-				try {					
-					if (domainVerificationHtml.exists()) {
-						println "Found existing html file, deleting"
-						domainVerificationHtml.delete()
-					}
-				} catch (Exception e) {
-					println "Failed deleting old html file ${domainVerificationHtml.getAbsolutePath()} with exception: ${e.getMessage()}"
-				}
-				
-				ByteArrayOutputStream baos = new ByteArrayOutputStream()
-				resp.getEntity().writeTo(baos)
-				byte[] bytes = baos.toByteArray()
-				
-				println "Writing ${bytes.length} bytes to html file"
-				
-				(domainVerificationHtml).withOutputStream {
-					it.write(bytes)
-				}
-			}
-		}
-		
-		return domainVerificationHtml
-	}
-	
-	public void confirmDomainEmail(String verificationToken) {
-		println "Confirming Email domain with token: " + verificationToken
-		
-		String url = API_DOMAIN_OWNERSHIP + Confirm + verificationToken
-		
+	public def getScan(String scanId, ScanType scanType) {
+		String url = getScanUrl(scanId, scanType)
 		println "Send GET request to ${this.baseUrl}$url"
-		HTTPBuilder nonRedirectBuilder = initializeHttpBuilder(baseUrl, false)
-		
-		nonRedirectBuilder.request(Method.GET, ContentType.TEXT){ req ->
+
+		def scan = null
+
+		httpBuilder.request(Method.GET, ContentType.JSON){ req ->
 			uri.path = url
-			//This should be an anonymous api method
-			//headers["Authorization"] = authHeader			
-			requestContentType = ContentType.JSON
-			
+			headers["Authorization"] = authHeader
+
 			response.success = { HttpResponseDecorator resp ->
 				println "Response status line: ${resp.statusLine}"
-				
-				assert resp.statusLine.statusCode == 301, "Failed confirming domain"
-				assert resp.headers.'Location'.contains("emailVerified"), "Failed confirming domain"
+
+				scan = parseJsonFromResponseText(resp, "getScan was not retrieved successfully")
+				assert resp.statusLine.statusCode == 200 || resp.statusLine.statusCode == 201, "Scan was not retrieved successfully" //201 is only temporary supported
+			}
+		}
+		println "Scan retrieved successfully. Scan name is: ${scan.Name}"
+		return scan
+	}
+
+	public def getAllScans(ScanType scanType) {
+		String url = getAllScansUrl(scanType)
+		def scans = null
+
+		println "Send GET request to ${this.baseUrl}$url"
+		httpBuilder.request(Method.GET, ContentType.JSON){ req ->
+			uri.path = url
+			headers["Authorization"] = authHeader
+
+			response.success = { HttpResponseDecorator resp ->
+				println "Response status line: ${resp.statusLine}"
+
+				scans = parseJsonFromResponseText(resp, "getAllScans were not retrieved successfully")
+				assert resp.statusLine.statusCode == 200, "User scans were not retrieved successfully"
+			}
+		}
+		println "User scans retrieved successfully"
+		return scans
+	}
+
+	public void deleteScan(String scanId, ScanType scanType) {
+		String url = getDeleteScanUrl(scanId, scanType)
+
+		println "Send DELETE request to ${this.baseUrl}$url"
+		httpBuilder.request(Method.DELETE){ req ->
+			uri.path = url
+			headers["Authorization"] = authHeader
+
+			response.success = { HttpResponseDecorator resp ->
+				println "Response status line: ${resp.statusLine}"
+				assert resp.statusLine.statusCode == 204, "Failed deleting scan with id: ${scanId}"
+				println "scan Id ${scanId} deleted successfully"
 			}
 		}
 	}
+
+	protected String getApiPath_V1(ScanType scanType) {
+		String apiPathFormat = null;
+		switch (scanType) {
+			case ScanType.Mobile:
+				apiPathFormat = MOBILE_API_PATH_V1
+				break
+			case ScanType.SAST:
+				apiPathFormat = SAST_API_PATH_V1
+				break
+			case ScanType.IOS:
+				apiPathFormat = IOS_API_PATH_V1
+				break
+			default:
+				apiPathFormat = DAST_API_PATH_V1
+		}
+		return String.format(apiPathFormat, apiEnvironment);
+	}
+
+	protected void validateScanIssues(def issuesJson, String scanName, String scanId, String issueCountString) {
+		if (issueCountString == null || issueCountString.isEmpty()) {
+			return
+		}
+
+		String[] issueCount = issueCountString.split(",");
+
+		int maxHighSeverityIssues = issueCount.length > 0 ? Integer.parseInt(issueCount[0]) : Integer.MAX_VALUE;
+		int maxMediumSeverityIssues = issueCount.length > 1 ? Integer.parseInt(issueCount[1]) : Integer.MAX_VALUE;
+		int maxLowSeverityIssues = issueCount.length > 2 ? Integer.parseInt(issueCount[2]) : Integer.MAX_VALUE;
+		int maxInformationalSeverityIssues = issueCount.length > 3 ? Integer.parseInt(issueCount[3]) : Integer.MAX_VALUE;
+
+		println "Scan ${scanName} with id ${scanId} has ${issuesJson.NHighIssues} high severity issues"
+		assert issuesJson.NHighIssues <= maxHighSeverityIssues, "Scan failed to meet high issue count. Result: ${issuesJson.NHighIssues}. Max expected: ${maxHighSeverityIssues}"
+
+		println "Scan ${scanName} with id ${scanId} has ${issuesJson.NMediumIssues} medium severity issues"
+		assert issuesJson.NMediumIssues <= maxMediumSeverityIssues, "Scan failed to meet medium issue count. Result: ${issuesJson.NMediumIssues}. Max expected: ${maxMediumSeverityIssues}"
+
+		println "Scan ${scanName} with id ${scanId} has ${issuesJson.NLowIssues} low severity issues"
+		assert issuesJson.NLowIssues <= maxLowSeverityIssues, "Scan failed to meet low issue count. Result: ${issuesJson.NLowIssues}. Max expected: ${maxLowSeverityIssues}"
+
+		println "Scan ${scanName} with id ${scanId} has ${issuesJson.NInfoIssues} informational severity issues"
+		assert issuesJson.NInfoIssues <= maxInformationalSeverityIssues, "Scan failed to meet informational issue count. Result: ${issuesJson.NInfoIssues}. Max expected: ${maxInformationalSeverityIssues}"
+	}
+
+	protected void unzip(InputStream inputStream, String filePattern, String targetDir) {
+		byte[] buffer = new byte[1024]
+
+		try{
+			File folder = new File(targetDir)
+
+			folder.deleteDir()
+			folder.mkdir()
+
+			ZipInputStream zis = new ZipInputStream(inputStream)
+			ZipEntry ze = zis.getNextEntry()
+
+			while(ze != null){
+				String fileName = ze.getName()
+				if (fileName =~ filePattern) {
+					File newFile = new File(targetDir + File.separator + fileName)
+					if (ze.isDirectory()) {
+						newFile.mkdirs();
+						ze = zis.getNextEntry()
+						continue
+					}
+					println "Unzipping file: ${newFile.getAbsoluteFile()}"
+					new File(newFile.getParent()).mkdirs()
+
+					FileOutputStream fos = new FileOutputStream(newFile)
+
+					int len
+					while ((len = zis.read(buffer)) > 0) {
+						fos.write(buffer, 0, len)
+					}
+					fos.close()
+				}
+				ze = zis.getNextEntry()
+			}
+			zis.closeEntry()
+			zis.close()
+
+			println "Done extracting zip"
+		} catch(IOException ex){
+			assert false, "Failed extracting zip filr to directory: ${targetDir}. Exception: ${ex.getMessage()}"
+		}
+	}
+
+	protected void assertLogin() {
+		assert token != null, "Login failed. Token is null"
+		authHeader = "Bearer " + token
+	}
+
+	protected void bluemixLogin() {
+		token = null
+		authHeader = null
+		apiEnvironment = "BlueMix";
+
+		Map<String, Serializable> params = [ Bindingid : username, Password : password]
+
+		String url = getBluemixLoginUrl()
+		println "Send POST request to ${baseUrl}$url: $params"
+
+		httpBuilder = initializeHttpBuilder(baseUrl)
+		try{
+			httpBuilder.request(Method.POST, ContentType.JSON){ req ->
+				uri.path = url
+				requestContentType = ContentType.URLENC
+				body = params
+
+				response.success = { HttpResponseDecorator resp ->
+					println "Response status line: ${resp.statusLine}"
+					assert resp.status == 200, "Login failed"
+					def json = parseJsonFromResponseText(resp, "Bluemix authentication failed")
+					token = json.Token
+					println "External Token: ${token}"
+				}
+				response.failure = { resp ->
+					println 'Bluemix authentication failed.'
+				}
+			}
+		}
+		catch (Exception e) {
+			println "Failed bluemixLogin with exception: ${e.getMessage()}"
+		}
+	}
+
+	protected void scxLogin() {
+		token = null
+		authHeader = null
+		apiEnvironment = "SCX";
+
+		Map<String, Serializable> params = [ Username : username, Password : password]
+
+		String url = getScxLoginUrl()
+		println "Send POST request to ${baseUrl}$url: $params"
+
+		httpBuilder = initializeHttpBuilder(baseUrl)
+		try{
+			httpBuilder.request(Method.POST, ContentType.JSON){ req ->
+				uri.path = url
+				requestContentType = ContentType.URLENC
+				body = params
+
+				response.success = { HttpResponseDecorator resp ->
+					println "Response status line: ${resp.statusLine}"
+					assert resp.status == 200, "Login failed"
+					def json = parseJsonFromResponseText(resp, "SCX authentication failed")
+					token = json.Token
+					println "External Token: ${token}"
+				}
+				response.failure = { resp ->
+					println 'SCX authentication failed.'
+				}
+			}
+		}
+		catch (Exception e) {
+			println "Failed scxLogin with exception: ${e.getMessage()}"
+		}
+	}
+
+	protected def parseJsonFromResponseText(HttpResponseDecorator resp, String errorMessage) {
+		def json;
+		try{
+			String text = resp.entity.content.text
+			String contentType = resp.headers."Content-Type"
+			assert  contentType?.startsWith("application/json"), "${errorMessage} -> the response headers did not have content-Type application/json"
+			json = new JsonSlurper().parseText(text)
+		}
+		catch (Exception e) {
+			println "${errorMessage} -> parseJsonFromResponseText failed, with this exception: ${e.getMessage()}"
+		}
+		return json
+	}
+
+	protected HTTPBuilder initializeHttpBuilder(String baseUrl, boolean followRedirects = true) {
+		HTTPBuilder httpBuilder = new HTTPBuilder(baseUrl)
+
+		SSLContextBuilder sslContextBuilder = new SSLContextBuilder();
+		if (!validateSSL) {
+			sslContextBuilder.loadTrustMaterial(null, new TrustSelfSignedStrategy());
+		}
+
+		RedirectStrategy redirectStrategy = new DefaultRedirectStrategy()
+		if (followRedirects == false) {
+			redirectStrategy = new NeverRedirectStrategy()
+		}
+
+		SSLConnectionSocketFactory sslcsf = new SSLConnectionSocketFactory(sslContextBuilder.build())
+		CloseableHttpClient httpclient = HttpClients.custom().setSSLSocketFactory(sslcsf).setRedirectStrategy(redirectStrategy).build();
+
+		httpBuilder.setClient(httpclient);
+
+		return httpBuilder
+	}
+
+	private static class NeverRedirectStrategy implements RedirectStrategy {
+		@Override
+		public HttpUriRequest getRedirect(HttpRequest arg0, HttpResponse arg1, HttpContext arg2) throws ProtocolException {
+			return null;
+		}
+
+		@Override
+		public boolean isRedirected(HttpRequest arg0, HttpResponse arg1, HttpContext arg2) throws ProtocolException {
+			return false;
+		}
+	}
+
+    private String uploadFile(File file) {
+        FileInputStream fileStream = new FileInputStream(file)
+        MultipartEntity multiPartContent = new MultipartEntity(HttpMultipartMode.BROWSER_COMPATIBLE)
+        multiPartContent.addPart("fileToUpload", new InputStreamBody(fileStream, "application/zip", file.getName()))
+
+        String fileId = null
+        String url = API_FILE_UPLOAD
+        println "Send POST request to ${this.baseUrl}$url"
+        httpBuilder.request(Method.POST, ContentType.JSON){ req ->
+            uri.path = url
+            headers["Authorization"] = authHeader
+            requestContentType: "multipart/form-data"
+            req.setEntity(multiPartContent)
+
+            response.success = { HttpResponseDecorator resp ->
+                println "Response status line: ${resp.statusLine}"
+
+                assert resp.statusLine.statusCode == 201, "The file was NOT uploaded successfully"
+                def json = parseJsonFromResponseText(resp, "The file was NOT uploaded successfully")
+                fileId = json.FileId
+                assert  fileId != null && fileId.length() >= 10, "The file was NOT uploaded successfully"
+            }
+        }
+        return fileId
+    }
+
+    private String fileBasedScan(String fileId, String fileName, ScanType scanType, String parentjobid, String appId) {
+        Map<String, Serializable> params = null
+        String url = null
+        String scanId = null
+        String lastExecutionId = null
+        String TechName = null
+
+        if (parentjobid != null && !parentjobid.isEmpty()) {
+            params = [ FileId : fileId]
+            url = String.format(API_RE_SCAN, parentjobid);
+            scanId = parentjobid
+        }
+        else {
+            switch (scanType) {
+                case ScanType.IOS:
+                    url = String.format(MOBILE_API_PATH, API_METHOD_SCANS);
+                    params = [ ApplicationFileId : fileId, ScanName : fileName]
+                    TechName = "iOS"
+                    break
+                case ScanType.Mobile:
+                    url = String.format(MOBILE_API_PATH, API_METHOD_SCANS);
+                    params = [ ApplicationFileId : fileId, ScanName : fileName]
+                    TechName = "MA Android"
+                    break
+                case ScanType.SAST:
+                    url = String.format(SAST_API_PATH, API_METHOD_SCANS);
+                    params = [ ARSAFileId : fileId, ScanName : fileName]
+                    TechName = "StaticAnalyzer"
+                    break
+                default:
+                    assert false , "FileBasedScan does not support scanType $scanType"
+            }
+        }
+        if (appId != null && !appId.isEmpty()) {
+            params.put("AppId", appId)
+        }
+
+        println "Send POST request to ${this.baseUrl}$url , with the following parameters: $params"
+        httpBuilder.request(Method.POST, ContentType.JSON){ req ->
+            uri.path = url
+            headers["Authorization"] = authHeader
+            requestContentType = ContentType.JSON
+            body = params
+
+            response.success = { HttpResponseDecorator resp ->
+                println "Response status line: ${resp.statusLine}"
+                assert resp.statusLine.statusCode == 201, "$TechName scan was NOT started successfully"
+                def json = parseJsonFromResponseText(resp, "fileBasedScan was NOT started successfully")
+                if (scanId == null) {
+                    scanId = json.Id
+                    assert  scanId != null && scanId.length() >= 10, "$TechName scan was NOT started successfully"
+                    lastExecutionId = json.LatestExecution.Id
+                }
+                else {
+                    lastExecutionId = json.Id
+                }
+                assert  lastExecutionId != null && lastExecutionId.length() >= 10, "$TechName lastExecutionID was NOT started successfully"
+            }
+        }
+        println "$TechName scan was started successfully. scanId=$scanId , executionId=$lastExecutionId"
+        return scanId
+    }
+
+    protected void verifyPresenceId(String presenceId) {
+        if (presenceId == null || presenceId.trim().isEmpty()) {
+            return
+        }
+
+        println "Waiting for presence to be active. Presence id: " + presenceId
+
+        Long waitTimeout = TimeUnit.MINUTES.toMillis(5)
+        Long startTime = System.currentTimeMillis()
+
+        while (true) {
+            Thread.sleep(TimeUnit.SECONDS.toMillis(30))
+
+            def presencesData = getPresences()
+
+            println "Current presences: " + presencesData
+
+            //verify that expected presence exists and online
+            boolean idExists = presencesData.any( { presence -> return (presence.Id == presenceId && presence.Status == "Active") })
+
+            if (idExists) {
+                println "Found active presence with id: " + presenceId
+                break;
+            }
+
+            assert !(System.currentTimeMillis() - startTime > waitTimeout), "Cannot find active presence with id: " + presenceId
+        }
+    }
+
+    protected def getPresences() {
+        String url = API_PRESENCES
+
+        println "Send GET request to ${this.baseUrl}$url"
+
+        def presencesData = null
+
+        httpBuilder.request(Method.GET, ContentType.JSON){ req ->
+            uri.path = url
+            headers["Authorization"] = authHeader
+
+            response.success = { HttpResponseDecorator resp ->
+                println "Response status line: ${resp.statusLine}"
+
+                assert resp.statusLine.statusCode == 200, "Get Presences failed"
+                presencesData = parseJsonFromResponseText(resp, "Get Presences failed")
+            }
+        }
+
+        return presencesData
+    }
+
+    @Override
+    public String startDastScan(String startingUrl, String loginUsername, String loginPassword, String parentjobid, String presenceId, String testPolicy, String appId, String scanType) {
+        Map<String, Serializable> params = null
+        String url = null
+        String scanId = null
+        String lastExecutionId = null
+        String testPolicyForPostRequest;
+
+        switch (testPolicy) {
+            case "Application-Only":
+                println "Test policy 'Application-Only' will be used."
+                testPolicyForPostRequest = "Application-Only.policy"
+                break
+            case "The Vital Few":
+                println "Test policy 'The Vital Few' will be used."
+                testPolicyForPostRequest = "The Vital Few.policy"
+                break
+            case "Default":
+                println "Test policy 'Default' will be used."
+                testPolicyForPostRequest = "Default.policy"
+                break
+            default:
+                println "Default test policy 'Default.policy' will be used."
+                testPolicyForPostRequest = "Default.policy"
+        }
+
+        if (parentjobid != null && !parentjobid.isEmpty()) {
+            url = String.format(API_RE_SCAN, parentjobid);
+            scanId = parentjobid
+            params = [:]
+        }
+        else {
+            verifyPresenceId(presenceId)
+            url = String.format(DAST_API_PATH, API_METHOD_SCANS);
+            params = [ ScanName : startingUrl, StartingUrl : startingUrl,
+                        LoginUser : loginUsername, LoginPassword : loginPassword, PresenceId : presenceId, testPolicy : testPolicyForPostRequest,
+                        ScanType: scanType]
+
+            if (appId != null && !appId.isEmpty()) {
+                params.put("AppId", appId)
+            }
+        }
+
+        println "Send POST request to ${this.baseUrl}$url , with the following parameters: $params"
+        httpBuilder.request(Method.POST, ContentType.JSON){ req ->
+            uri.path = url
+            headers["Authorization"] = authHeader
+            requestContentType = ContentType.JSON
+            body = params
+
+            response.success = { HttpResponseDecorator resp ->
+                println "Response status line: ${resp.statusLine}"
+                assert resp.statusLine.statusCode == 201, "DAST scan was NOT started successfully"
+                def json = parseJsonFromResponseText(resp, "DAST scan was NOT started successfully")
+                if (scanId == null) {
+                    scanId = json.Id
+                    assert  scanId != null && scanId.length() >= 10, "DAST scan was NOT started successfully"
+                    lastExecutionId = json.LatestExecution.Id
+                }
+                else {
+                    lastExecutionId = json.Id
+                }
+                assert  lastExecutionId != null && lastExecutionId.length() >= 10, "DAST lastExecutionID was NOT started successfully"
+            }
+        }
+        println "DAST scan was started successfully. scanId=$scanId , executionId=$lastExecutionId"
+        return scanId
+    }
+
+    public String uploadAPK(File apkFile, String parentjobid, String appId) {
+        String fileId = uploadFile(apkFile)
+        println "APK file was uploaded successfully. FileID: " + fileId
+        return fileBasedScan(fileId, apkFile.getName(), ScanType.Mobile, parentjobid, appId)
+    }
+
+    public String uploadARSA(File arsaFile, String parentjobid, String appId) {
+        String fileId = uploadFile(arsaFile)
+        println "IRX file was uploaded successfully. FileID: " + fileId
+        return fileBasedScan(fileId, arsaFile.getName(), ScanType.SAST, parentjobid, appId)
+    }
+
+    public String uploadIPAX(File ipaxFile, String appUsername, String appPassword, String parentjobid, String appId) {
+        String fileId = uploadFile(ipaxFile)
+        println "iOS file was uploaded successfully. FileID: " + fileId
+        return fileBasedScan(fileId, ipaxFile.getName(), ScanType.IOS, parentjobid, appId)
+    }
+
+    @Override
+    public void waitForScan(String scanId, ScanType scanType, Long scanTimeout, Long startTime, String issueCountString, Properties props) {
+        println "Waiting for scan with id '${scanId}'"
+
+        def scan = null
+        String status = null
+        String executionProgress = null
+
+        Boolean toleratePendingSupport = true;
+        String toleratePause = props['toleratePause'];
+        if (toleratePause != null && toleratePause.equalsIgnoreCase("false")) {
+            toleratePendingSupport = false;
+        }
+
+        while (true) {
+
+            Thread.sleep(TimeUnit.MINUTES.toMillis(1))
+
+            scan = getScan(scanId, scanType)
+            status = scan.LatestExecution.Status
+            executionProgress = scan.LatestExecution.ExecutionProgress
+            println "Scan '${scan.Name}' , with id '${scan.Id}' , status is '$status' , ExecutionProgress is '$executionProgress'"
+            if (!status.equalsIgnoreCase("Running") || (!toleratePendingSupport && executionProgress.equalsIgnoreCase("Paused"))) {
+                break
+            }
+            assert !(System.currentTimeMillis() - startTime > scanTimeout), "Job running for more than ${TimeUnit.MILLISECONDS.toMinutes(scanTimeout)} minutes"
+        }
+        assert status.equalsIgnoreCase("Ready"), "Scan status is '$status' and not 'Ready'. (ExecutionProgress is '$executionProgress')"
+
+        downloadReport(scanId, scanType)
+        validateScanIssues(scan.LastSuccessfulExecution, scan.Name, scanId, issueCountString)
+    }
+
+    private void downloadSingleReportType(String scanId, String reportType) {
+        String url =  String.format(API_DOWNLOAD_REPORT, scanId, reportType)
+
+        println "Send GET request to ${this.baseUrl}$url"
+        httpBuilder.request(Method.GET, ContentType.BINARY){ req ->
+            uri.path = url
+            headers["Authorization"] = authHeader
+
+            response.success = { HttpResponseDecorator resp ->
+                ByteArrayOutputStream baos = new ByteArrayOutputStream()
+                resp.getEntity().writeTo(baos)
+                byte[] bytes = baos.toByteArray()
+
+                println "Response status line: ${resp.statusLine}"
+                assert bytes.length > RestClient.MinReportSize, "Report size '${bytes.length}' is invalid"
+                assert resp.statusLine.statusCode == 200 , "Report type ${reportType} was not retrieved successfully"
+            }
+        }
+        println "Report type ${reportType} downloaded successfully"
+    }
+
+    public void downloadReport(String scanId, ScanType scanType) {
+        downloadSingleReportType(scanId, REPORT_TYPE_XML)
+        if (scanType == ScanType.SAST) {
+            downloadSingleReportType(scanId, REPORT_TYPE_HTML)
+        }
+        else {
+            downloadSingleReportType(scanId, REPORT_TYPE_PDF)
+            if (scanType == ScanType.DAST) {
+                downloadSingleReportType(scanId, REPORT_TYPE_COMPLIANCE_PDF)
+            }
+        }
+    }
+
+    protected String getApiPath(ScanType scanType) {
+        String apiPath = null;
+        switch (scanType) {
+            case ScanType.Mobile:
+                apiPath = MOBILE_API_PATH;
+                break
+            case ScanType.SAST:
+                apiPath = SAST_API_PATH;
+                break
+            case ScanType.IOS:
+                apiPath = MOBILE_API_PATH;
+                break
+            default:
+                apiPath = DAST_API_PATH;
+        }
+        return apiPath
+    }
+
+    @Override
+    protected String getScanUrl(String scanId, ScanType scanType)
+    {
+        String path = String.format(getApiPath(scanType), API_METHOD_SCANS)
+        return "${path}/${scanId}"
+    }
+
+    @Override
+    protected def getAllScansUrl(ScanType scanType)
+    {
+        return String.format(API_V2, API_METHOD_SCANS)
+    }
+
+    @Override
+    protected String getDeleteScanUrl(String scanId, ScanType scanType)
+    {
+        return String.format(API_V2, API_METHOD_SCANS).concat("/${scanId}")
+    }
+
+    @Override
+    protected String getBluemixLoginUrl()
+    {
+        return API_BLUEMIX_LOGIN
+    }
+
+    @Override
+    protected String getScxLoginUrl()
+    {
+        return API_IBMID_LOGIN
+    }
+
+    public void deleteAllPresences() {
+        println "Deleting all existing presences"
+
+        String url = API_PRESENCES
+
+        def presencesData = getPresences()
+
+        println "Current presences: " + presencesData
+
+        presencesData.each { presence ->
+            println "Deleting presence with id: " + presence.Id
+            httpBuilder.request(Method.DELETE, ContentType.JSON) { req ->
+                uri.path = url + "/" + presence.Id
+                headers["Authorization"] = authHeader
+
+                response.success = { HttpResponseDecorator resp ->
+                    println "Response status line: ${resp.statusLine}"
+
+                    assert resp.statusLine.statusCode == 204, "Delete presence failed for id: " + presence.Id
+                    presencesData = parseJsonFromResponseText(resp, "Delete presence failed for id: " + presence.Id)
+                }
+            }
+        }
+    }
+
+    public String createNewPresence() {
+        println "Creating new presence"
+
+        Date currentTime = new Date();
+
+        String url = API_PRESENCES
+
+        println "Send POST request to ${this.baseUrl}$url"
+
+        String presenceId = null
+
+        httpBuilder.request(Method.POST, ContentType.JSON){ req ->
+            uri.path = url
+            headers["Authorization"] = authHeader
+            requestContentType = ContentType.JSON
+            body = [ PresenceName : "Grovvy Presence: " + currentTime]
+
+            response.success = { HttpResponseDecorator resp ->
+                println "Response status line: ${resp.statusLine}"
+
+                assert resp.statusLine.statusCode == 201, "Failed creating new presence"
+                def json = parseJsonFromResponseText(resp, "Failed creating new presence")
+                presenceId = json.Id
+            }
+        }
+
+        return presenceId
+    }
+
+    public void downloadPresenceKeyFile(String serviceDirectory, String presenceId) {
+        println "Downloading new key file for presence with id: ${presenceId}"
+
+        String url = API_PRESENCES + "/" + presenceId + "/" + NEW_KEY
+
+        println "Send POST request to ${this.baseUrl}$url"
+
+        httpBuilder.request(Method.POST, ContentType.BINARY){ req ->
+            uri.path = url
+            headers["Authorization"] = authHeader
+
+            response.success = { HttpResponseDecorator resp ->
+                println "Response status line: ${resp.statusLine}"
+
+                assert resp.statusLine.statusCode == 200, "Generate presence key failed"
+
+                ByteArrayOutputStream baos = new ByteArrayOutputStream()
+                resp.getEntity().writeTo(baos)
+                byte[] bytes = baos.toByteArray()
+
+                File keyFile = new File(serviceDirectory, "AppScanPresence.key")
+                try {
+                    boolean deleted = keyFile.delete();
+                    if (deleted) {
+                        println "Deleted presence key file ${keyFile.getAbsolutePath()}"
+                        keyFile.getParentFile().mkdirs();
+                        keyFile.createNewFile();
+                    }
+                } catch (Exception e) {
+                    println "Failed deleting old presence key file ${keyFile.getAbsolutePath()} with exception: ${e.getMessage()}"
+                }
+
+                (keyFile).withOutputStream {
+                    it.write(bytes)
+                }
+            }
+        }
+    }
+
+    public void downloadAppscanPresence(String serviceDirectory, boolean isWindows) {
+        println "Downloading latest Appscan Presence"
+
+        String url = API_TOOLS + ASPresence + (isWindows ? Win_x86_64 : Linux_x86_64)
+
+        File serviceDir = new File(serviceDirectory)
+
+        println "Send GET request to ${this.baseUrl}$url"
+
+        httpBuilder.request(Method.GET){ req ->
+            uri.path = url
+            headers["Authorization"] = authHeader
+            headers["Accept"] = "application/zip"
+            response.success = { HttpResponseDecorator resp, zip ->
+                println "Response status line: ${resp.statusLine}"
+
+                assert resp.statusLine.statusCode == 200, "Failed downloading Appscan Presence tool"
+                println "Appscan Presence tool successfully received. Deleting ${serviceDir.getName()} before extracting it."
+
+                serviceDir.deleteDir()
+                unzip(zip, "", serviceDir.getName())
+            }
+        }
+    }
+
+    public static enum DORegistrationType
+    {
+        Email,
+        Html
+    }
+
+    public static enum AdminMailPrefix
+    {
+        Admin,
+        Administrator,
+        HostMaster,
+        Root,
+        WebMaster,
+        PostMaster
+    }
+
+    public boolean isDomainVerified(String urlToVerify) {
+        println "Verifying domain for url: " + urlToVerify
+
+        String url = API_DOMAIN_OWNERSHIP + Verify
+
+        def params = [ STP: urlToVerify ]
+        println "Send POST request to ${this.baseUrl}$url: $params"
+
+        boolean result = false
+
+        httpBuilder.request(Method.POST, ContentType.TEXT){ req ->
+            uri.path = url
+            headers["Authorization"] = authHeader
+            requestContentType = ContentType.JSON
+            body = params
+
+            response.success = { HttpResponseDecorator resp ->
+                println "Response status line: ${resp.statusLine}"
+
+                assert resp.statusLine.statusCode == 200, "Failed verifying domain for url: " + urlToVerify
+
+                String responseText = resp.entity.content.text
+                println "Response for url verification is: " + responseText
+
+                result = Boolean.parseBoolean(responseText)
+            }
+        }
+
+        return result
+    }
+
+    public void registerEmailDomain(String urlToRegister, AdminMailPrefix mailPrefix, String domainToRegister) {
+        println "Registering Email domain for url '${urlToRegister}' and domain '${domainToRegister}' with prefix '${mailPrefix}'"
+
+        String url = API_DOMAIN_OWNERSHIP + Register + DORegistrationType.Email
+
+        def params = [ stp: urlToRegister, mailprefix: mailPrefix, domain: domainToRegister ]
+        println "Send POST request to ${this.baseUrl}$url: $params"
+
+        httpBuilder.request(Method.POST, ContentType.TEXT){ req ->
+            uri.path = url
+            headers["Authorization"] = authHeader
+            requestContentType = ContentType.JSON
+            body = params
+
+            response.success = { HttpResponseDecorator resp ->
+                println "Response status line: ${resp.statusLine}"
+
+                assert resp.statusLine.statusCode == 200, "Failed registering Email domain for url: " + urlToRegister
+
+                String responseText = resp.entity.content.text
+                println "Response for Email registration is: " + responseText
+            }
+        }
+    }
+
+    public File registerHtmlDomain(String urlToRegister, String domainToRegister) {
+        println "Registering Html domain for url '${urlToRegister}' and domain '${domainToRegister}'"
+
+        String url = API_DOMAIN_OWNERSHIP + Register + DORegistrationType.Html
+
+        def params = [ stp: urlToRegister, domain: domainToRegister ]
+        println "Send POST request to ${this.baseUrl}$url: $params"
+
+        File domainVerificationHtml = null;
+
+        httpBuilder.request(Method.POST, ContentType.BINARY){ req ->
+            uri.path = url
+            headers["Authorization"] = authHeader
+            requestContentType = ContentType.JSON
+            body = params
+
+            response.success = { HttpResponseDecorator resp ->
+                println "Response status line: ${resp.statusLine}"
+
+                assert resp.statusLine.statusCode == 200, "Failed registering Html domain for url: " + urlToRegister
+
+                domainVerificationHtml = new File("IBMDomainVerification.html")
+
+                try {
+                    if (domainVerificationHtml.exists()) {
+                        println "Found existing html file, deleting"
+                        domainVerificationHtml.delete()
+                    }
+                } catch (Exception e) {
+                    println "Failed deleting old html file ${domainVerificationHtml.getAbsolutePath()} with exception: ${e.getMessage()}"
+                }
+
+                ByteArrayOutputStream baos = new ByteArrayOutputStream()
+                resp.getEntity().writeTo(baos)
+                byte[] bytes = baos.toByteArray()
+
+                println "Writing ${bytes.length} bytes to html file"
+
+                (domainVerificationHtml).withOutputStream {
+                    it.write(bytes)
+                }
+            }
+        }
+
+        return domainVerificationHtml
+    }
+
+    public void confirmDomainEmail(String verificationToken) {
+        println "Confirming Email domain with token: " + verificationToken
+
+        String url = API_DOMAIN_OWNERSHIP + Confirm + verificationToken
+
+        println "Send GET request to ${this.baseUrl}$url"
+        HTTPBuilder nonRedirectBuilder = initializeHttpBuilder(baseUrl, false)
+
+        nonRedirectBuilder.request(Method.GET, ContentType.TEXT){ req ->
+            uri.path = url
+            //This should be an anonymous api method
+            //headers["Authorization"] = authHeader
+            requestContentType = ContentType.JSON
+
+            response.success = { HttpResponseDecorator resp ->
+                println "Response status line: ${resp.statusLine}"
+
+                assert resp.statusLine.statusCode == 301, "Failed confirming domain"
+                assert resp.headers.'Location'.contains("emailVerified"), "Failed confirming domain"
+            }
+        }
+    }
+
+	protected abstract def login()
 }

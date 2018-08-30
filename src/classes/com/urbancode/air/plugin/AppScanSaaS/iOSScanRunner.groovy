@@ -1,5 +1,5 @@
 /**
- * © Copyright IBM Corporation 2015.
+ * ï¿½ Copyright IBM Corporation 2015.
  * This is licensed under the following license.
  * The Eclipse Public 1.0 License (http://www.eclipse.org/legal/epl-v10.html)
  * U.S. Government Users Restricted Rights:  Use, duplication or disclosure restricted by GSA ADP Schedule Contract with IBM Corp.
@@ -16,11 +16,11 @@ import groovy.io.FileType
 import java.lang.Process
 import java.util.Properties
 
-import com.urbancode.air.plugin.AppScanSaaS.RestClientBase
+import com.urbancode.air.plugin.AppScanSaaS.RestClient
 import com.urbancode.air.plugin.AppScanSaaS.ScanType
 
 public class iOSScanRunner {
-	public static String runIOSScan(Properties props, RestClientBase restClient) {
+	public static String runIOSScan(Properties props, RestClient restClient) {
 		final def validateReport = false;
 		String issueCountString = "";
 		if (props.containsKey("validateReport")) {
@@ -117,7 +117,7 @@ public class iOSScanRunner {
 		return numberOfDeletions
 	}
 	
-	private static File generateIPAX(RestClientBase restClient, File projectFile, Properties props) {
+	private static File generateIPAX(RestClient restClient, File projectFile, Properties props) {
 		String userName = props["loginUsername"]
 		String toolDirName = "IPAX_Generator_for_${userName}"
 		String ipaxOutputDirName = "IPAX_Generator_Output_for_${userName}"

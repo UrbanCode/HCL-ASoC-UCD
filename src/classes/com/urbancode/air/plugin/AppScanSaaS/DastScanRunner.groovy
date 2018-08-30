@@ -8,7 +8,7 @@
 package com.urbancode.air.plugin.AppScanSaaS
 import java.util.concurrent.TimeUnit;
 
-import com.urbancode.air.plugin.AppScanSaaS.RestClientBase
+import com.urbancode.air.plugin.AppScanSaaS.RestClient
 import com.urbancode.air.plugin.AppScanSaaS.ScanType
 
 
@@ -19,7 +19,7 @@ public class DastScanRunner {
 	private static String windowsScript = "startPresence.vbs"
 	private static String unixScript = "startPresence.sh"
 
-	public static String runDastScan(Properties props, RestClientBase restClient) {
+	public static String runDastScan(Properties props, RestClient restClient) {
 		final def validateReport = false;
 		String issueCountString = "";
 		if (props.containsKey("validateReport")) {
