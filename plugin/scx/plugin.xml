@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <plugin xmlns="http://www.urbancode.com/PluginXMLSchema_v1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <header>
-    <identifier id="com.urbancode.air.plugin.IBMSecurity.scx" version="9" name="IBM Application Security on Cloud"/>
+    <identifier id="com.urbancode.air.plugin.IBMSecurity.scx" version="10" name="IBM Application Security on Cloud"/>
     <description>
     This plugin enables you to use IBM Application Security on Cloud (ASoC) easily from UrbanCode
 </description>
@@ -56,7 +56,7 @@
 
     <command program="${GROOVY_HOME}/bin/groovy">
 	  <arg value="-cp"/>
-      <arg path="classes:lib/commons-beanutils-1.9.2:lib/commons-collections-3.2.1.jar:lib/commons-fileupload-1.3.1.jar:lib/commons-logging-1.1.3.jar:lib/groovy-json-2.1.7.jar:lib/http-builder-0.7.2-uc.jar:lib/httpclient-4.3.5.jar:lib/httpclient-cache-4.3.5.jar:lib/httpcore-4.3.2.jar:lib/httpmime-4.3.5.jar:lib/json-lib-2.4-jdk15.jar:lib/resolver.jar" />
+      <arg path="classes:lib/HttpComponents-Util.jar:lib/CommonsUtil.jar:lib/log4j.jar:lib/commons-beanutils-1.9.2:lib/commons-collections-3.2.1.jar:lib/commons-fileupload-1.3.1.jar:lib/commons-logging-1.1.3.jar:lib/groovy-json-2.1.7.jar:lib/http-builder-0.7.2-uc.jar:lib/httpclient-4.3.5.jar:lib/httpclient-cache-4.3.5.jar:lib/httpcore-4.3.2.jar:lib/httpmime-4.3.5.jar:lib/json-lib-2.4-jdk15.jar:lib/resolver.jar" />
       <arg file="start_ma_scan.groovy"/>
       <arg file="${PLUGIN_INPUT_PROPS}"/>
       <arg file="${PLUGIN_OUTPUT_PROPS}"/>
@@ -116,6 +116,11 @@
         <value label="Application-Only">Application-Only</value>
         <value label="The Vital Few">The Vital Few</value>
       </property>
+      <property name="applicationId" required="true">
+        <property-ui type="textBox"
+                     label="Application ID"
+                     description="The Application ID"/>
+      </property>
     </properties>
     <post-processing>
       <![CDATA[
@@ -130,7 +135,7 @@
 
     <command program="${GROOVY_HOME}/bin/groovy">
 	  <arg value="-cp"/>
-      <arg path="classes:lib/commons-beanutils-1.9.2:lib/commons-collections-3.2.1.jar:lib/commons-fileupload-1.3.1.jar:lib/commons-logging-1.1.3.jar:lib/groovy-json-2.1.7.jar:lib/http-builder-0.7.2-uc.jar:lib/httpclient-4.3.5.jar:lib/httpclient-cache-4.3.5.jar:lib/httpcore-4.3.2.jar:lib/httpmime-4.3.5.jar:lib/json-lib-2.4-jdk15.jar:lib/resolver.jar" />
+      <arg path="classes:lib/HttpComponents-Util.jar:lib/CommonsUtil.jar:lib/log4j.jar:lib/commons-beanutils-1.9.2:lib/commons-collections-3.2.1.jar:lib/commons-fileupload-1.3.1.jar:lib/commons-logging-1.1.3.jar:lib/groovy-json-2.1.7.jar:lib/http-builder-0.7.2-uc.jar:lib/httpclient-4.3.5.jar:lib/httpclient-cache-4.3.5.jar:lib/httpcore-4.3.2.jar:lib/httpmime-4.3.5.jar:lib/json-lib-2.4-jdk15.jar:lib/resolver.jar" />
       <arg file="start_dast_scan.groovy"/>
       <arg file="${PLUGIN_INPUT_PROPS}"/>
       <arg file="${PLUGIN_OUTPUT_PROPS}"/>
@@ -181,6 +186,11 @@
         			 label="Original scan ID"
         			 description="If you have previously scanned the application, please enter the original scan ID here if you want to rescan it." />
       </property>
+      <property name="applicationId" required="true">
+        <property-ui type="textBox"
+                     label="Application ID"
+                     description="The Application ID"/>
+      </property>
     </properties>
     <post-processing>
       <![CDATA[
@@ -195,7 +205,7 @@
 
     <command program="${GROOVY_HOME}/bin/groovy">
 	  <arg value="-cp"/>
-      <arg path="classes:lib/commons-beanutils-1.9.2:lib/commons-collections-3.2.1.jar:lib/commons-fileupload-1.3.1.jar:lib/commons-logging-1.1.3.jar:lib/groovy-json-2.1.7.jar:lib/http-builder-0.7.2-uc.jar:lib/httpclient-4.3.5.jar:lib/httpclient-cache-4.3.5.jar:lib/httpcore-4.3.2.jar:lib/httpmime-4.3.5.jar:lib/json-lib-2.4-jdk15.jar:lib/resolver.jar" />
+      <arg path="classes:lib/HttpComponents-Util.jar:lib/CommonsUtil.jar:lib/log4j.jar:lib/commons-beanutils-1.9.2:lib/commons-collections-3.2.1.jar:lib/commons-fileupload-1.3.1.jar:lib/commons-logging-1.1.3.jar:lib/groovy-json-2.1.7.jar:lib/http-builder-0.7.2-uc.jar:lib/httpclient-4.3.5.jar:lib/httpclient-cache-4.3.5.jar:lib/httpcore-4.3.2.jar:lib/httpmime-4.3.5.jar:lib/json-lib-2.4-jdk15.jar:lib/resolver.jar" />
       <arg file="start_sast_scan.groovy"/>
       <arg file="${PLUGIN_INPUT_PROPS}"/>
       <arg file="${PLUGIN_OUTPUT_PROPS}"/>

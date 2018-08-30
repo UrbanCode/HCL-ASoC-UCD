@@ -16,15 +16,14 @@ import java.util.Properties;
 import java.util.concurrent.TimeUnit
 import java.util.zip.ZipEntry
 import java.util.zip.ZipInputStream
-import java.util.zip.ZipOutputStream
 
-import org.apache.http.HttpHost
 import org.apache.http.HttpRequest;
 import org.apache.http.HttpResponse;
 import org.apache.http.ProtocolException;
 import org.apache.http.client.RedirectStrategy
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.entity.mime.HttpMultipartMode
+import org.apache.http.entity.mime.MultipartEntityBuilder
 import org.apache.http.entity.mime.content.InputStreamBody
 import org.apache.http.entity.mime.content.StringBody
 import org.apache.http.conn.ssl.SSLContextBuilder
@@ -36,7 +35,7 @@ import org.apache.http.impl.client.HttpClients
 import org.apache.http.protocol.HttpContext;
 
 public abstract class RestClient {
-
+    protected RestClientHelper restHelper
 	protected boolean validateSSL;
 	protected String token
 	protected String authHeader
@@ -95,7 +94,9 @@ public abstract class RestClient {
 		this.baseUrl = "https://" + userServer + ":" +  userServerPort
 		this.username = props["loginUsername"]
 		this.password = props["loginPassword"]
-		this.httpBuilder = initializeHttpBuilder(baseUrl)
+
+        this.restHelper =  new RestClientHelper(baseUrl, username, password, false)
+
 		login()
 	}
 
@@ -108,39 +109,28 @@ public abstract class RestClient {
 		String url = "${apiPath}${API_METHOD_DOWNLOAD_TOOL_V1}"
 		println "Send POST request to ${this.baseUrl}$url"
 
-		httpBuilder.request(Method.POST){ req ->
-			uri.path = url
-			headers["Authorization"] = authHeader
-			headers["Accept"] = "application/zip"
-			response.success = { HttpResponseDecorator resp, zip ->
-				println "Response status line: ${resp.statusLine}"
+        restHelper.addRequestHeader("Accept", "application/zip")
 
-				assert resp.statusLine.statusCode == 200, "Failed downloading IPAX generator"
-				println "IPAX generator tool successfully received. Deleting ${dirName} before extracting it."
-				(new File(dirName)).deleteDir()
-				unzip(zip, "", dirName)
-			}
-		}
+        def response = restHelper.doPostRequest(url)
+        InputStream zip = response.getEntity().getContent()
+
+        println "IPAX generator tool successfully received. Deleting ${dirName} before extracting it."
+        (new File(dirName)).deleteDir()
+        unzip(zip, "", dirName)
+
 		return new File(dirName, "IPAX_Generator.sh")
 	}
 
 	public def getScan(String scanId, ScanType scanType) {
 		String url = getScanUrl(scanId, scanType)
-		println "Send GET request to ${this.baseUrl}$url"
-
 		def scan = null
 
-		httpBuilder.request(Method.GET, ContentType.JSON){ req ->
-			uri.path = url
-			headers["Authorization"] = authHeader
+        println "Send GET request to ${this.baseUrl}$url"
 
-			response.success = { HttpResponseDecorator resp ->
-				println "Response status line: ${resp.statusLine}"
+        HttpResponse response = restHelper.doGetRequest(url)
 
-				scan = parseJsonFromResponseText(resp, "getScan was not retrieved successfully")
-				assert resp.statusLine.statusCode == 200 || resp.statusLine.statusCode == 201, "Scan was not retrieved successfully" //201 is only temporary supported
-			}
-		}
+        scan = restHelper.parseResponse(response)
+
 		println "Scan retrieved successfully. Scan name is: ${scan.Name}"
 		return scan
 	}
@@ -149,18 +139,11 @@ public abstract class RestClient {
 		String url = getAllScansUrl(scanType)
 		def scans = null
 
-		println "Send GET request to ${this.baseUrl}$url"
-		httpBuilder.request(Method.GET, ContentType.JSON){ req ->
-			uri.path = url
-			headers["Authorization"] = authHeader
+        println "Send GET request to ${this.baseUrl}$url"
 
-			response.success = { HttpResponseDecorator resp ->
-				println "Response status line: ${resp.statusLine}"
+        HttpResponse response = restHelper.doGetRequest(url)
+        scans = restHelper.parseResponse(response)
 
-				scans = parseJsonFromResponseText(resp, "getAllScans were not retrieved successfully")
-				assert resp.statusLine.statusCode == 200, "User scans were not retrieved successfully"
-			}
-		}
 		println "User scans retrieved successfully"
 		return scans
 	}
@@ -169,16 +152,9 @@ public abstract class RestClient {
 		String url = getDeleteScanUrl(scanId, scanType)
 
 		println "Send DELETE request to ${this.baseUrl}$url"
-		httpBuilder.request(Method.DELETE){ req ->
-			uri.path = url
-			headers["Authorization"] = authHeader
 
-			response.success = { HttpResponseDecorator resp ->
-				println "Response status line: ${resp.statusLine}"
-				assert resp.statusLine.statusCode == 204, "Failed deleting scan with id: ${scanId}"
-				println "scan Id ${scanId} deleted successfully"
-			}
-		}
+        restHelper.doDeleteRequest(url)
+		println "scan Id ${scanId} deleted successfully"
 	}
 
 	protected String getApiPath_V1(ScanType scanType) {
@@ -270,6 +246,7 @@ public abstract class RestClient {
 	protected void assertLogin() {
 		assert token != null, "Login failed. Token is null"
 		authHeader = "Bearer " + token
+        restHelper.addRequestHeader("Authorization", authHeader)
 	}
 
 	protected void bluemixLogin() {
@@ -277,33 +254,21 @@ public abstract class RestClient {
 		authHeader = null
 		apiEnvironment = "BlueMix";
 
-		Map<String, Serializable> params = [ Bindingid : username, Password : password]
+		Properties props = new Properties()
+        props.put("Username", username)
+        props.put("Password", password)
 
 		String url = getBluemixLoginUrl()
-		println "Send POST request to ${baseUrl}$url: $params"
+		println "Send POST request to ${baseUrl}$url: $props"
 
-		httpBuilder = initializeHttpBuilder(baseUrl)
-		try{
-			httpBuilder.request(Method.POST, ContentType.JSON){ req ->
-				uri.path = url
-				requestContentType = ContentType.URLENC
-				body = params
-
-				response.success = { HttpResponseDecorator resp ->
-					println "Response status line: ${resp.statusLine}"
-					assert resp.status == 200, "Login failed"
-					def json = parseJsonFromResponseText(resp, "Bluemix authentication failed")
-					token = json.Token
-					println "External Token: ${token}"
-				}
-				response.failure = { resp ->
-					println 'Bluemix authentication failed.'
-				}
-			}
-		}
-		catch (Exception e) {
-			println "Failed bluemixLogin with exception: ${e.getMessage()}"
-		}
+        try{
+            HttpResponse response = restHelper.doPostRequest(url, props)
+            def jsonObj = restHelper.parseResponse(response)
+            token = jsonObj.Token
+        }
+        catch (Exception e) {
+            println "Failed bluemixLogin with exception: ${e.getMessage()}"
+        }
 	}
 
 	protected void scxLogin() {
@@ -311,29 +276,17 @@ public abstract class RestClient {
 		authHeader = null
 		apiEnvironment = "SCX";
 
-		Map<String, Serializable> params = [ Username : username, Password : password]
+		Properties props = new Properties()
+        props.put("Username", username)
+        props.put("Password", password)
 
 		String url = getScxLoginUrl()
-		println "Send POST request to ${baseUrl}$url: $params"
+		println "Send POST request to ${baseUrl}$url: $props"
 
-		httpBuilder = initializeHttpBuilder(baseUrl)
 		try{
-			httpBuilder.request(Method.POST, ContentType.JSON){ req ->
-				uri.path = url
-				requestContentType = ContentType.URLENC
-				body = params
-
-				response.success = { HttpResponseDecorator resp ->
-					println "Response status line: ${resp.statusLine}"
-					assert resp.status == 200, "Login failed"
-					def json = parseJsonFromResponseText(resp, "SCX authentication failed")
-					token = json.Token
-					println "External Token: ${token}"
-				}
-				response.failure = { resp ->
-					println 'SCX authentication failed.'
-				}
-			}
+            HttpResponse response = restHelper.doPostRequest(url, props)
+            def jsonObj = restHelper.parseResponse(response)
+            token = jsonObj.Token
 		}
 		catch (Exception e) {
 			println "Failed scxLogin with exception: ${e.getMessage()}"
@@ -354,74 +307,37 @@ public abstract class RestClient {
 		return json
 	}
 
-	protected HTTPBuilder initializeHttpBuilder(String baseUrl, boolean followRedirects = true) {
-		HTTPBuilder httpBuilder = new HTTPBuilder(baseUrl)
-
-		SSLContextBuilder sslContextBuilder = new SSLContextBuilder();
-		if (!validateSSL) {
-			sslContextBuilder.loadTrustMaterial(null, new TrustSelfSignedStrategy());
-		}
-
-		RedirectStrategy redirectStrategy = new DefaultRedirectStrategy()
-		if (followRedirects == false) {
-			redirectStrategy = new NeverRedirectStrategy()
-		}
-
-		SSLConnectionSocketFactory sslcsf = new SSLConnectionSocketFactory(sslContextBuilder.build())
-		CloseableHttpClient httpclient = HttpClients.custom().setSSLSocketFactory(sslcsf).setRedirectStrategy(redirectStrategy).build();
-
-		httpBuilder.setClient(httpclient);
-
-		return httpBuilder
-	}
-
-	private static class NeverRedirectStrategy implements RedirectStrategy {
-		@Override
-		public HttpUriRequest getRedirect(HttpRequest arg0, HttpResponse arg1, HttpContext arg2) throws ProtocolException {
-			return null;
-		}
-
-		@Override
-		public boolean isRedirected(HttpRequest arg0, HttpResponse arg1, HttpContext arg2) throws ProtocolException {
-			return false;
-		}
-	}
-
     private String uploadFile(File file) {
+        MultipartEntityBuilder entityBuilder = MultipartEntityBuilder.create()
+
         FileInputStream fileStream = new FileInputStream(file)
-        MultipartEntity multiPartContent = new MultipartEntity(HttpMultipartMode.BROWSER_COMPATIBLE)
-        multiPartContent.addPart("fileToUpload", new InputStreamBody(fileStream, "application/zip", file.getName()))
+        entityBuilder.setMode(HttpMultipartMode.BROWSER_COMPATIBLE)
+        entityBuilder.addPart("fileToUpload", new InputStreamBody(fileStream, "application/zip", file.getName()))
 
         String fileId = null
         String url = API_FILE_UPLOAD
         println "Send POST request to ${this.baseUrl}$url"
-        httpBuilder.request(Method.POST, ContentType.JSON){ req ->
-            uri.path = url
-            headers["Authorization"] = authHeader
-            requestContentType: "multipart/form-data"
-            req.setEntity(multiPartContent)
 
-            response.success = { HttpResponseDecorator resp ->
-                println "Response status line: ${resp.statusLine}"
+        restHelper.removeRequestHeader("Content-Type")  // browser must determine correct multipart entity content type
 
-                assert resp.statusLine.statusCode == 201, "The file was NOT uploaded successfully"
-                def json = parseJsonFromResponseText(resp, "The file was NOT uploaded successfully")
-                fileId = json.FileId
-                assert  fileId != null && fileId.length() >= 10, "The file was NOT uploaded successfully"
-            }
-        }
+        def response = restHelper.doPostRequest(url, entityBuilder.build())
+
+        def json = restHelper.parseResponse(response)
+        fileId = json.FileId
+        assert  fileId != null && fileId.length() >= 10, "The file was NOT uploaded successfully"
+
         return fileId
     }
 
     private String fileBasedScan(String fileId, String fileName, ScanType scanType, String parentjobid, String appId) {
-        Map<String, Serializable> params = null
+        Properties props = new Properties()
         String url = null
         String scanId = null
         String lastExecutionId = null
         String TechName = null
 
         if (parentjobid != null && !parentjobid.isEmpty()) {
-            params = [ FileId : fileId]
+            props.put("FileId", fileId)
             url = String.format(API_RE_SCAN, parentjobid);
             scanId = parentjobid
         }
@@ -429,17 +345,20 @@ public abstract class RestClient {
             switch (scanType) {
                 case ScanType.IOS:
                     url = String.format(MOBILE_API_PATH, API_METHOD_SCANS);
-                    params = [ ApplicationFileId : fileId, ScanName : fileName]
+                    props.put("ApplicationFileId", fileId)
+                    props.put("ScanName", fileName)
                     TechName = "iOS"
                     break
                 case ScanType.Mobile:
                     url = String.format(MOBILE_API_PATH, API_METHOD_SCANS);
-                    params = [ ApplicationFileId : fileId, ScanName : fileName]
+                    props.put("ApplicationFileId", fileId)
+                    props.put("ScanName", fileName)
                     TechName = "MA Android"
                     break
                 case ScanType.SAST:
                     url = String.format(SAST_API_PATH, API_METHOD_SCANS);
-                    params = [ ARSAFileId : fileId, ScanName : fileName]
+                    props.put("ARSAFileId", fileId)
+                    props.put("ScanName", fileName)
                     TechName = "StaticAnalyzer"
                     break
                 default:
@@ -447,31 +366,27 @@ public abstract class RestClient {
             }
         }
         if (appId != null && !appId.isEmpty()) {
-            params.put("AppId", appId)
+            println("APP ID IS " + appId)
+            props.put("AppId", appId)
         }
 
-        println "Send POST request to ${this.baseUrl}$url , with the following parameters: $params"
-        httpBuilder.request(Method.POST, ContentType.JSON){ req ->
-            uri.path = url
-            headers["Authorization"] = authHeader
-            requestContentType = ContentType.JSON
-            body = params
+        println "Send POST request to ${this.baseUrl}$url , with the following parameters: $props"
+        restHelper.addRequestHeader("Content-Type", "application/json")
+        def response = restHelper.doPostRequest(url, props)
 
-            response.success = { HttpResponseDecorator resp ->
-                println "Response status line: ${resp.statusLine}"
-                assert resp.statusLine.statusCode == 201, "$TechName scan was NOT started successfully"
-                def json = parseJsonFromResponseText(resp, "fileBasedScan was NOT started successfully")
-                if (scanId == null) {
-                    scanId = json.Id
-                    assert  scanId != null && scanId.length() >= 10, "$TechName scan was NOT started successfully"
-                    lastExecutionId = json.LatestExecution.Id
-                }
-                else {
-                    lastExecutionId = json.Id
-                }
-                assert  lastExecutionId != null && lastExecutionId.length() >= 10, "$TechName lastExecutionID was NOT started successfully"
-            }
+        println "Response status line: ${response.getStatusLine()}"
+        def json = restHelper.parseResponse(response)
+
+        if (scanId == null) {
+            scanId = json.Id
+            assert  scanId != null && scanId.length() >= 10, "$TechName scan was NOT started successfully"
+            lastExecutionId = json.LatestExecution.Id
         }
+        else {
+            lastExecutionId = json.Id
+        }
+        assert  lastExecutionId != null && lastExecutionId.length() >= 10, "$TechName lastExecutionID was NOT started successfully"
+
         println "$TechName scan was started successfully. scanId=$scanId , executionId=$lastExecutionId"
         return scanId
     }
@@ -512,24 +427,13 @@ public abstract class RestClient {
 
         def presencesData = null
 
-        httpBuilder.request(Method.GET, ContentType.JSON){ req ->
-            uri.path = url
-            headers["Authorization"] = authHeader
-
-            response.success = { HttpResponseDecorator resp ->
-                println "Response status line: ${resp.statusLine}"
-
-                assert resp.statusLine.statusCode == 200, "Get Presences failed"
-                presencesData = parseJsonFromResponseText(resp, "Get Presences failed")
-            }
-        }
+        HttpResponse response = restHelper.doGetRequest(url)
 
         return presencesData
     }
 
-    @Override
     public String startDastScan(String startingUrl, String loginUsername, String loginPassword, String parentjobid, String presenceId, String testPolicy, String appId, String scanType) {
-        Map<String, Serializable> params = null
+        Properties props = new Properties()
         String url = null
         String scanId = null
         String lastExecutionId = null
@@ -556,42 +460,36 @@ public abstract class RestClient {
         if (parentjobid != null && !parentjobid.isEmpty()) {
             url = String.format(API_RE_SCAN, parentjobid);
             scanId = parentjobid
-            params = [:]
+            props = new Properties()
         }
         else {
             verifyPresenceId(presenceId)
             url = String.format(DAST_API_PATH, API_METHOD_SCANS);
-            params = [ ScanName : startingUrl, StartingUrl : startingUrl,
-                        LoginUser : loginUsername, LoginPassword : loginPassword, PresenceId : presenceId, testPolicy : testPolicyForPostRequest,
-                        ScanType: scanType]
+            props.putAll([ ScanName : startingUrl, StartingUrl : startingUrl, LoginUser : loginUsername,
+                LoginPassword : loginPassword, PresenceId : presenceId,
+                testPolicy : testPolicyForPostRequest, ScanType: scanType])
 
             if (appId != null && !appId.isEmpty()) {
-                params.put("AppId", appId)
+                props.put("AppId", appId)
             }
         }
 
-        println "Send POST request to ${this.baseUrl}$url , with the following parameters: $params"
-        httpBuilder.request(Method.POST, ContentType.JSON){ req ->
-            uri.path = url
-            headers["Authorization"] = authHeader
-            requestContentType = ContentType.JSON
-            body = params
+        println "Send POST request to ${this.baseUrl}$url , with the following parameters: $props"
 
-            response.success = { HttpResponseDecorator resp ->
-                println "Response status line: ${resp.statusLine}"
-                assert resp.statusLine.statusCode == 201, "DAST scan was NOT started successfully"
-                def json = parseJsonFromResponseText(resp, "DAST scan was NOT started successfully")
-                if (scanId == null) {
-                    scanId = json.Id
-                    assert  scanId != null && scanId.length() >= 10, "DAST scan was NOT started successfully"
-                    lastExecutionId = json.LatestExecution.Id
-                }
-                else {
-                    lastExecutionId = json.Id
-                }
-                assert  lastExecutionId != null && lastExecutionId.length() >= 10, "DAST lastExecutionID was NOT started successfully"
-            }
+        HttpResponse response = restHelper.doPostRequest(url, props)
+
+        def json = restHelper.parseResponse(response)
+
+        if (scanId == null) {
+            scanId = json.Id
+            assert  scanId != null && scanId.length() >= 10, "DAST scan was NOT started successfully"
+            lastExecutionId = json.LatestExecution.Id
         }
+        else {
+            lastExecutionId = json.Id
+        }
+
+        assert  lastExecutionId != null && lastExecutionId.length() >= 10, "DAST lastExecutionID was NOT started successfully"
         println "DAST scan was started successfully. scanId=$scanId , executionId=$lastExecutionId"
         return scanId
     }
@@ -614,7 +512,6 @@ public abstract class RestClient {
         return fileBasedScan(fileId, ipaxFile.getName(), ScanType.IOS, parentjobid, appId)
     }
 
-    @Override
     public void waitForScan(String scanId, ScanType scanType, Long scanTimeout, Long startTime, String issueCountString, Properties props) {
         println "Waiting for scan with id '${scanId}'"
 
@@ -651,20 +548,15 @@ public abstract class RestClient {
         String url =  String.format(API_DOWNLOAD_REPORT, scanId, reportType)
 
         println "Send GET request to ${this.baseUrl}$url"
-        httpBuilder.request(Method.GET, ContentType.BINARY){ req ->
-            uri.path = url
-            headers["Authorization"] = authHeader
 
-            response.success = { HttpResponseDecorator resp ->
-                ByteArrayOutputStream baos = new ByteArrayOutputStream()
-                resp.getEntity().writeTo(baos)
-                byte[] bytes = baos.toByteArray()
+        def response = restHelper.doGetRequest(url)
 
-                println "Response status line: ${resp.statusLine}"
-                assert bytes.length > RestClient.MinReportSize, "Report size '${bytes.length}' is invalid"
-                assert resp.statusLine.statusCode == 200 , "Report type ${reportType} was not retrieved successfully"
-            }
-        }
+        ByteArrayOutputStream baos = new ByteArrayOutputStream()
+        response.getEntity().writeTo(baos)
+        byte[] bytes = baos.toByteArray()
+
+        println "Response status line: ${response.statusLine}"
+        assert bytes.length > RestClient.MinReportSize, "Report size '${bytes.length}' is invalid"
         println "Report type ${reportType} downloaded successfully"
     }
 
@@ -676,7 +568,7 @@ public abstract class RestClient {
         else {
             downloadSingleReportType(scanId, REPORT_TYPE_PDF)
             if (scanType == ScanType.DAST) {
-                downloadSingleReportType(scanId, REPORT_TYPE_COMPLIANCE_PDF)
+                //downloadSingleReportType(scanId, REPORT_TYPE_COMPLIANCE_PDF)
             }
         }
     }
@@ -699,32 +591,27 @@ public abstract class RestClient {
         return apiPath
     }
 
-    @Override
     protected String getScanUrl(String scanId, ScanType scanType)
     {
         String path = String.format(getApiPath(scanType), API_METHOD_SCANS)
         return "${path}/${scanId}"
     }
 
-    @Override
     protected def getAllScansUrl(ScanType scanType)
     {
         return String.format(API_V2, API_METHOD_SCANS)
     }
 
-    @Override
     protected String getDeleteScanUrl(String scanId, ScanType scanType)
     {
         return String.format(API_V2, API_METHOD_SCANS).concat("/${scanId}")
     }
 
-    @Override
     protected String getBluemixLoginUrl()
     {
         return API_BLUEMIX_LOGIN
     }
 
-    @Override
     protected String getScxLoginUrl()
     {
         return API_IBMID_LOGIN
@@ -741,17 +628,8 @@ public abstract class RestClient {
 
         presencesData.each { presence ->
             println "Deleting presence with id: " + presence.Id
-            httpBuilder.request(Method.DELETE, ContentType.JSON) { req ->
-                uri.path = url + "/" + presence.Id
-                headers["Authorization"] = authHeader
 
-                response.success = { HttpResponseDecorator resp ->
-                    println "Response status line: ${resp.statusLine}"
-
-                    assert resp.statusLine.statusCode == 204, "Delete presence failed for id: " + presence.Id
-                    presencesData = parseJsonFromResponseText(resp, "Delete presence failed for id: " + presence.Id)
-                }
-            }
+            HttpResponse response = restHelper.doPostRequest(url + "/" + presence.Id)
         }
     }
 
@@ -764,22 +642,13 @@ public abstract class RestClient {
 
         println "Send POST request to ${this.baseUrl}$url"
 
-        String presenceId = null
+        Properties props = new Properties()
 
-        httpBuilder.request(Method.POST, ContentType.JSON){ req ->
-            uri.path = url
-            headers["Authorization"] = authHeader
-            requestContentType = ContentType.JSON
-            body = [ PresenceName : "Grovvy Presence: " + currentTime]
+        props.put("PresenceName", "Groovy Presence" + currentTime)
+        def response = restHelper.doPostRequest(url, props)
 
-            response.success = { HttpResponseDecorator resp ->
-                println "Response status line: ${resp.statusLine}"
-
-                assert resp.statusLine.statusCode == 201, "Failed creating new presence"
-                def json = parseJsonFromResponseText(resp, "Failed creating new presence")
-                presenceId = json.Id
-            }
-        }
+        def json = restHelper.parseResponse(response)
+        String presenceId = json.Id
 
         return presenceId
     }
@@ -790,36 +659,28 @@ public abstract class RestClient {
         String url = API_PRESENCES + "/" + presenceId + "/" + NEW_KEY
 
         println "Send POST request to ${this.baseUrl}$url"
+        HttpResponse response = restHelper.doPostRequest(url, null)
 
-        httpBuilder.request(Method.POST, ContentType.BINARY){ req ->
-            uri.path = url
-            headers["Authorization"] = authHeader
+        println "Response status line: ${response.statusLine}"
 
-            response.success = { HttpResponseDecorator resp ->
-                println "Response status line: ${resp.statusLine}"
+        ByteArrayOutputStream baos = new ByteArrayOutputStream()
+        response.getEntity().writeTo(baos)
+        byte[] bytes = baos.toByteArray()
 
-                assert resp.statusLine.statusCode == 200, "Generate presence key failed"
-
-                ByteArrayOutputStream baos = new ByteArrayOutputStream()
-                resp.getEntity().writeTo(baos)
-                byte[] bytes = baos.toByteArray()
-
-                File keyFile = new File(serviceDirectory, "AppScanPresence.key")
-                try {
-                    boolean deleted = keyFile.delete();
-                    if (deleted) {
-                        println "Deleted presence key file ${keyFile.getAbsolutePath()}"
-                        keyFile.getParentFile().mkdirs();
-                        keyFile.createNewFile();
-                    }
-                } catch (Exception e) {
-                    println "Failed deleting old presence key file ${keyFile.getAbsolutePath()} with exception: ${e.getMessage()}"
-                }
-
-                (keyFile).withOutputStream {
-                    it.write(bytes)
-                }
+        File keyFile = new File(serviceDirectory, "AppScanPresence.key")
+        try {
+            boolean deleted = keyFile.delete();
+            if (deleted) {
+                println "Deleted presence key file ${keyFile.getAbsolutePath()}"
+                keyFile.getParentFile().mkdirs();
+                keyFile.createNewFile();
             }
+        } catch (Exception e) {
+            println "Failed deleting old presence key file ${keyFile.getAbsolutePath()} with exception: ${e.getMessage()}"
+        }
+
+        (keyFile).withOutputStream {
+            it.write(bytes)
         }
     }
 
@@ -831,21 +692,12 @@ public abstract class RestClient {
         File serviceDir = new File(serviceDirectory)
 
         println "Send GET request to ${this.baseUrl}$url"
+        restHelper.addRequestHeader("application/zip")
+        HttpResponse response = restHelper.doGetRequest(url)
 
-        httpBuilder.request(Method.GET){ req ->
-            uri.path = url
-            headers["Authorization"] = authHeader
-            headers["Accept"] = "application/zip"
-            response.success = { HttpResponseDecorator resp, zip ->
-                println "Response status line: ${resp.statusLine}"
-
-                assert resp.statusLine.statusCode == 200, "Failed downloading Appscan Presence tool"
-                println "Appscan Presence tool successfully received. Deleting ${serviceDir.getName()} before extracting it."
-
-                serviceDir.deleteDir()
-                unzip(zip, "", serviceDir.getName())
-            }
-        }
+        InputStream zip = response.getEntity().getContent()
+        serviceDir.deleteDir()
+        unzip(zip, "", serviceDir.getName())
     }
 
     public static enum DORegistrationType
@@ -869,28 +721,17 @@ public abstract class RestClient {
 
         String url = API_DOMAIN_OWNERSHIP + Verify
 
-        def params = [ STP: urlToVerify ]
-        println "Send POST request to ${this.baseUrl}$url: $params"
+        Properties props = new Properties()
+        props.put("STP", urlToVerify)
+        println "Send POST request to ${this.baseUrl}$url: $props"
+        HttpResponse response = restHelper.doPostRequest(url, props)
 
-        boolean result = false
+        println "Response status line: ${resp.statusLine}"
 
-        httpBuilder.request(Method.POST, ContentType.TEXT){ req ->
-            uri.path = url
-            headers["Authorization"] = authHeader
-            requestContentType = ContentType.JSON
-            body = params
+        String responseText = response.entity.content.text
+        println "Response for url verification is: " + responseText
 
-            response.success = { HttpResponseDecorator resp ->
-                println "Response status line: ${resp.statusLine}"
-
-                assert resp.statusLine.statusCode == 200, "Failed verifying domain for url: " + urlToVerify
-
-                String responseText = resp.entity.content.text
-                println "Response for url verification is: " + responseText
-
-                result = Boolean.parseBoolean(responseText)
-            }
-        }
+        boolean result = Boolean.parseBoolean(responseText)
 
         return result
     }
@@ -900,24 +741,14 @@ public abstract class RestClient {
 
         String url = API_DOMAIN_OWNERSHIP + Register + DORegistrationType.Email
 
-        def params = [ stp: urlToRegister, mailprefix: mailPrefix, domain: domainToRegister ]
-        println "Send POST request to ${this.baseUrl}$url: $params"
+        Properties props = new Properties()
+        props.putAll([stp: urlToRegister, mailprefix: mailPrefix, domain: domainToRegister])
+        println "Send POST request to ${this.baseUrl}$url: $props"
+        HttpResponse response = restHelper.doPostRequest(url, props)
+        println "Response status line: ${response.statusLine}"
 
-        httpBuilder.request(Method.POST, ContentType.TEXT){ req ->
-            uri.path = url
-            headers["Authorization"] = authHeader
-            requestContentType = ContentType.JSON
-            body = params
-
-            response.success = { HttpResponseDecorator resp ->
-                println "Response status line: ${resp.statusLine}"
-
-                assert resp.statusLine.statusCode == 200, "Failed registering Email domain for url: " + urlToRegister
-
-                String responseText = resp.entity.content.text
-                println "Response for Email registration is: " + responseText
-            }
-        }
+        String responseText = response.entity.content.text
+        println "Response for Email registration is: " + responseText
     }
 
     public File registerHtmlDomain(String urlToRegister, String domainToRegister) {
@@ -925,43 +756,35 @@ public abstract class RestClient {
 
         String url = API_DOMAIN_OWNERSHIP + Register + DORegistrationType.Html
 
-        def params = [ stp: urlToRegister, domain: domainToRegister ]
-        println "Send POST request to ${this.baseUrl}$url: $params"
+        Properties props = new Properties()
+        props.putAll([stp: urlToRegister, domain: domainToRegister])
+        println "Send POST request to ${this.baseUrl}$url: $props"
 
-        File domainVerificationHtml = null;
+        File domainVerificationHtml = null
 
-        httpBuilder.request(Method.POST, ContentType.BINARY){ req ->
-            uri.path = url
-            headers["Authorization"] = authHeader
-            requestContentType = ContentType.JSON
-            body = params
+        HttpResponse response = restHelper.doPostRequest(url, props)
 
-            response.success = { HttpResponseDecorator resp ->
-                println "Response status line: ${resp.statusLine}"
+        println "Response status line: ${response.statusLine}"
 
-                assert resp.statusLine.statusCode == 200, "Failed registering Html domain for url: " + urlToRegister
+        domainVerificationHtml = new File("IBMDomainVerification.html")
 
-                domainVerificationHtml = new File("IBMDomainVerification.html")
-
-                try {
-                    if (domainVerificationHtml.exists()) {
-                        println "Found existing html file, deleting"
-                        domainVerificationHtml.delete()
-                    }
-                } catch (Exception e) {
-                    println "Failed deleting old html file ${domainVerificationHtml.getAbsolutePath()} with exception: ${e.getMessage()}"
-                }
-
-                ByteArrayOutputStream baos = new ByteArrayOutputStream()
-                resp.getEntity().writeTo(baos)
-                byte[] bytes = baos.toByteArray()
-
-                println "Writing ${bytes.length} bytes to html file"
-
-                (domainVerificationHtml).withOutputStream {
-                    it.write(bytes)
-                }
+        try {
+            if (domainVerificationHtml.exists()) {
+                println "Found existing html file, deleting"
+                domainVerificationHtml.delete()
             }
+        } catch (Exception e) {
+            println "Failed deleting old html file ${domainVerificationHtml.getAbsolutePath()} with exception: ${e.getMessage()}"
+        }
+
+        ByteArrayOutputStream baos = new ByteArrayOutputStream()
+        response.getEntity().writeTo(baos)
+        byte[] bytes = baos.toByteArray()
+
+        println "Writing ${bytes.length} bytes to html file"
+
+        (domainVerificationHtml).withOutputStream {
+            it.write(bytes)
         }
 
         return domainVerificationHtml
@@ -973,22 +796,11 @@ public abstract class RestClient {
         String url = API_DOMAIN_OWNERSHIP + Confirm + verificationToken
 
         println "Send GET request to ${this.baseUrl}$url"
-        HTTPBuilder nonRedirectBuilder = initializeHttpBuilder(baseUrl, false)
+        HttpResponse response = restHelper.doGetRequest(url)
+        println "Response status line: ${response.statusLine}"
 
-        nonRedirectBuilder.request(Method.GET, ContentType.TEXT){ req ->
-            uri.path = url
-            //This should be an anonymous api method
-            //headers["Authorization"] = authHeader
-            requestContentType = ContentType.JSON
-
-            response.success = { HttpResponseDecorator resp ->
-                println "Response status line: ${resp.statusLine}"
-
-                assert resp.statusLine.statusCode == 301, "Failed confirming domain"
-                assert resp.headers.'Location'.contains("emailVerified"), "Failed confirming domain"
-            }
-        }
+        assert response.containsHeader("emailVerified"), "Failed confirming domain"
     }
 
-	protected abstract def login()
+    protected abstract def login()
 }

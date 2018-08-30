@@ -158,5 +158,8 @@ Add "testPolicy" to "Start Dynamic Analyzer ASoC Scan" step. Migrate the "Start 
 	  <release-note plugin-version="9">
 Remove old deprecated "projectLocation" and "workspaceScheme" fields from "Start iOS Scan" step ("ipaFileLocation" already replaced them)
 	  </release-note>
+      <release-note plugin-version="10">
+Added application ID.
+      </release-note>
   </release-notes>
 </pluginInfo>

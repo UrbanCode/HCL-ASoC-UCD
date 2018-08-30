@@ -10,14 +10,18 @@
 		<string value="**/httpclient-cache-4.3.5.jar" />
 		<string value="**/httpcore-4.3.2.jar" />
 		<string value="**/httpmime-4.3.5.jar" />
+        <string value="**/HttpComponents-Util.jar" />
+        <string value="**/CommonsUtil.jar" />
 		<string value="**/json-lib-2.4-jdk15.jar" />
 		<string value="**/resolver.jar" />
+        <string value="**/log4j.jar" />
 	</resources>
 
 	<resources id="base.release.src.files">
 		<string value="**/AirPluginTool.groovy" />
 		<string value="**/RestClientBase.groovy" />
 		<string value="**/RestClient.groovy" />
+        <string value="**/RestClientHelper.groovy" />
 		<string value="**/ScanType.groovy" />
 		<string value="**/ScanTechnology.groovy" />
 		<string value="**/HttpBuilderUtils.groovy" />

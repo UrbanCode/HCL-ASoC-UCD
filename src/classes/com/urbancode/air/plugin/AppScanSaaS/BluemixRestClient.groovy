@@ -1,5 +1,5 @@
 /**
- * © Copyright IBM Corporation 2015.
+ * ï¿½ Copyright IBM Corporation 2015.
  * This is licensed under the following license.
  * The Eclipse Public 1.0 License (http://www.eclipse.org/legal/epl-v10.html)
  * U.S. Government Users Restricted Rights:  Use, duplication or disclosure restricted by GSA ADP Schedule Contract with IBM Corp.
@@ -13,10 +13,10 @@ public class BluemixRestClient extends RestClient {
 	public BluemixRestClient(Properties props) {
 		super(props, true, false);
 	}
-	
+
 	@Override
 	protected def login() {
 		bluemixLogin()
 		assertLogin()
-	} 
+	}
 }
