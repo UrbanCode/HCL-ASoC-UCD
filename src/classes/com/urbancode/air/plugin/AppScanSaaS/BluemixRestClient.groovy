@@ -10,13 +10,19 @@ package com.urbancode.air.plugin.AppScanSaaS
 import java.util.Properties;
 
 public class BluemixRestClient extends RestClient {
+    private String username
+    private String password
+
 	public BluemixRestClient(Properties props) {
-		super(props, true, false);
+		super(props, true, false)
+        this.username = props['loginUsername']
+        this.password = props['loginPassword']
+        login()
 	}
 
 	@Override
 	protected def login() {
-		bluemixLogin()
+		bluemixLogin(this.username, this.password)
 		assertLogin()
 	}
 }

@@ -41,11 +41,7 @@ public abstract class RestClient {
 	protected String authHeader
 
 	protected String baseUrl
-	protected String username
-	protected String password
 	protected String apiEnvironment;
-
-	protected HTTPBuilder httpBuilder
 
 	protected static final String ANALYZERS_API_BM_DOMAIN = "appscan.bluemix.net"
 	protected static final String ASM_API_GATEWAY_DOMAIN = "appscan.ibmcloud.com"
@@ -58,7 +54,7 @@ public abstract class RestClient {
 
     private static final String API_V2 = "/api/v2/%s"
     private static final String API_BLUEMIX_LOGIN = "/api/V2/Account/BluemixLogin"
-    private static final String API_IBMID_LOGIN = "/api/V2/Account/IBMIdLogin"
+    private static final String API_APIKEY_LOGIN = "/api/V2/Account/ApiKeyLogin"
     private static final String REPORT_TYPE_XML = "Xml"
     private static final String REPORT_TYPE_PDF = "Pdf"
     private static final String REPORT_TYPE_HTML = "Html"
@@ -87,17 +83,13 @@ public abstract class RestClient {
     private static final int MinReportSize = 1024
 
 	public RestClient(Properties props, boolean validateSSL, boolean useAsmGatewayAsDefault) {
-		this.validateSSL = validateSSL;
-		String userServer = props.containsKey("userServer") ? props["userServer"] : (useAsmGatewayAsDefault ? ASM_API_GATEWAY_DOMAIN : ANALYZERS_API_BM_DOMAIN);
-		String userServerPort = props.containsKey("userServerPort") ? props["userServerPort"] : "443";
+		this.validateSSL = validateSSL
+		String userServer = props.containsKey("userServer") ? props["userServer"] : (useAsmGatewayAsDefault ? ASM_API_GATEWAY_DOMAIN : ANALYZERS_API_BM_DOMAIN)
+		String userServerPort = props.containsKey("userServerPort") ? props["userServerPort"] : "443"
 
 		this.baseUrl = "https://" + userServer + ":" +  userServerPort
-		this.username = props["loginUsername"]
-		this.password = props["loginPassword"]
 
-        this.restHelper =  new RestClientHelper(baseUrl, username, password, false)
-
-		login()
+        this.restHelper =  new RestClientHelper(baseUrl, false)
 	}
 
 	public getBaseUrl() {
@@ -249,7 +241,7 @@ public abstract class RestClient {
         restHelper.addRequestHeader("Authorization", authHeader)
 	}
 
-	protected void bluemixLogin() {
+	protected void bluemixLogin(String username, String password) {
 		token = null
 		authHeader = null
 		apiEnvironment = "BlueMix";
@@ -271,14 +263,14 @@ public abstract class RestClient {
         }
 	}
 
-	protected void scxLogin() {
+	protected void scxLogin(String keyId, String keySecret) {
 		token = null
 		authHeader = null
 		apiEnvironment = "SCX";
 
 		Properties props = new Properties()
-        props.put("Username", username)
-        props.put("Password", password)
+        props.put("KeyId", keyId)
+        props.put("KeySecret", keySecret)
 
 		String url = getScxLoginUrl()
 		println "Send POST request to ${baseUrl}$url: $props"
@@ -432,7 +424,16 @@ public abstract class RestClient {
         return presencesData
     }
 
-    public String startDastScan(String startingUrl, String loginUsername, String loginPassword, String parentjobid, String presenceId, String testPolicy, String appId, String scanType) {
+    public String startDastScan(
+        String startingUrl,
+        String loginUsername,
+        String loginPassword,
+        String parentjobid,
+        String presenceId,
+        String testPolicy,
+        String appId,
+        String scanType)
+    {
         Properties props = new Properties()
         String url = null
         String scanId = null
@@ -464,7 +465,7 @@ public abstract class RestClient {
         }
         else {
             verifyPresenceId(presenceId)
-            url = String.format(DAST_API_PATH, API_METHOD_SCANS);
+            url = String.format(DAST_API_PATH, API_METHOD_SCANS)
             props.putAll([ ScanName : startingUrl, StartingUrl : startingUrl, LoginUser : loginUsername,
                 LoginPassword : loginPassword, PresenceId : presenceId,
                 testPolicy : testPolicyForPostRequest, ScanType: scanType])
@@ -614,7 +615,7 @@ public abstract class RestClient {
 
     protected String getScxLoginUrl()
     {
-        return API_IBMID_LOGIN
+        return API_APIKEY_LOGIN
     }
 
     public void deleteAllPresences() {

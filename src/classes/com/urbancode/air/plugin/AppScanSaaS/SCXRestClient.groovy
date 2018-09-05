@@ -10,13 +10,19 @@ package com.urbancode.air.plugin.AppScanSaaS
 import java.util.Properties;
 
 public class SCXRestClient extends RestClient {
+    private String keyId
+    private String keySecret
+
 	public SCXRestClient(Properties props) {
-		super(props, true, true);
+		super(props, true, true)
+        this.keyId = props['keyId']
+        this.keySecret = props['keySecret']
+        login()
 	}
 
 	@Override
 	protected def login() {
-		scxLogin()
+		scxLogin(this.keyId, this.keySecret)
 		assertLogin()
 	}
 }

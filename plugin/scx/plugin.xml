@@ -15,15 +15,15 @@
                      label="APK file location"
                      description="Please point to an apk file" />
       </property> 	  	
-	  <property name="loginUsername" required="true">
+	  <property name="keyId" required="true">
         <property-ui type="textBox"
-                     label="IBM ID Username"
-                     description="Please Specify you IBM ID Username" />
+                     label="Login Key ID"
+                     description="Please Specify your Login Key ID" />
       </property>
-	  <property name="loginPassword" required="true">
+	  <property name="keySecret" required="true">
         <property-ui type="secureBox"
-                     label="IBM ID Password"
-                     description="Please Specify you IBM ID Password" />
+                     label="Login Key Secret"
+                     description="Please Specify your Login Key Secret" />
       </property>
 	  <property name="reportIssueCountValidation" required="false">
         <property-ui type="textBox"
@@ -41,6 +41,11 @@
         <property-ui type="textBox"
                      label="Original scan ID"
                      description="If this is a rescan please enter the original scan id"/>
+      </property>
+      <property name="applicationId" required="true">
+        <property-ui type="textBox"
+                     label="Application ID"
+                     description="The Application ID"/>
       </property>
     </properties>
     <post-processing>
@@ -80,15 +85,15 @@
                      label="Application Password"
                      description="Password for the scanned application if contains login" />
       </property> 
-	  <property name="loginUsername" required="true">
+	  <property name="keyId" required="true">
         <property-ui type="textBox"
-                     label="IBM ID Username"
-                     description="Please Specify you IBM ID Username" />
+                     label="Login Key ID"
+                     description="Please Specify your Login Key ID" />
       </property>
-	  <property name="loginPassword" required="true">
+	  <property name="keySecret" required="true">
         <property-ui type="secureBox"
-                     label="IBM ID Password"
-                     description="Please Specify you IBM ID password" />
+                     label="Login Key Secret"
+                     description="Please Specify your Login Key Secret" />
       </property>
 	  <property name="reportIssueCountValidation" required="false">
         <property-ui type="textBox"
@@ -159,15 +164,15 @@
         			 label="Static Analyzer Client Tool location"
         			 description="Please point to the directory that the client tool was unzipped to. For example, C:\SAClientUtil." />
       </property>
-	  <property name="loginUsername" required="true">
+	  <property name="keyId" required="true">
         <property-ui type="textBox"
-                     label="IBM ID Username"
-                     description="Please Specify you IBM ID Username" />
+                     label="Login Key ID"
+                     description="Please Specify your Login Key ID" />
       </property>
-	  <property name="loginPassword" required="true">
+	  <property name="keySecret" required="true">
         <property-ui type="secureBox"
-        			 label="IBM ID Password"
-        			 description="Please Specify you IBM ID password" />
+        			 label="Login Key Secret"
+        			 description="Please Specify your Login Key Secret" />
       </property>
 	  <property name="reportIssueCountValidation" required="false">
         <property-ui type="textBox"
@@ -219,15 +224,15 @@
                      label="IPA file location"
                      description="Please point to the ipa file" />
       </property>  
-	  <property name="loginUsername" required="true">
+	  <property name="keyId" required="true">
         <property-ui type="textBox"
-                     label="IBM ID Username"
-                     description="Please Specify you IBM ID Username" />
+                     label="Login Key ID"
+                     description="Please Specify your Login Key ID" />
       </property>
-	  <property name="loginPassword" required="true">
+	  <property name="keySecret" required="true">
         <property-ui type="secureBox"
-                     label="IBM ID Password"
-                     description="Please Specify you IBM ID Password" />
+                     label="Login Key Secret"
+                     description="Please Specify your Login Key Secret" />
       </property>	 
 	  <property name="reportIssueCountValidation" required="false">
         <property-ui type="textBox"
@@ -245,6 +250,11 @@
         <property-ui type="textBox"
                      label="Original scan ID"
                      description="If this is a rescan please enter the original scan id"/>
+      </property>
+      <property name="applicationId" required="true">
+        <property-ui type="textBox"
+                     label="Application ID"
+                     description="The Application ID"/>
       </property>
     </properties>
     <post-processing>

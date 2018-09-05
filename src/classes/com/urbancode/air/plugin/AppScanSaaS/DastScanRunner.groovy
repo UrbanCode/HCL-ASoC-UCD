@@ -43,23 +43,31 @@ public class DastScanRunner {
 		if (props.containsKey("presenceId")) {
 			presenceId = props["presenceId"]
 		}
-		
+
 		String testPolicy = ""
 		if (props.containsKey("testPolicy")) {
 			testPolicy = props["testPolicy"]
 		}
-		
+
 		String appId = ""
 		if (props.containsKey("applicationId")) {
 			appId = props["applicationId"]
 		}
-		
+
 		String scanType = "Production"
 		if (props.containsKey("scanType")) {
 			scanType = props["scanType"]
 		}
-		
-		String scanId = restClient.startDastScan(startingUrl, scanUser, scanPassword, parentjobid, presenceId, testPolicy, appId, scanType)
+
+		String scanId = restClient.startDastScan(
+            startingUrl,
+            scanUser,
+            scanPassword,
+            parentjobid,
+            presenceId,
+            testPolicy,
+            appId,
+            scanType)
 
 		Long startTime = System.currentTimeMillis()
 		if (validateReport){
@@ -101,14 +109,14 @@ public class DastScanRunner {
 		}
 
 		println "Starting AppScan Presence with command: ${args}"
-				
+
 		Process process = args.execute(null, new File(serviceWorkingDirectory))
 		if (isWindows) {
 			//the windows batch file starts the presence in a new shell window, so we wait for the current shell to finish
 			//we give it some sime to extract the Java zip
 			waitForProcess(process, (int)TimeUnit.MINUTES.toMillis(10), true)
 		}
-		
+
 		restClient.verifyPresenceId(newPresenceId)
 
 		return newPresenceId

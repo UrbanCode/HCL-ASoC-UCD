@@ -44,7 +44,29 @@
 		<migrate-command name="Start iOS Analyzer ASoC Scan" />
 	</migrate>
     <migrate to-version="10">
-        <migrate-command name="Start Static Analyzer ASoC Scan" />
-        <migrate-command name="Start Dynamic Analyzer ASoC Scan" />
+        <migrate-command name="Start Static Analyzer ASoC Scan">
+            <migrate-properties>
+                <migrate-property name="keyId" default="" />
+                <migrate-property name="keySecret" default="" />
+            </migrate-properties>
+        </migrate-command>
+        <migrate-command name="Start Dynamic Analyzer ASoC Scan">
+            <migrate-properties>
+                <migrate-property name="keyId" default="" />
+                <migrate-property name="keySecret" default="" />
+            </migrate-properties>
+        </migrate-command>
+        <migrate-command name="Start iOS Analyzer ASoC Scan">
+            <migrate-properties>
+                <migrate-property name="keyId" default="" />
+                <migrate-property name="keySecret" default="" />
+            </migrate-properties>
+        </migrate-command>
+        <migrate-command name="Start Android Mobile Analyzer ASoC Scan">
+            <migrate-properties>
+                <migrate-property name="keyId" default="" />
+                <migrate-property name="keySecret" default="" />
+            </migrate-properties>
+        </migrate-command>
     </migrate>
 </plugin-upgrade>
