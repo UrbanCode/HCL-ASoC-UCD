@@ -24,7 +24,7 @@
         <string value="**/RestClientHelper.groovy" />
 		<string value="**/ScanType.groovy" />
 		<string value="**/ScanTechnology.groovy" />
-		<string value="**/HttpBuilderUtils.groovy" />
+		<string value="**/PresenceHelper.groovy" />
 	</resources>
 
 	<resources id="bluemix.release.src.files">

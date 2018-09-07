@@ -25,6 +25,18 @@
                      label="Login Key Secret"
                      description="Please Specify your Login Key Secret" />
       </property>
+      <property name="applicationId" required="true">
+        <property-ui type="textBox"
+                     label="Application ID"
+                     description="The Application ID"/>
+      </property>
+      <property name="presenceId">
+        <property-ui type="textBox"
+                     label="Presence ID"
+                     description="Specify an ID of an existing presence, which allows you to run
+                        scans on apps not connected to the internet or require a proxy server
+                        to make a connection."/>
+      </property>
 	  <property name="reportIssueCountValidation" required="false">
         <property-ui type="textBox"
         			 label="Fail condition threshold (H, M, L, I)"
@@ -41,11 +53,6 @@
         <property-ui type="textBox"
                      label="Original scan ID"
                      description="If this is a rescan please enter the original scan id"/>
-      </property>
-      <property name="applicationId" required="true">
-        <property-ui type="textBox"
-                     label="Application ID"
-                     description="The Application ID"/>
       </property>
     </properties>
     <post-processing>
@@ -68,7 +75,7 @@
     </command>
   </step-type>
   <step-type name="Start Dynamic Analyzer ASoC Scan">
-    <description>Starts a new Dynamic Analyzer Scan, using IBM Application Security on Cloud</description>
+    <description>Starts a new Dynamic Analyzer Scan, using IBM Application Security on Cloud.</description>
     <properties>
       <property name="startingUrl" required="true">
         <property-ui type="textBox"
@@ -95,6 +102,18 @@
                      label="Login Key Secret"
                      description="Please Specify your Login Key Secret" />
       </property>
+      <property name="applicationId" required="true">
+        <property-ui type="textBox"
+                     label="Application ID"
+                     description="The Application ID"/>
+      </property>
+      <property name="presenceId">
+        <property-ui type="textBox"
+                     label="Presence ID"
+                     description="Specify an ID of an existing presence, which allows you to run
+                        scans on apps not connected to the internet or require a proxy server
+                        to make a connection."/>
+      </property>
 	  <property name="reportIssueCountValidation" required="false">
         <property-ui type="textBox"
         			 label="Fail condition threshold (H, M, L, I)"
@@ -120,11 +139,6 @@
         <value label="Comprehensive (Default)">Default</value>
         <value label="Application-Only">Application-Only</value>
         <value label="The Vital Few">The Vital Few</value>
-      </property>
-      <property name="applicationId" required="true">
-        <property-ui type="textBox"
-                     label="Application ID"
-                     description="The Application ID"/>
       </property>
     </properties>
     <post-processing>
@@ -174,6 +188,11 @@
         			 label="Login Key Secret"
         			 description="Please Specify your Login Key Secret" />
       </property>
+      <property name="applicationId" required="true">
+        <property-ui type="textBox"
+                     label="Application ID"
+                     description="The Application ID"/>
+      </property>
 	  <property name="reportIssueCountValidation" required="false">
         <property-ui type="textBox"
         			 label="Fail condition threshold (H, M, L, I)"
@@ -190,11 +209,6 @@
         <property-ui type="textBox"
         			 label="Original scan ID"
         			 description="If you have previously scanned the application, please enter the original scan ID here if you want to rescan it." />
-      </property>
-      <property name="applicationId" required="true">
-        <property-ui type="textBox"
-                     label="Application ID"
-                     description="The Application ID"/>
       </property>
     </properties>
     <post-processing>
@@ -233,7 +247,19 @@
         <property-ui type="secureBox"
                      label="Login Key Secret"
                      description="Please Specify your Login Key Secret" />
-      </property>	 
+      </property>
+      <property name="applicationId" required="true">
+        <property-ui type="textBox"
+                     label="Application ID"
+                     description="The Application ID"/>
+      </property>
+      <property name="presenceId">
+        <property-ui type="textBox"
+                     label="Presence ID"
+                     description="Specify an ID of an existing presence, which allows you to run
+                        scans on apps not connected to the internet or require a proxy server
+                        to make a connection."/>
+      </property> 
 	  <property name="reportIssueCountValidation" required="false">
         <property-ui type="textBox"
         			 label="Fail condition threshold (H, M, L, I)"
@@ -251,11 +277,6 @@
                      label="Original scan ID"
                      description="If this is a rescan please enter the original scan id"/>
       </property>
-      <property name="applicationId" required="true">
-        <property-ui type="textBox"
-                     label="Application ID"
-                     description="The Application ID"/>
-      </property>
     </properties>
     <post-processing>
       <![CDATA[
@@ -272,6 +293,140 @@
 	  <arg value="-cp"/>
       <arg path="classes:lib/commons-beanutils-1.9.2:lib/commons-collections-3.2.1.jar:lib/commons-fileupload-1.3.1.jar:lib/commons-logging-1.1.3.jar:lib/groovy-json-2.1.7.jar:lib/http-builder-0.7.2-uc.jar:lib/httpclient-4.3.5.jar:lib/httpclient-cache-4.3.5.jar:lib/httpcore-4.3.2.jar:lib/httpmime-4.3.5.jar:lib/json-lib-2.4-jdk15.jar:lib/resolver.jar" />
       <arg file="start_ios_scan.groovy"/>
+      <arg file="${PLUGIN_INPUT_PROPS}"/>
+      <arg file="${PLUGIN_OUTPUT_PROPS}"/>
+    </command>
+  </step-type>
+
+  <step-type name="Create ASoC Presence">
+    <description>Create and start a new presence. To access a private site server you must 
+        create the presence in an environment that has local access to the server. The 'PresenceId'
+        output property generated can be used to run scans in environments that do not have
+        access to the private site.</description>
+    <properties> 
+      <property name="keyId" required="true">
+        <property-ui type="textBox"
+                     label="Login Key ID"
+                     description="Please Specify your Login Key ID" />
+      </property>
+      <property name="keySecret" required="true">
+        <property-ui type="secureBox"
+                     label="Login Key Secret"
+                     description="Please Specify your Login Key Secret" />
+      </property>
+      <property name="startPresence">
+        <property-ui type="checkBox"
+                     label="Start Presence"
+                     default-value="true"
+                     description="Select this option to start the presence after it 
+                        is created." />
+      </property>
+    </properties>
+    <post-processing>
+      <![CDATA[
+        if (properties.get("exitCode") != 0) {
+            properties.put("Status", "Failure");
+        }
+        else {
+            properties.put("Status", "Success");
+        }
+     ]]>
+    </post-processing>
+
+    <command program="${GROOVY_HOME}/bin/groovy">
+      <arg value="-cp"/>
+      <arg path="classes:lib/HttpComponents-Util.jar:lib/CommonsUtil.jar:lib/log4j.jar:lib/commons-beanutils-1.9.2:lib/commons-collections-3.2.1.jar:lib/commons-fileupload-1.3.1.jar:lib/commons-logging-1.1.3.jar:lib/groovy-json-2.1.7.jar:lib/http-builder-0.7.2-uc.jar:lib/httpclient-4.3.5.jar:lib/httpclient-cache-4.3.5.jar:lib/httpcore-4.3.2.jar:lib/httpmime-4.3.5.jar:lib/json-lib-2.4-jdk15.jar:lib/resolver.jar" />
+      <arg file="create_presence.groovy"/>
+      <arg file="${PLUGIN_INPUT_PROPS}"/>
+      <arg file="${PLUGIN_OUTPUT_PROPS}"/>
+    </command>
+  </step-type>
+  <step-type name="Start ASoC Presence">
+    <description>Start an existing ASoC presence. The presence will be started on the 
+        agent machine that runs the step.</description>
+    <properties> 
+      <property name="keyId" required="true">
+        <property-ui type="textBox"
+                     label="Login Key ID"
+                     description="Please Specify your Login Key ID" />
+      </property>
+      <property name="keySecret" required="true">
+        <property-ui type="secureBox"
+                     label="Login Key Secret"
+                     description="Please Specify your Login Key Secret" />
+      </property>
+      <property name="presenceId">
+        <property-ui type="textBox"
+                     label="Presence ID"
+                     description="Specify an ID of an existing presence, which allows you to run
+                        scans on apps not connected to the internet or require a proxy server
+                        to make a connection."/>
+      </property>
+      <property name="renewKey">
+        <property-ui type="checkBox"
+                     label="Renew Presence Key"
+                     default-value="true"
+                     description="Select this option to renew the key before 
+                        starting the presence." />
+      </property>
+    </properties>
+    <post-processing>
+      <![CDATA[
+        if (properties.get("exitCode") != 0) {
+            properties.put("Status", "Failure");
+        }
+        else {
+            properties.put("Status", "Success");
+        }
+     ]]>
+    </post-processing>
+
+    <command program="${GROOVY_HOME}/bin/groovy">
+      <arg value="-cp"/>
+      <arg path="classes:lib/HttpComponents-Util.jar:lib/CommonsUtil.jar:lib/log4j.jar:lib/commons-beanutils-1.9.2:lib/commons-collections-3.2.1.jar:lib/commons-fileupload-1.3.1.jar:lib/commons-logging-1.1.3.jar:lib/groovy-json-2.1.7.jar:lib/http-builder-0.7.2-uc.jar:lib/httpclient-4.3.5.jar:lib/httpclient-cache-4.3.5.jar:lib/httpcore-4.3.2.jar:lib/httpmime-4.3.5.jar:lib/json-lib-2.4-jdk15.jar:lib/resolver.jar" />
+      <arg file="start_presence.groovy"/>
+      <arg file="${PLUGIN_INPUT_PROPS}"/>
+      <arg file="${PLUGIN_OUTPUT_PROPS}"/>
+    </command>
+  </step-type>
+
+  <step-type name="Stop ASoC Presence">
+    <description>Stop a running ASoC presence. The presence will be stopped on the 
+        agent machine on which it was originally started.</description>
+    <properties> 
+      <property name="keyId" required="true">
+        <property-ui type="textBox"
+                     label="Login Key ID"
+                     description="Please Specify your Login Key ID" />
+      </property>
+      <property name="keySecret" required="true">
+        <property-ui type="secureBox"
+                     label="Login Key Secret"
+                     description="Please Specify your Login Key Secret" />
+      </property>
+      <property name="presenceId">
+        <property-ui type="textBox"
+                     label="Presence ID"
+                     description="Specify an ID of an existing presence, which allows you to run
+                        scans on apps not connected to the internet or require a proxy server
+                        to make a connection."/>
+      </property>
+    </properties>
+    <post-processing>
+      <![CDATA[
+        if (properties.get("exitCode") != 0) {
+            properties.put("Status", "Failure");
+        }
+        else {
+            properties.put("Status", "Success");
+        }
+     ]]>
+    </post-processing>
+
+    <command program="${GROOVY_HOME}/bin/groovy">
+      <arg value="-cp"/>
+      <arg path="classes:lib/HttpComponents-Util.jar:lib/CommonsUtil.jar:lib/log4j.jar:lib/commons-beanutils-1.9.2:lib/commons-collections-3.2.1.jar:lib/commons-fileupload-1.3.1.jar:lib/commons-logging-1.1.3.jar:lib/groovy-json-2.1.7.jar:lib/http-builder-0.7.2-uc.jar:lib/httpclient-4.3.5.jar:lib/httpclient-cache-4.3.5.jar:lib/httpcore-4.3.2.jar:lib/httpmime-4.3.5.jar:lib/json-lib-2.4-jdk15.jar:lib/resolver.jar" />
+      <arg file="stop_presence.groovy"/>
       <arg file="${PLUGIN_INPUT_PROPS}"/>
       <arg file="${PLUGIN_OUTPUT_PROPS}"/>
     </command>

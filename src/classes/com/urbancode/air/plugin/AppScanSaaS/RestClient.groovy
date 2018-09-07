@@ -75,8 +75,6 @@ public abstract class RestClient {
 
     private static final String NEW_KEY = "NewKey"
 
-    private static final String API_TOOLS = "/api/v2/Tools"
-    private static final String ASPresence = "/ASPresence"
     private static final String Linux_x86_64 = "/Linux_x86_64"
     private static final String Win_x86_64 = "/Win_x86_64"
 
@@ -383,6 +381,7 @@ public abstract class RestClient {
         return scanId
     }
 
+    /* Verify presence exists and is active */
     protected void verifyPresenceId(String presenceId) {
         if (presenceId == null || presenceId.trim().isEmpty()) {
             return
@@ -420,6 +419,7 @@ public abstract class RestClient {
         def presencesData = null
 
         HttpResponse response = restHelper.doGetRequest(url)
+        presencesData = restHelper.parseResponse(response)
 
         return presencesData
     }
@@ -654,7 +654,7 @@ public abstract class RestClient {
         return presenceId
     }
 
-    public void downloadPresenceKeyFile(String serviceDirectory, String presenceId) {
+    public void renewPresenceKeyFile(String serviceDirectory, String presenceId) {
         println "Downloading new key file for presence with id: ${presenceId}"
 
         String url = API_PRESENCES + "/" + presenceId + "/" + NEW_KEY
@@ -685,16 +685,16 @@ public abstract class RestClient {
         }
     }
 
-    public void downloadAppscanPresence(String serviceDirectory, boolean isWindows) {
+    public void downloadAppscanPresence(String serviceDirectory, boolean isWindows, String presenceId) {
         println "Downloading latest Appscan Presence"
 
-        String url = API_TOOLS + ASPresence + (isWindows ? Win_x86_64 : Linux_x86_64)
+        String url = API_PRESENCES + "/${presenceId}/Download" + (isWindows ? Win_x86_64 : Linux_x86_64)
 
         File serviceDir = new File(serviceDirectory)
 
-        println "Send GET request to ${this.baseUrl}$url"
-        restHelper.addRequestHeader("application/zip")
-        HttpResponse response = restHelper.doGetRequest(url)
+        println "Send POST request to ${this.baseUrl}$url"
+        restHelper.addRequestHeader("Accept", "application/zip")
+        HttpResponse response = restHelper.doPostRequest(url, null)
 
         InputStream zip = response.getEntity().getContent()
         serviceDir.deleteDir()
