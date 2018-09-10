@@ -85,12 +85,18 @@
       <property name="scanUser" required="false">
         <property-ui type="textBox"
                      label="Application Username"
-                     description="Username for the scanned application if contains login" />
+                     description="Username for the scanned application if it contains a login." />
       </property> 
       <property name="scanPassword" required="false">
         <property-ui type="secureBox"
                      label="Application Password"
-                     description="Password for the scanned application if contains login" />
+                     description="Password for the scanned application if it contains a login." />
+      </property> 
+      <property name="thirdCredential" required="false">
+        <property-ui type="secureBox"
+                     label="Third Application Credential"
+                     description="Provide this field if your application requires a third
+                        credential." />
       </property> 
 	  <property name="keyId" required="true">
         <property-ui type="textBox"
@@ -113,6 +119,16 @@
                      description="Specify an ID of an existing presence, which allows you to run
                         scans on apps not connected to the internet or require a proxy server
                         to make a connection."/>
+      </property>
+      <property name="scanType">
+        <property-ui type="selectBox"
+                     label="Scan Type"
+                     description="Select the type of scan. Staging scans are more comprehensive
+                        and designed to scan sites before production. Production scans are 
+                        designed to scan live sites."
+                     default-value="Production"/>
+        <value label="Production">Production</value>
+        <value label="Staging">Staging</value>
       </property>
 	  <property name="reportIssueCountValidation" required="false">
         <property-ui type="textBox"

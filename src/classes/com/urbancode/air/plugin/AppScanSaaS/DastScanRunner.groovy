@@ -31,6 +31,7 @@ public class DastScanRunner {
 
 		String scanUser = props["scanUser"]
 		String scanPassword = props["scanPassword"]
+        String thirdCredential = props['thirdCredential']
 		String parentjobid = props["parentScanId"]
 
 		String presenceId = ""
@@ -57,6 +58,7 @@ public class DastScanRunner {
             startingUrl,
             scanUser,
             scanPassword,
+            thirdCredential,
             parentjobid,
             presenceId,
             testPolicy,

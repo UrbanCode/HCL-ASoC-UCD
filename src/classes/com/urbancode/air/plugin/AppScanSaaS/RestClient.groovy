@@ -428,6 +428,7 @@ public abstract class RestClient {
         String startingUrl,
         String loginUsername,
         String loginPassword,
+        String thirdCredential,
         String parentjobid,
         String presenceId,
         String testPolicy,
@@ -466,13 +467,11 @@ public abstract class RestClient {
         else {
             verifyPresenceId(presenceId)
             url = String.format(DAST_API_PATH, API_METHOD_SCANS)
-            props.putAll([ ScanName : startingUrl, StartingUrl : startingUrl, LoginUser : loginUsername,
-                LoginPassword : loginPassword, PresenceId : presenceId,
-                testPolicy : testPolicyForPostRequest, ScanType: scanType])
 
-            if (appId != null && !appId.isEmpty()) {
-                props.put("AppId", appId)
-            }
+            /* Empty fields are ignored */
+            props.putAll([ AppId: appId, ScanName : startingUrl, StartingUrl : startingUrl, LoginUser : loginUsername,
+                LoginPassword : loginPassword, ExtraField: thirdCredential, PresenceId : presenceId,
+                testPolicy : testPolicyForPostRequest, ScanType: scanType])
         }
 
         println "Send POST request to ${this.baseUrl}$url , with the following parameters: $props"
@@ -568,9 +567,6 @@ public abstract class RestClient {
         }
         else {
             downloadSingleReportType(scanId, REPORT_TYPE_PDF)
-            if (scanType == ScanType.DAST) {
-                //downloadSingleReportType(scanId, REPORT_TYPE_COMPLIANCE_PDF)
-            }
         }
     }
 
