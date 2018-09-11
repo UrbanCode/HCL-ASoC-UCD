@@ -150,7 +150,7 @@ public abstract class RestClient {
 	protected String getApiPath_V1(ScanType scanType) {
 		String apiPathFormat = null;
 		switch (scanType) {
-			case ScanType.Mobile:
+			case ScanType.Android:
 				apiPathFormat = MOBILE_API_PATH_V1
 				break
 			case ScanType.SAST:
@@ -319,45 +319,19 @@ public abstract class RestClient {
         return fileId
     }
 
-    private String fileBasedScan(String fileId, String fileName, ScanType scanType, String parentjobid, String appId) {
-        Properties props = new Properties()
+    /* Scan using an ARSA file for static scans, or an IPAX/APK file for IOS/Android scans */
+    private String fileBasedScan(ScanType scanType, String fileId, String parentjobid, Properties props) {
         String url = null
         String scanId = null
         String lastExecutionId = null
-        String TechName = null
+        String TechName = scanType.toString()
 
+        /* Check if this is a re-scan */
         if (parentjobid != null && !parentjobid.isEmpty()) {
+            props = new Properties()    // Overwrite properties and only specify the scan file
             props.put("FileId", fileId)
             url = String.format(API_RE_SCAN, parentjobid);
             scanId = parentjobid
-        }
-        else {
-            switch (scanType) {
-                case ScanType.IOS:
-                    url = String.format(MOBILE_API_PATH, API_METHOD_SCANS);
-                    props.put("ApplicationFileId", fileId)
-                    props.put("ScanName", fileName)
-                    TechName = "iOS"
-                    break
-                case ScanType.Mobile:
-                    url = String.format(MOBILE_API_PATH, API_METHOD_SCANS);
-                    props.put("ApplicationFileId", fileId)
-                    props.put("ScanName", fileName)
-                    TechName = "MA Android"
-                    break
-                case ScanType.SAST:
-                    url = String.format(SAST_API_PATH, API_METHOD_SCANS);
-                    props.put("ARSAFileId", fileId)
-                    props.put("ScanName", fileName)
-                    TechName = "StaticAnalyzer"
-                    break
-                default:
-                    assert false , "FileBasedScan does not support scanType $scanType"
-            }
-        }
-        if (appId != null && !appId.isEmpty()) {
-            println("APP ID IS " + appId)
-            props.put("AppId", appId)
         }
 
         println "Send POST request to ${this.baseUrl}$url , with the following parameters: $props"
@@ -494,22 +468,36 @@ public abstract class RestClient {
         return scanId
     }
 
-    public String uploadAPK(File apkFile, String parentjobid, String appId) {
-        String fileId = uploadFile(apkFile)
-        println "APK file was uploaded successfully. FileID: " + fileId
-        return fileBasedScan(fileId, apkFile.getName(), ScanType.Mobile, parentjobid, appId)
+    public String startMobileScan(
+        ScanType scanType,
+        File scanFile,
+        String appUsername,
+        String appPassword,
+        String thirdCredential,
+        String parentjobid,
+        String appId,
+        String presenceId)
+    {
+        Properties props = new Properties()
+        String fileName = scanFile.getName()
+        String fileId = uploadFile(scanFile)    // Upload either the IPAX or APK file
+        println "${fileName} was uploaded successfully. FileID: " + fileId
+        String url = String.format(MOBILE_API_PATH, API_METHOD_SCANS);
+        props.putAll(AppId: appId, ApplicationFileId: fileId, ScanName: fileName, LoginUser: appUsername,
+            LoginPassword: appPassword, ExtraField: thirdCredential, PresenceId: presenceId)
+
+        return fileBasedScan(scanType, fileId, parentjobid, props)
     }
 
-    public String uploadARSA(File arsaFile, String parentjobid, String appId) {
+    public String startStaticScan(File arsaFile, String parentjobid, String appId) {
+        Properties props = new Properties()
+        String fileName = arsaFile.getName()
         String fileId = uploadFile(arsaFile)
-        println "IRX file was uploaded successfully. FileID: " + fileId
-        return fileBasedScan(fileId, arsaFile.getName(), ScanType.SAST, parentjobid, appId)
-    }
+        println "${fileName} was uploaded successfully. FileID: " + fileId
+        String url = String.format(SAST_API_PATH, API_METHOD_SCANS);
+        props.putAll([ARSAFileId: fileId, ScanName: fileName])
 
-    public String uploadIPAX(File ipaxFile, String appUsername, String appPassword, String parentjobid, String appId) {
-        String fileId = uploadFile(ipaxFile)
-        println "iOS file was uploaded successfully. FileID: " + fileId
-        return fileBasedScan(fileId, ipaxFile.getName(), ScanType.IOS, parentjobid, appId)
+        return fileBasedScan(ScanType.SAST, fileId, parentjobid, props)
     }
 
     public void waitForScan(String scanId, ScanType scanType, Long scanTimeout, Long startTime, String issueCountString, Properties props) {
@@ -573,7 +561,7 @@ public abstract class RestClient {
     protected String getApiPath(ScanType scanType) {
         String apiPath = null;
         switch (scanType) {
-            case ScanType.Mobile:
+            case ScanType.Android:
                 apiPath = MOBILE_API_PATH;
                 break
             case ScanType.SAST:

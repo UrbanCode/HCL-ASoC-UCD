@@ -14,7 +14,23 @@
         <property-ui type="textBox"
                      label="APK file location"
                      description="Please point to an apk file" />
-      </property> 	  	
+      </property> 
+      <property name="scanUser" required="false">
+        <property-ui type="textBox"
+                     label="Application Username"
+                     description="Username for the scanned application if it contains a login." />
+      </property> 
+      <property name="scanPassword" required="false">
+        <property-ui type="secureBox"
+                     label="Application Password"
+                     description="Password for the scanned application if it contains a login." />
+      </property> 
+      <property name="thirdCredential" required="false">
+        <property-ui type="secureBox"
+                     label="Third Application Credential"
+                     description="Provide this field if your application requires a third
+                        credential." />
+      </property>	  	
 	  <property name="keyId" required="true">
         <property-ui type="textBox"
                      label="Login Key ID"
@@ -253,7 +269,23 @@
         <property-ui type="textBox"
                      label="IPA file location"
                      description="Please point to the ipa file" />
-      </property>  
+      </property>
+      <property name="scanUser" required="false">
+        <property-ui type="textBox"
+                     label="Application Username"
+                     description="Username for the scanned application if it contains a login." />
+      </property> 
+      <property name="scanPassword" required="false">
+        <property-ui type="secureBox"
+                     label="Application Password"
+                     description="Password for the scanned application if it contains a login." />
+      </property> 
+      <property name="thirdCredential" required="false">
+        <property-ui type="secureBox"
+                     label="Third Application Credential"
+                     description="Provide this field if your application requires a third
+                        credential." />
+      </property>
 	  <property name="keyId" required="true">
         <property-ui type="textBox"
                      label="Login Key ID"

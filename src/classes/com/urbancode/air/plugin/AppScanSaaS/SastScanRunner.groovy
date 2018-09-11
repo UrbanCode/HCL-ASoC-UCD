@@ -17,7 +17,7 @@ import com.urbancode.air.plugin.AppScanSaaS.ScanType
 public class SastScanRunner {
 	public static String runSastScan(Properties props, RestClient restClient) {
 		final def validateReport = false;
-		
+
 		String issueCountString = "";
 		if (props.containsKey("validateReport")) {
 			validateReport = Boolean.valueOf(props['validateReport'])
@@ -25,25 +25,25 @@ public class SastScanRunner {
 			issueCountString = props['reportIssueCountValidation'];
 			validateReport = !issueCountString.isEmpty();
 		}
-		
+
 		String sastFileLocation = props['sastFileLocation']
-		
+
 		if (!sastFileLocation) {
 			println "sastFileLocation has not been specified."
 			System.exit 1
 		}
-		
+
 		File arsaFile = new File(sastFileLocation)
 		if (!arsaFile.exists()){
 			println "SAST file $arsaFile doesn't exist."
 			System.exit 1
 		}
-		
+
 		String parentjobid = props["parentScanId"]
-		
+
 		assert restClient != null, "Invalid plugin configuration"
 		boolean isGenerateARSA = !(arsaFile.name.endsWith('.irx') || arsaFile.name.endsWith('.arsa'))
-		
+
 		if (isGenerateARSA) {
 			String arsaToolDir = props['arsaToolDir']
 
@@ -51,43 +51,40 @@ public class SastScanRunner {
 				println "arsaToolDir has not been specified."
 				System.exit 1
 			}
-			
+
 			String encryptArsa = props['encryptArsa']
 			boolean encrypt = true;
-			
+
 			if (encryptArsa) {
 				encrypt = Boolean.parseBoolean(encryptArsa)
 			}
-			
+
 			arsaFile = generateARSA(arsaToolDir, arsaFile, props["sastConfigFile"], encrypt)
 			assert arsaFile.exists(), 'IRX file generation failed.'
 		}
-		
-		String appId = ""
-		if (props.containsKey("applicationId")) {
-			appId = props["applicationId"]
-		}
-		
-		String scanId = restClient.uploadARSA(arsaFile, parentjobid, appId)
-		
+
+        String appId = props["applicationId"]
+
+		String scanId = restClient.startStaticScan(arsaFile, parentjobid, appId)
+
 		if (isGenerateARSA) {
 			arsaFile.delete()
 		}
-		
+
 		Long startTime = System.currentTimeMillis()
 		if (validateReport){
 			final def scanTimeout = 45
 			try {
 				scanTimeout = Integer.parseInt(props['scanTimeout'])
-				
+
 			} catch (NumberFormatException){}
-			
+
 			restClient.waitForScan(scanId, ScanType.SAST, TimeUnit.MINUTES.toMillis(scanTimeout), startTime, issueCountString, props)
 		}
-		
+
 		return scanId
 	}
-	
+
 	protected static File generateARSA(String arsaToolDir, File scanDirectory, String configFile, boolean encrypt) {
 		boolean isWindows = (System.getProperty('os.name') =~ /(?i)windows/).find()
 		File arsaToolBin = new File(arsaToolDir, 'bin')
@@ -96,33 +93,33 @@ public class SastScanRunner {
 		assert arsaExe.exists(), "$arsaExe not found.  IRX file cannot be generated."
 		String arsaName = scanDirectory.getName()
 		File arsaFile = new File(scanDirectory, arsaName + '.irx')
-		
+
 		if (arsaFile.exists()) {
 			arsaFile.delete()
 		}
-		
+
 		def command = [arsaExe.absolutePath, 'prepare', '-n', arsaName]
-		
+
 		if (configFile) {
 			command.addAll(['-c', configFile])
 			println "Using configuration file $configFile"
 		}
-		
+
 		if (!encrypt) {
 			command.add('-ne')
 		}
-			
+
 		println "Running the following command arguments: $command"
 		def process = command.execute(System.getenv().collect { k, v -> "$k=$v" }, scanDirectory)
 		process.waitFor()
-		
+
 		def exitVal = process.exitValue()
 		if (!exitVal) {
 			println "Command ended with exitValue = $exitVal , process.text = ${process.text}"
 		} else {
 			println "Command failed with exitValue = $exitVal , process.err.text = ${process.err.text}"
 		}
-		
+
 		return arsaFile
 	}
 }

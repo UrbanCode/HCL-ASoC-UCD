@@ -21,34 +21,40 @@ public class MAScanRunner {
 			issueCountString = props['reportIssueCountValidation'];
 			validateReport = !issueCountString.isEmpty();
 		}
-		
+
 		File apkFile = new File(props["apkFileLocation"])
 		if (!apkFile.exists()){
 			println "APK file doesn't exist"
 			System.exit 1
 		}
-		
-		String parentjobid = props["parentScanId"]
-		
-		String appId = ""
-		if (props.containsKey("applicationId")) {
-			appId = props["applicationId"]
-		}
-		
-		String scanId = restClient.uploadAPK(apkFile, parentjobid, appId)
-		
-		
+
+        String appUsername = props["appUsername"]
+        String appPassword = props["appPassword"]
+        String thirdCredential = props['thirdCredential']
+        String parentjobid = props["parentScanId"]
+        String appId = props["applicationId"]
+
+        String scanId = restClient.startMobileScan(
+            ScanType.Android,
+            apkFile,
+            appUsername,
+            appPassword,
+            thirdCredential,
+            parentjobid,
+            appId)
+
+
 		Long startTime = System.currentTimeMillis()
 		if (validateReport){
 			final def scanTimeout = 45
 			try {
 				scanTimeout = Integer.parseInt(props['scanTimeout'])
-				
+
 			} catch (NumberFormatException){}
-			
-			restClient.waitForScan(scanId, ScanType.Mobile, TimeUnit.MINUTES.toMillis(scanTimeout), startTime, issueCountString, props)
+
+			restClient.waitForScan(scanId, ScanType.Android, TimeUnit.MINUTES.toMillis(scanTimeout), startTime, issueCountString, props)
 		}
-		
+
 		return scanId;
 	}
 }
