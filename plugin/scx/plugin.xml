@@ -10,6 +10,21 @@
   <step-type name="Start Android Mobile Analyzer ASoC Scan">
     <description>Starts a new Android Mobile Analyzer ASoC Scan, using IBM Application Security on Cloud</description>
     <properties>
+      <property name="applicationId" required="true">
+        <property-ui type="textBox"
+                     label="ASoC Application ID"
+                     description="The ID of the application in ASoC."/>
+      </property>
+      <property name="keyId" required="true">
+        <property-ui type="textBox"
+                     label="Login Key ID"
+                     description="The key ID to authenticate with ASoC." />
+      </property>
+      <property name="keySecret" required="true">
+        <property-ui type="secureBox"
+                     label="Login Key Secret"
+                     description="The key secret to authenticate with ASoC." />
+      </property>
       <property name="apkFileLocation" required="true">
         <property-ui type="textBox"
                      label="APK file location"
@@ -31,21 +46,6 @@
                      description="Provide this field if your application requires a third
                         credential." />
       </property>	  	
-	  <property name="keyId" required="true">
-        <property-ui type="textBox"
-                     label="Login Key ID"
-                     description="Please Specify your Login Key ID" />
-      </property>
-	  <property name="keySecret" required="true">
-        <property-ui type="secureBox"
-                     label="Login Key Secret"
-                     description="Please Specify your Login Key Secret" />
-      </property>
-      <property name="applicationId" required="true">
-        <property-ui type="textBox"
-                     label="Application ID"
-                     description="The Application ID"/>
-      </property>
       <property name="presenceId">
         <property-ui type="textBox"
                      label="Presence ID"
@@ -93,6 +93,21 @@
   <step-type name="Start Dynamic Analyzer ASoC Scan">
     <description>Starts a new Dynamic Analyzer Scan, using IBM Application Security on Cloud.</description>
     <properties>
+      <property name="applicationId" required="true">
+        <property-ui type="textBox"
+                     label="ASoC Application ID"
+                     description="The ID of the application in ASoC."/>
+      </property>
+      <property name="keyId" required="true">
+        <property-ui type="textBox"
+                     label="Login Key ID"
+                     description="The key ID to authenticate with ASoC." />
+      </property>
+      <property name="keySecret" required="true">
+        <property-ui type="secureBox"
+                     label="Login Key Secret"
+                     description="The key secret to authenticate with ASoC." />
+      </property>
       <property name="startingUrl" required="true">
         <property-ui type="textBox"
                      label="Starting url"
@@ -114,29 +129,14 @@
                      description="Provide this field if your application requires a third
                         credential." />
       </property> 
-	  <property name="keyId" required="true">
-        <property-ui type="textBox"
-                     label="Login Key ID"
-                     description="Please Specify your Login Key ID" />
-      </property>
-	  <property name="keySecret" required="true">
-        <property-ui type="secureBox"
-                     label="Login Key Secret"
-                     description="Please Specify your Login Key Secret" />
-      </property>
-      <property name="applicationId" required="true">
-        <property-ui type="textBox"
-                     label="Application ID"
-                     description="The Application ID"/>
-      </property>
-      <property name="presenceId">
+      <property name="presenceId" required="false">
         <property-ui type="textBox"
                      label="Presence ID"
                      description="Specify an ID of an existing presence, which allows you to run
                         scans on apps not connected to the internet or require a proxy server
                         to make a connection."/>
       </property>
-      <property name="scanType">
+      <property name="scanType" required="false">
         <property-ui type="selectBox"
                      label="Scan Type"
                      description="Select the type of scan. Staging scans are more comprehensive
@@ -145,6 +145,14 @@
                      default-value="Production"/>
         <value label="Production">Production</value>
         <value label="Staging">Staging</value>
+      </property>
+      <property name="scanFile" required="false">
+        <property-ui type="textBox"
+                     label="Scan/Template File"
+                     description="The path to a configuration (SCAN or SCANT) file. Use 
+                        this field if you have specific configuration requirements. The 
+                        Starting URL that you enter above must be identical to the 
+                        Starting URL in the file."/>
       </property>
 	  <property name="reportIssueCountValidation" required="false">
         <property-ui type="textBox"
@@ -195,6 +203,21 @@
     <step-type name="Start Static Analyzer ASoC Scan">
     <description>Starts a new Static Analyzer ASoC Scan, using IBM Application Security on Cloud</description>
     <properties>
+      <property name="applicationId" required="true">
+        <property-ui type="textBox"
+                     label="ASoC Application ID"
+                     description="The ID of the application in ASoC."/>
+      </property>
+      <property name="keyId" required="true">
+        <property-ui type="textBox"
+                     label="Login Key ID"
+                     description="The key ID to authenticate with ASoC." />
+      </property>
+      <property name="keySecret" required="true">
+        <property-ui type="secureBox"
+                     label="Login Key Secret"
+                     description="The key secret to authenticate with ASoC." />
+      </property>
       <property name="sastFileLocation" required="true">
         <property-ui type="textBox"
 			         label="IRX file/Scan directory"
@@ -209,21 +232,6 @@
         <property-ui type="textBox"
         			 label="Static Analyzer Client Tool location"
         			 description="Please point to the directory that the client tool was unzipped to. For example, C:\SAClientUtil." />
-      </property>
-	  <property name="keyId" required="true">
-        <property-ui type="textBox"
-                     label="Login Key ID"
-                     description="Please Specify your Login Key ID" />
-      </property>
-	  <property name="keySecret" required="true">
-        <property-ui type="secureBox"
-        			 label="Login Key Secret"
-        			 description="Please Specify your Login Key Secret" />
-      </property>
-      <property name="applicationId" required="true">
-        <property-ui type="textBox"
-                     label="Application ID"
-                     description="The Application ID"/>
       </property>
 	  <property name="reportIssueCountValidation" required="false">
         <property-ui type="textBox"
@@ -265,10 +273,25 @@
   <step-type name="Start iOS Analyzer ASoC Scan">
 	<description>Starts a new iOS Analyzer ASoC Scan, using IBM Application Security on Cloud</description>
     <properties>
+      <property name="applicationId" required="true">
+        <property-ui type="textBox"
+                     label="ASoC Application ID"
+                     description="The ID of the application in ASoC."/>
+      </property>
+      <property name="keyId" required="true">
+        <property-ui type="textBox"
+                     label="Login Key ID"
+                     description="The key ID to authenticate with ASoC." />
+      </property>
+      <property name="keySecret" required="true">
+        <property-ui type="secureBox"
+                     label="Login Key Secret"
+                     description="The key secret to authenticate with ASoC." />
+      </property>
       <property name="ipaFileLocation" required="true">
         <property-ui type="textBox"
                      label="IPA file location"
-                     description="Please point to the ipa file" />
+                     description="The path to the ipa file." />
       </property>
       <property name="scanUser" required="false">
         <property-ui type="textBox"
@@ -285,21 +308,6 @@
                      label="Third Application Credential"
                      description="Provide this field if your application requires a third
                         credential." />
-      </property>
-	  <property name="keyId" required="true">
-        <property-ui type="textBox"
-                     label="Login Key ID"
-                     description="Please Specify your Login Key ID" />
-      </property>
-	  <property name="keySecret" required="true">
-        <property-ui type="secureBox"
-                     label="Login Key Secret"
-                     description="Please Specify your Login Key Secret" />
-      </property>
-      <property name="applicationId" required="true">
-        <property-ui type="textBox"
-                     label="Application ID"
-                     description="The Application ID"/>
       </property>
       <property name="presenceId">
         <property-ui type="textBox"
@@ -355,12 +363,12 @@
       <property name="keyId" required="true">
         <property-ui type="textBox"
                      label="Login Key ID"
-                     description="Please Specify your Login Key ID" />
+                     description="The key ID to authenticate with ASoC." />
       </property>
       <property name="keySecret" required="true">
         <property-ui type="secureBox"
                      label="Login Key Secret"
-                     description="Please Specify your Login Key Secret" />
+                     description="The key secret to authenticate with ASoC." />
       </property>
       <property name="startPresence">
         <property-ui type="checkBox"
@@ -396,14 +404,14 @@
       <property name="keyId" required="true">
         <property-ui type="textBox"
                      label="Login Key ID"
-                     description="Please Specify your Login Key ID" />
+                     description="The key ID to authenticate with ASoC." />
       </property>
       <property name="keySecret" required="true">
         <property-ui type="secureBox"
                      label="Login Key Secret"
-                     description="Please Specify your Login Key Secret" />
+                     description="The key secret to authenticate with ASoC." />
       </property>
-      <property name="presenceId">
+      <property name="presenceId" required="false">
         <property-ui type="textBox"
                      label="Presence ID"
                      description="Specify an ID of an existing presence, which allows you to run
@@ -445,14 +453,14 @@
       <property name="keyId" required="true">
         <property-ui type="textBox"
                      label="Login Key ID"
-                     description="Please Specify your Login Key ID" />
+                     description="The key ID to authenticate with ASoC." />
       </property>
       <property name="keySecret" required="true">
         <property-ui type="secureBox"
                      label="Login Key Secret"
-                     description="Please Specify your Login Key Secret" />
+                     description="The key secret to authenticate with ASoC." />
       </property>
-      <property name="presenceId">
+      <property name="presenceId" required="false">
         <property-ui type="textBox"
                      label="Presence ID"
                      description="Specify an ID of an existing presence, which allows you to run

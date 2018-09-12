@@ -14,44 +14,22 @@ import com.urbancode.air.plugin.AppScanSaaS.ScanType
 
 public class DastScanRunner {
 	public static String runDastScan(Properties props, RestClient restClient) {
-		final def validateReport = false;
-		String issueCountString = "";
-		if (props.containsKey("validateReport")) {
-			validateReport = Boolean.valueOf(props['validateReport'])
-		} else if (props.containsKey("reportIssueCountValidation")) {
-			issueCountString = props['reportIssueCountValidation']
-			validateReport = !issueCountString.isEmpty();
-		}
+        String appId = props["applicationId"]
+        String startingUrl = props["startingUrl"]
+		String issueCountString = props['reportIssueCountValidation'] // Fail count threshold
+        String scanUser = props["scanUser"]
+        String scanPassword = props["scanPassword"]
+        String thirdCredential = props['thirdCredential']
+        String parentjobid = props["parentScanId"]
+        String scanType = props["scanType"]
+        String scanFilePath = props["scanFile"]
+        String presenceId = props["presenceId"]
+        String testPolicy = props["testPolicy"]
+        boolean validateReport = !issueCountString.isEmpty()   // Do not validate report if no fail condition
 
-		String startingUrl = props["startingUrl"]
 		if (startingUrl == null || startingUrl.isEmpty()){
 			println "Missing starting url"
 			System.exit 1
-		}
-
-		String scanUser = props["scanUser"]
-		String scanPassword = props["scanPassword"]
-        String thirdCredential = props['thirdCredential']
-		String parentjobid = props["parentScanId"]
-
-		String presenceId = ""
-		if (props.containsKey("presenceId")) {
-			presenceId = props["presenceId"]
-		}
-
-		String testPolicy = ""
-		if (props.containsKey("testPolicy")) {
-			testPolicy = props["testPolicy"]
-		}
-
-		String appId = ""
-		if (props.containsKey("applicationId")) {
-			appId = props["applicationId"]
-		}
-
-		String scanType = "Production"
-		if (props.containsKey("scanType")) {
-			scanType = props["scanType"]
 		}
 
 		String scanId = restClient.startDastScan(
@@ -63,7 +41,8 @@ public class DastScanRunner {
             presenceId,
             testPolicy,
             appId,
-            scanType)
+            scanType,
+            scanFilePath)
 
 		Long startTime = System.currentTimeMillis()
 		if (validateReport){
@@ -76,6 +55,6 @@ public class DastScanRunner {
 			restClient.waitForScan(scanId, ScanType.DAST, TimeUnit.MINUTES.toMillis(scanTimeout), startTime, issueCountString, props)
 		}
 
-		return scanId;
+		return scanId
 	}
 }

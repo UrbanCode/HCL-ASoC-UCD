@@ -64,6 +64,7 @@ public abstract class RestClient {
     private static final String MOBILE_API_PATH = "/api/v2/%s/MobileAnalyzer"
     private static final String SAST_API_PATH = "/api/v2/%s/StaticAnalyzer"
     private static final String DAST_API_PATH = "/api/v2/%s/DynamicAnalyzer"
+    protected static final String DAST_FILE_API_PATH = "/api/v2/%s/DynamicAnalyzerWithFile"
     private static final String API_METHOD_SCANS = "Scans"
     private static final String API_RE_SCAN = "/api/v2/Scans/%s/Executions"
     private static final String API_PRESENCES = "/api/v2/Presences"
@@ -176,18 +177,39 @@ public abstract class RestClient {
 		int maxMediumSeverityIssues = issueCount.length > 1 ? Integer.parseInt(issueCount[1]) : Integer.MAX_VALUE;
 		int maxLowSeverityIssues = issueCount.length > 2 ? Integer.parseInt(issueCount[2]) : Integer.MAX_VALUE;
 		int maxInformationalSeverityIssues = issueCount.length > 3 ? Integer.parseInt(issueCount[3]) : Integer.MAX_VALUE;
+        String failureString
 
 		println "Scan ${scanName} with id ${scanId} has ${issuesJson.NHighIssues} high severity issues"
-		assert issuesJson.NHighIssues <= maxHighSeverityIssues, "Scan failed to meet high issue count. Result: ${issuesJson.NHighIssues}. Max expected: ${maxHighSeverityIssues}"
+		if (issuesJson.NHighIssues <= maxHighSeverityIssues) {
+             failureString = "Scan failed to meet high issue count. Result: ${issuesJson.NHighIssues}. Max expected: ${maxHighSeverityIssues}"
+             println(failureString)
+		}
 
 		println "Scan ${scanName} with id ${scanId} has ${issuesJson.NMediumIssues} medium severity issues"
-		assert issuesJson.NMediumIssues <= maxMediumSeverityIssues, "Scan failed to meet medium issue count. Result: ${issuesJson.NMediumIssues}. Max expected: ${maxMediumSeverityIssues}"
+		if (issuesJson.NMediumIssues <= maxMediumSeverityIssues) {
+            failureString = "Scan failed to meet medium issue count. Result: ${issuesJson.NMediumIssues}. Max expected: ${maxMediumSeverityIssues}"
+            println(failureString)
+		}
 
 		println "Scan ${scanName} with id ${scanId} has ${issuesJson.NLowIssues} low severity issues"
-		assert issuesJson.NLowIssues <= maxLowSeverityIssues, "Scan failed to meet low issue count. Result: ${issuesJson.NLowIssues}. Max expected: ${maxLowSeverityIssues}"
+
+        if (issuesJson.NLowIssues <= maxLowSeverityIssues) {
+            failureString = "Scan failed to meet low issue count. Result: ${issuesJson.NLowIssues}. Max expected: ${maxLowSeverityIssues}"
+            println(failureString)
+        }
 
 		println "Scan ${scanName} with id ${scanId} has ${issuesJson.NInfoIssues} informational severity issues"
-		assert issuesJson.NInfoIssues <= maxInformationalSeverityIssues, "Scan failed to meet informational issue count. Result: ${issuesJson.NInfoIssues}. Max expected: ${maxInformationalSeverityIssues}"
+
+        if (issuesJson.NInfoIssues <= maxInformationalSeverityIssues) {
+            failureString = "Scan failed to meet informational issue count. Result: ${issuesJson.NInfoIssues}. Max expected: ${maxInformationalSeverityIssues}"
+            println(failureString)
+        }
+
+        /* Temporary feature... will return exitCode instead */
+        if (!failureString.isEmpty()) {
+
+            System.exit(1)
+        }
 	}
 
 	protected void unzip(InputStream inputStream, String filePattern, String targetDir) {
@@ -309,8 +331,8 @@ public abstract class RestClient {
         println "Send POST request to ${this.baseUrl}$url"
 
         restHelper.removeRequestHeader("Content-Type")  // browser must determine correct multipart entity content type
-
         def response = restHelper.doPostRequest(url, entityBuilder.build())
+        restHelper.addRequestHeader("Content-Type", "application/json")
 
         def json = restHelper.parseResponse(response)
         fileId = json.FileId
@@ -407,13 +429,14 @@ public abstract class RestClient {
         String presenceId,
         String testPolicy,
         String appId,
-        String scanType)
+        String scanType,
+        String scanFilePath)
     {
         Properties props = new Properties()
         String url = null
         String scanId = null
         String lastExecutionId = null
-        String testPolicyForPostRequest;
+        String testPolicyForPostRequest
 
         switch (testPolicy) {
             case "Application-Only":
@@ -440,7 +463,24 @@ public abstract class RestClient {
         }
         else {
             verifyPresenceId(presenceId)
-            url = String.format(DAST_API_PATH, API_METHOD_SCANS)
+
+            if ("".equals(scanFilePath) || scanFilePath.isEmpty()) {
+                /* Run scan without file */
+                url = String.format(DAST_API_PATH, API_METHOD_SCANS)
+            }
+            else {
+                /* Run scan with SCAN or SCANT file */
+                url = String.format(DAST_FILE_API_PATH, API_METHOD_SCANS)
+                File scanFile = new File(scanFilePath)
+
+                if (scanFile.isFile()) {
+                    String fileId = uploadFile(scanFile)
+                    props.put("ScanFileId", fileId)
+                }
+                else {
+                    throw new FileNotFoundException("File path ${scanFile.absolutePath} does not exist or is not a file.")
+                }
+            }
 
             /* Empty fields are ignored */
             props.putAll([ AppId: appId, ScanName : startingUrl, StartingUrl : startingUrl, LoginUser : loginUsername,

@@ -16,6 +16,8 @@ import com.urbancode.air.plugin.AppScanSaaS.ScanType
 
 public class SastScanRunner {
 	public static String runSastScan(Properties props, RestClient restClient) {
+        String appId = props["applicationId"]
+        String parentjobid = props["parentScanId"]
 		final def validateReport = false;
 
 		String issueCountString = "";
@@ -34,12 +36,10 @@ public class SastScanRunner {
 		}
 
 		File arsaFile = new File(sastFileLocation)
-		if (!arsaFile.exists()){
+		if (!arsaFile.exists()) {
 			println "SAST file $arsaFile doesn't exist."
 			System.exit 1
 		}
-
-		String parentjobid = props["parentScanId"]
 
 		assert restClient != null, "Invalid plugin configuration"
 		boolean isGenerateARSA = !(arsaFile.name.endsWith('.irx') || arsaFile.name.endsWith('.arsa'))
@@ -62,8 +62,6 @@ public class SastScanRunner {
 			arsaFile = generateARSA(arsaToolDir, arsaFile, props["sastConfigFile"], encrypt)
 			assert arsaFile.exists(), 'IRX file generation failed.'
 		}
-
-        String appId = props["applicationId"]
 
 		String scanId = restClient.startStaticScan(arsaFile, parentjobid, appId)
 

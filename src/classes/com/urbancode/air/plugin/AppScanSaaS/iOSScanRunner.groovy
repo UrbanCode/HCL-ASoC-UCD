@@ -21,14 +21,13 @@ import com.urbancode.air.plugin.AppScanSaaS.ScanType
 
 public class iOSScanRunner {
 	public static String runIOSScan(Properties props, RestClient restClient) {
-		final def validateReport = false;
-		String issueCountString = "";
-		if (props.containsKey("validateReport")) {
-			validateReport = Boolean.valueOf(props['validateReport'])
-		} else if (props.containsKey("reportIssueCountValidation")) {
-			issueCountString = props['reportIssueCountValidation'];
-			validateReport = !issueCountString.isEmpty();
-		}
+        String appUsername = props["appUsername"]
+        String appPassword = props["appPassword"]
+        String thirdCredential = props['thirdCredential']
+        String parentjobid = props["parentScanId"]
+        String appId = props["applicationId"]
+        String issueCountString = props['reportIssueCountValidation'];
+        boolean validateReport = !issueCountString.isEmpty();
 
 		File scanFile = null;
 
@@ -57,12 +56,6 @@ public class iOSScanRunner {
 
 			scanFile = generateIPAX(restClient, projectFile, props);
 		}
-
-		String appUsername = props["appUsername"]
-		String appPassword = props["appPassword"]
-        String thirdCredential = props['thirdCredential']
-		String parentjobid = props["parentScanId"]
-		String appId = props["applicationId"]
 
 		String scanId = restClient.startMobileScan(
             ScanType.IOS,
