@@ -1,4 +1,4 @@
-<project name="appscansaasdeployplugin" default="bluemix" basedir=".">
+<project name="appscansaasdeployplugin" default="scx" basedir=".">
 	<resources id="release.jar.files">
 		<string value="**/commons-beanutils-1.9.2.jar" />
 		<string value="**/commons-collections-3.2.1.jar" />
@@ -27,15 +27,6 @@
 		<string value="**/PresenceHelper.groovy" />
 	</resources>
 
-	<resources id="bluemix.release.src.files">
-		<resources refid="base.release.src.files" />
-		<string value="**/BluemixRestClient.groovy" />
-		<string value="**/DastScanRunner.groovy" />
-		<string value="**/MAScanRunner.groovy" />
-		<string value="**/SastScanRunner.groovy" />
-		<string value="bluemix/**" />
-	</resources>
-
 	<resources id="scx.release.src.files">
 		<resources refid="base.release.src.files" />
 		<string value="**/SCXRestClient.groovy" />
@@ -45,14 +36,6 @@
 		<string value="**/iOSScanRunner.groovy" />
 		<string value="scx/**" />
 	</resources>
-
-	<target name="bluemix">
-		<property name="build.type" value="bluemix" />
-
-		<pathconvert property="lib.includes" refid="release.jar.files" pathsep=" " />
-		<pathconvert property="src.includes" refid="bluemix.release.src.files" pathsep=" " />
-		<antcall target="main" />
-	</target>
 
 	<target name="scx">
 		<property name="build.type" value="scx" />
@@ -128,36 +111,6 @@
 		<property name="lib.dir" value="${basedir}/lib" />
 		<property name="res.dir" value="${basedir}/res" />
 		<property name="deployPluginArchiveName" value="releases/IBMSecurityTesting.${build.type}.zip" />
-	</target>
-
-	<target name="start_ma_scan_bluemix">
-		<clean_property_files />
-		<propertyfile file="in_props" comment="Input properties">
-			<entry key="apkFileLocation" value="res\test.apk" />
-		</propertyfile>
-
-		<run_groovy_script src="src/bluemix/start_ma_scan.groovy" loginusername="ffffffff-ffff-ffff-ffff-ffffffffffff" loginpassword="**********************************" />
-	</target>
-
-	<target name="start_dast_scan_bluemix">
-		<clean_property_files />
-		<propertyfile file="in_props" comment="Input properties">
-			<entry key="startingUrl" value="http://altoroj.mybluemix.net/" />
-			<entry key="scanUser" value="jsmith" />
-			<entry key="scanPassword" value="demo1234" />
-		</propertyfile>
-
-		<run_groovy_script src="src/bluemix/start_dast_scan.groovy" loginusername="ffffffff-ffff-ffff-ffff-ffffffffffff" loginpassword="**********************************" />
-	</target>
-
-	<target name="start_sast_scan_bluemix">
-		<clean_property_files />
-		<propertyfile file="in_props" comment="Input properties">
-			<entry key="sastFileLocation" value="res" />
-			<entry key="arsaToolDir" value="C:\SAClientUtil" />
-		</propertyfile>
-
-		<run_groovy_script src="src/bluemix/start_sast_scan.groovy" loginusername="ffffffff-ffff-ffff-ffff-ffffffffffff" loginpassword="**********************************" />
 	</target>
 
 	<target name="start_ma_scan_scx">
