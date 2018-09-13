@@ -5,9 +5,6 @@
  * U.S. Government Users Restricted Rights:  Use, duplication or disclosure restricted by GSA ADP Schedule Contract with IBM Corp.
  */
 
-import java.util.Formatter.DateTime;
-import java.util.concurrent.TimeUnit;
-
 import com.urbancode.air.AirPluginTool
 import com.urbancode.air.plugin.AppScanSaaS.SCXRestClient
 
@@ -21,4 +18,4 @@ restClient.deletePresence(presenceId, deleteAll)
 
 airHelper.setOutputProperty("PresenceId", presenceId)
 airHelper.storeOutputProperties()
-println "Exiting with success"
+println "[OK] Process has completed successfully."

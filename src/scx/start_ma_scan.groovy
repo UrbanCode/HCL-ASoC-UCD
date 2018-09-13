@@ -18,13 +18,16 @@ String thirdCredential = props['thirdCredential']
 String parentjobid = props["parentScanId"]
 String appId = props["applicationId"]
 String issueCountString = props['reportIssueCountValidation']
+long scanTimeout = props["scanTimeout"] ? Long.parseLong(props["scanTimeout"]) : -1
+boolean failOnPause = Boolean.parseBoolean(props['failOnPause'])
 boolean validateReport = !issueCountString.isEmpty()
+int exitCode = 0
 
 SCXRestClient restClient = new SCXRestClient(props)
 
 File apkFile = new File(props["apkFileLocation"])
 if (!apkFile.exists()){
-    println "APK file doesn't exist"
+    println "[Error] APK file doesn't exist."
     System.exit 1
 }
 
@@ -41,7 +44,15 @@ airHelper.setOutputProperty("ScanId", scanId)
 airHelper.storeOutputProperties()
 
 if (validateReport){
-    Long startTime = System.currentTimeMillis()
-    int exitCode = restClient.waitForScan(scanId, ScanType.Android, startTime, issueCountString, props)
-    System.exit(exitCode)
+    long startTime = System.currentTimeMillis()
+    exitCode = restClient.waitForScan(scanId, ScanType.Android, issueCountString, startTime, scanTimeout, failOnPause)
 }
+
+if (exitCode) {
+    println("[Error] Scan has failed validation.")
+}
+else {
+    println("[OK] Scan has completed successfully.")
+}
+
+System.exit(exitCode)

@@ -7,41 +7,26 @@
 
 package com.urbancode.air.plugin.AppScanSaaS
 
-import groovy.json.JsonSlurper
-import groovyx.net.http.*
-
-import java.io.File;
-import java.io.InputStream;
-import java.util.Properties;
+import java.io.File
+import java.io.InputStream
+import java.util.Properties
 import java.util.concurrent.TimeUnit
 import java.util.zip.ZipEntry
 import java.util.zip.ZipInputStream
 
-import org.apache.http.HttpRequest;
-import org.apache.http.HttpResponse;
-import org.apache.http.ProtocolException;
-import org.apache.http.client.RedirectStrategy
-import org.apache.http.client.methods.HttpUriRequest;
+import org.apache.http.HttpResponse
 import org.apache.http.entity.mime.HttpMultipartMode
 import org.apache.http.entity.mime.MultipartEntityBuilder
 import org.apache.http.entity.mime.content.InputStreamBody
-import org.apache.http.entity.mime.content.StringBody
-import org.apache.http.conn.ssl.SSLContextBuilder
-import org.apache.http.conn.ssl.TrustSelfSignedStrategy
-import org.apache.http.conn.ssl.SSLConnectionSocketFactory
-import org.apache.http.impl.client.CloseableHttpClient
-import org.apache.http.impl.client.DefaultRedirectStrategy
-import org.apache.http.impl.client.HttpClients
-import org.apache.http.protocol.HttpContext;
 
 public abstract class RestClient {
     protected RestClientHelper restHelper
-	protected boolean validateSSL;
+	protected boolean validateSSL
 	protected String token
 	protected String authHeader
 
 	protected String baseUrl
-	protected String apiEnvironment;
+	protected String apiEnvironment
 
 	protected static final String ANALYZERS_API_BM_DOMAIN = "appscan.bluemix.net"
 	protected static final String ASM_API_GATEWAY_DOMAIN = "appscan.ibmcloud.com"
@@ -98,14 +83,14 @@ public abstract class RestClient {
 	public File getIPAXGenerator(String dirName) {
 		String apiPath = getApiPath_V1(ScanType.IOS);
 		String url = "${apiPath}${API_METHOD_DOWNLOAD_TOOL_V1}"
-		println "Sending POST request to ${this.baseUrl}$url."
+		println "[Action] Sending POST request to ${this.baseUrl}$url."
 
         restHelper.addRequestHeader("Accept", "application/zip")
 
         def response = restHelper.doPostRequest(url)
         InputStream zip = response.getEntity().getContent()
 
-        println "IPAX generator tool successfully received. Deleting ${dirName} before extracting it."
+        println "[OK] IPAX generator tool successfully received. Deleting ${dirName} before extracting it."
         (new File(dirName)).deleteDir()
         unzip(zip, "", dirName)
 
@@ -116,13 +101,13 @@ public abstract class RestClient {
 		String url = getScanUrl(scanId, scanType)
 		def scan = null
 
-        println "Sending GET request to ${this.baseUrl}$url."
+        println "[Action] Sending GET request to ${this.baseUrl}$url."
 
         HttpResponse response = restHelper.doGetRequest(url)
 
         scan = restHelper.parseResponse(response)
 
-		println "Scan retrieved successfully. Scan name is: ${scan.Name}"
+		println "[OK] Scan retrieved successfully. Scan name is: ${scan.Name}"
 		return scan
 	}
 
@@ -130,22 +115,22 @@ public abstract class RestClient {
 		String url = getAllScansUrl(scanType)
 		def scans = null
 
-        println "Sending GET request to ${this.baseUrl}$url."
+        println "[Action] Sending GET request to ${this.baseUrl}$url."
 
         HttpResponse response = restHelper.doGetRequest(url)
         scans = restHelper.parseResponse(response)
 
-		println "User scans retrieved successfully"
+		println "[OK] User scans retrieved successfully"
 		return scans
 	}
 
 	public void deleteScan(String scanId, ScanType scanType) {
 		String url = getDeleteScanUrl(scanId, scanType)
 
-		println "Sending DELETE request to ${this.baseUrl}$url."
+		println "[Action] Sending DELETE request to ${this.baseUrl}$url."
 
         restHelper.doDeleteRequest(url)
-		println "Scan Id: ${scanId} deleted successfully"
+		println "[OK] Scan Id: ${scanId} deleted successfully"
 	}
 
 	protected String getApiPath_V1(ScanType scanType) {
@@ -179,29 +164,33 @@ public abstract class RestClient {
 		int maxInformationalSeverityIssues = issueCount.length > 3 ? Integer.parseInt(issueCount[3]) : Integer.MAX_VALUE;
         int exitCode = 0
 
-		println "Scan ${scanName} with id ${scanId} has ${issuesJson.NHighIssues} high severity issues."
+		println "[OK] Scan ${scanName} with id ${scanId} has ${issuesJson.NHighIssues} high severity issues."
 		if (issuesJson.NHighIssues > maxHighSeverityIssues) {
-             println("Scan failed to meet high issue count. Result: ${issuesJson.NHighIssues}. Max expected: ${maxHighSeverityIssues}")
+             println("[Error] Scan exceeded high issue count threshold. Result: ${issuesJson.NHighIssues}. "
+                 + "Max expected: ${maxHighSeverityIssues}")
              exitCode = 1
 		}
 
-		println "Scan ${scanName} with id ${scanId} has ${issuesJson.NMediumIssues} medium severity issues."
+		println "[OK] Scan ${scanName} with id ${scanId} has ${issuesJson.NMediumIssues} medium severity issues."
 		if (issuesJson.NMediumIssues > maxMediumSeverityIssues) {
-            println("Scan failed to meet medium issue count. Result: ${issuesJson.NMediumIssues}. Max expected: ${maxMediumSeverityIssues}")
+            println("[Error] Scan exceeded medium issue count threshold. Result: ${issuesJson.NMediumIssues}. "
+                + "Max expected: ${maxMediumSeverityIssues}")
             exitCode = 1
 		}
 
-		println "Scan ${scanName} with id ${scanId} has ${issuesJson.NLowIssues} low severity issues"
+		println "[OK] Scan ${scanName} with id ${scanId} has ${issuesJson.NLowIssues} low severity issues"
 
         if (issuesJson.NLowIssues > maxLowSeverityIssues) {
-            println("Scan failed to meet low issue count. Result: ${issuesJson.NLowIssues}. Max expected: ${maxLowSeverityIssues}")
+            println("[Error] Scan exceeded low issue count threshold. Result: ${issuesJson.NLowIssues}. "
+                + "Max expected: ${maxLowSeverityIssues}")
             exitCode = 1
         }
 
-		println "Scan ${scanName} with id ${scanId} has ${issuesJson.NInfoIssues} informational severity issues"
+		println "[OK] Scan ${scanName} with id ${scanId} has ${issuesJson.NInfoIssues} informational severity issues"
 
         if (issuesJson.NInfoIssues > maxInformationalSeverityIssues) {
-            println("Scan failed to meet informational issue count. Result: ${issuesJson.NInfoIssues}. Max expected: ${maxInformationalSeverityIssues}")
+            println("[Error] Scan exceeded informational issue count threshold. Result: ${issuesJson.NInfoIssues}. "
+                + "Max expected: ${maxInformationalSeverityIssues}")
             exitCode = 1
         }
 
@@ -229,7 +218,7 @@ public abstract class RestClient {
 						ze = zis.getNextEntry()
 						continue
 					}
-					println "Unzipping file: ${newFile.getAbsoluteFile()}"
+					println "[Action] Unzipping file: ${newFile.getAbsoluteFile()}."
 					new File(newFile.getParent()).mkdirs()
 
 					FileOutputStream fos = new FileOutputStream(newFile)
@@ -245,7 +234,7 @@ public abstract class RestClient {
 			zis.closeEntry()
 			zis.close()
 
-			println "Done extracting zip"
+			println "[OK] Done extracting zip."
 		} catch(IOException ex){
 			assert false, "Failed extracting zip filr to directory: ${targetDir}. Exception: ${ex.getMessage()}"
 		}
@@ -267,30 +256,11 @@ public abstract class RestClient {
         props.put("KeySecret", keySecret)
 
 		String url = getScxLoginUrl()
-		println "Send POST request to ${baseUrl}$url: $props"
+		println("[Action] Send POST request to ${baseUrl}$url: $props.")
 
-		try{
-            HttpResponse response = restHelper.doPostRequest(url, props)
-            def jsonObj = restHelper.parseResponse(response)
-            token = jsonObj.Token
-		}
-		catch (Exception e) {
-			println "Failed scxLogin with exception: ${e.getMessage()}"
-		}
-	}
-
-	protected def parseJsonFromResponseText(HttpResponseDecorator resp, String errorMessage) {
-		def json;
-		try{
-			String text = resp.entity.content.text
-			String contentType = resp.headers."Content-Type"
-			assert  contentType?.startsWith("application/json"), "${errorMessage} -> the response headers did not have content-Type application/json"
-			json = new JsonSlurper().parseText(text)
-		}
-		catch (Exception e) {
-			println "${errorMessage} -> parseJsonFromResponseText failed, with this exception: ${e.getMessage()}"
-		}
-		return json
+        HttpResponse response = restHelper.doPostRequest(url, props)
+        def jsonObj = restHelper.parseResponse(response)
+        token = jsonObj.Token
 	}
 
     private String uploadFile(File file) {
@@ -302,7 +272,7 @@ public abstract class RestClient {
 
         String fileId = null
         String url = API_FILE_UPLOAD
-        println "Send POST request to ${this.baseUrl}$url"
+        println("[Action] Sending POST request to ${this.baseUrl}$url.")
 
         restHelper.removeRequestHeader("Content-Type")  // browser must determine correct multipart entity content type
         def response = restHelper.doPostRequest(url, entityBuilder.build())
@@ -310,7 +280,11 @@ public abstract class RestClient {
 
         def json = restHelper.parseResponse(response)
         fileId = json.FileId
-        assert  fileId != null && fileId.length() >= 10, "The file was NOT uploaded successfully"
+
+        if (fileId == null || fileId.length() < 10) {
+            println("[Error] The file was NOT uploaded successfully.")
+            System.exit(1)
+        }
 
         return fileId
     }
@@ -335,11 +309,11 @@ public abstract class RestClient {
             scanId = parentjobid
         }
 
-        println "Send POST request to ${this.baseUrl}$url , with the following parameters: $props"
+        println "[Action] Sending POST request to ${this.baseUrl}$url , with the following parameters: $props."
         restHelper.addRequestHeader("Content-Type", "application/json")
         def response = restHelper.doPostRequest(url, props)
 
-        println "Response status line: ${response.getStatusLine()}"
+        println "[OK] Response status line: ${response.getStatusLine()}."
         def json = restHelper.parseResponse(response)
 
         if (scanId == null) {
@@ -350,9 +324,11 @@ public abstract class RestClient {
         else {
             lastExecutionId = json.Id
         }
-        assert  lastExecutionId != null && lastExecutionId.length() >= 10, "$TechName lastExecutionID was NOT started successfully"
 
-        println "$TechName scan was started successfully. scanId=$scanId , executionId=$lastExecutionId"
+        if (lastExecutionId == null || lastExecutionId.length() < 10)
+            println("[Error] $TechName lastExecutionID was NOT started successfully.")
+
+        println "[OK] $TechName scan was started successfully. scanId=$scanId , executionId=$lastExecutionId."
         return scanId
     }
 
@@ -362,7 +338,7 @@ public abstract class RestClient {
             return
         }
 
-        println "Waiting for presence to be active. Presence id: " + presenceId
+        println ("[Action] Waiting for presence to be active. Presence id: ${presenceId}.")
 
         Long waitTimeout = TimeUnit.MINUTES.toMillis(5)
         Long startTime = System.currentTimeMillis()
@@ -372,14 +348,14 @@ public abstract class RestClient {
 
             def presencesData = getPresences()
 
-            println "Current presences: " + presencesData
+            println("[OK] Current presences: ${presencesData}.")
 
             //verify that expected presence exists and online
             boolean idExists = presencesData.any( { presence -> return (presence.Id == presenceId && presence.Status == "Active") })
 
             if (idExists) {
-                println "Found active presence with id: " + presenceId
-                break;
+                println "[OK] Found active presence with id: ${presenceId}."
+                break
             }
 
             assert !(System.currentTimeMillis() - startTime > waitTimeout), "Cannot find active presence with id: " + presenceId
@@ -389,7 +365,7 @@ public abstract class RestClient {
     protected def getPresences() {
         String url = API_PRESENCES
 
-        println "Send GET request to ${this.baseUrl}$url"
+        println("[Action] Sending GET request to ${this.baseUrl}$url.")
 
         def presencesData = null
 
@@ -419,19 +395,19 @@ public abstract class RestClient {
 
         switch (testPolicy) {
             case "Application-Only":
-                println "Test policy 'Application-Only' will be used."
+                println("[OK] Test policy 'Application-Only' will be used.")
                 testPolicyForPostRequest = "Application-Only.policy"
                 break
             case "The Vital Few":
-                println "Test policy 'The Vital Few' will be used."
+                println("[OK] Test policy 'The Vital Few' will be used.")
                 testPolicyForPostRequest = "The Vital Few.policy"
                 break
             case "Default":
-                println "Test policy 'Default' will be used."
+                println("[OK] Test policy 'Default' will be used.")
                 testPolicyForPostRequest = "Default.policy"
                 break
             default:
-                println "Default test policy 'Default.policy' will be used."
+                println("[OK] Default test policy 'Default.policy' will be used.")
                 testPolicyForPostRequest = "Default.policy"
         }
 
@@ -467,7 +443,7 @@ public abstract class RestClient {
                 testPolicy : testPolicyForPostRequest, ScanType: scanType])
         }
 
-        println "Send POST request to ${this.baseUrl}$url , with the following parameters: $props"
+        println("[Action] Sending POST request to ${this.baseUrl}$url , with the following parameters: $props.")
 
         HttpResponse response = restHelper.doPostRequest(url, props)
 
@@ -482,8 +458,11 @@ public abstract class RestClient {
             lastExecutionId = json.Id
         }
 
-        assert  lastExecutionId != null && lastExecutionId.length() >= 10, "DAST lastExecutionID was NOT started successfully"
-        println "DAST scan was started successfully. scanId=$scanId , executionId=$lastExecutionId"
+        if (lastExecutionId == null || lastExecutionId.length() < 10) {
+            println("[Error] DAST lastExecutionID was NOT started successfully.")
+            System.exit(1)
+        }
+        println("[OK] DAST scan was started successfully. scanId=$scanId , executionId=$lastExecutionId.")
         return scanId
     }
 
@@ -500,7 +479,7 @@ public abstract class RestClient {
         Properties props = new Properties()
         String fileName = scanFile.getName()
         String fileId = uploadFile(scanFile)    // Upload either the IPAX or APK file
-        println "${fileName} was uploaded successfully. FileID: " + fileId
+        println("[OK] ${fileName} was uploaded successfully. FileID: ${fileId}.")
         String url = String.format(MOBILE_API_PATH, API_METHOD_SCANS);
         props.putAll(AppId: appId, ApplicationFileId: fileId, ScanName: fileName, LoginUser: appUsername,
             LoginPassword: appPassword, ExtraField: thirdCredential, PresenceId: presenceId)
@@ -512,39 +491,47 @@ public abstract class RestClient {
         Properties props = new Properties()
         String fileName = arsaFile.getName()
         String fileId = uploadFile(arsaFile)
-        println "${fileName} was uploaded successfully. FileID: " + fileId
+        println("[OK] ${fileName} was uploaded successfully. FileID: ${fileId}.")
         String url = String.format(SAST_API_PATH, API_METHOD_SCANS)
         props.putAll([AppId: appId, ARSAFileId: fileId, ScanName: fileName])
 
         return fileBasedScan(ScanType.SAST, url, fileId, parentjobid, props)
     }
 
-    public int waitForScan(String scanId, ScanType scanType, Long startTime, String issueCountString, Properties props) {
-        println "Waiting for scan with id '${scanId}'"
+    public int waitForScan(
+        String scanId,
+        ScanType scanType,
+        String issueCountString,
+        long startTime,
+        long timeout,
+        boolean failOnPause)
+    {
+        println("[Action] Waiting for scan with id '${scanId}'.")
 
         def scan = null
         String status = null
         String executionProgress = null
 
-        Boolean toleratePendingSupport = true;
-        String toleratePause = props['toleratePause'];
-        if (toleratePause != null && toleratePause.equalsIgnoreCase("false")) {
-            toleratePendingSupport = false;
-        }
-
         while (true) {
-
             Thread.sleep(TimeUnit.MINUTES.toMillis(1))
 
             scan = getScan(scanId, scanType)
             status = scan.LatestExecution.Status
             executionProgress = scan.LatestExecution.ExecutionProgress
-            println "Scan '${scan.Name}' , with id '${scan.Id}' , status is '$status' , ExecutionProgress is '$executionProgress'"
-            if (!status.equalsIgnoreCase("Running") || (!toleratePendingSupport && executionProgress.equalsIgnoreCase("Paused"))) {
+            println("[OK] Scan '${scan.Name}' , with id '${scan.Id}' , status is '$status' , ExecutionProgress is '$executionProgress'.")
+            if (!status.equalsIgnoreCase("Running") || (failOnPause && executionProgress.equalsIgnoreCase("Paused"))) {
+                break
+            }
+            if (timeout != -1 && (System.currentTimeMillis() - startTime) > timeout) {
+                println("[Error] Scan did not complete within the given timeout value.")
                 break
             }
         }
-        assert status.equalsIgnoreCase("Ready"), "Scan status is '$status' and not 'Ready'. (ExecutionProgress is '$executionProgress')"
+
+        if (!status.equalsIgnoreCase("Ready")) {
+            println("[Error] Scan status is '$status' and not 'Ready'. (ExecutionProgress is '$executionProgress').")
+            System.exit(1)
+        }
 
         downloadReport(scanId, scanType)
         return validateScanIssues(scan.LastSuccessfulExecution, scan.Name, scanId, issueCountString)
@@ -553,7 +540,7 @@ public abstract class RestClient {
     private void downloadSingleReportType(String scanId, String reportType) {
         String url =  String.format(API_DOWNLOAD_REPORT, scanId, reportType)
 
-        println "Send GET request to ${this.baseUrl}$url"
+        println("[Action] Sending GET request to ${this.baseUrl}$url.")
 
         def response = restHelper.doGetRequest(url)
 
@@ -561,9 +548,13 @@ public abstract class RestClient {
         response.getEntity().writeTo(baos)
         byte[] bytes = baos.toByteArray()
 
-        println "Response status line: ${response.statusLine}"
-        assert bytes.length > RestClient.MinReportSize, "Report size '${bytes.length}' is invalid"
-        println "Report type ${reportType} downloaded successfully"
+        println("[OK] Response status line: ${response.statusLine}.")
+        if (bytes.length <= RestClient.MinReportSize) {
+            println("[Error] Report size '${bytes.length}' is invalid.")
+            System.exit(1)
+        }
+
+        println("[OK] Report type ${reportType} downloaded successfully.")
     }
 
     public void downloadReport(String scanId, ScanType scanType) {
@@ -621,13 +612,13 @@ public abstract class RestClient {
     }
 
     public String createNewPresence() {
-        println "Creating new presence"
+        println("[Action] Creating new presence.")
 
         Date currentTime = new Date();
 
         String url = API_PRESENCES
 
-        println "Send POST request to ${this.baseUrl}$url"
+        println("[Action] Sending POST request to ${this.baseUrl}$url.")
 
         Properties props = new Properties()
 
@@ -641,14 +632,14 @@ public abstract class RestClient {
     }
 
     public void renewPresenceKeyFile(String serviceDirectory, String presenceId) {
-        println "Downloading new key file for presence with id: ${presenceId}"
+        println("[Action] Downloading new key file for presence with id: ${presenceId}.")
 
         String url = API_PRESENCES + "/" + presenceId + "/" + NEW_KEY
 
-        println "Send POST request to ${this.baseUrl}$url"
+        println("[Action] Sending POST request to ${this.baseUrl}$url.")
         HttpResponse response = restHelper.doPostRequest(url, null)
 
-        println "Response status line: ${response.statusLine}"
+        println("[OK] Response status line: ${response.statusLine}.")
 
         ByteArrayOutputStream baos = new ByteArrayOutputStream()
         response.getEntity().writeTo(baos)
@@ -658,7 +649,7 @@ public abstract class RestClient {
         try {
             boolean deleted = keyFile.delete();
             if (deleted) {
-                println "Deleted presence key file ${keyFile.getAbsolutePath()}"
+                println("[OK] Deleted presence key file ${keyFile.getAbsolutePath()}.")
                 keyFile.getParentFile().mkdirs();
                 keyFile.createNewFile();
             }
@@ -672,13 +663,13 @@ public abstract class RestClient {
     }
 
     public void downloadAppscanPresence(String serviceDirectory, boolean isWindows, String presenceId) {
-        println "Downloading latest Appscan Presence"
+        println("[Action] Downloading latest Appscan Presence.")
 
         String url = API_PRESENCES + "/${presenceId}/Download" + (isWindows ? Win_x86_64 : Linux_x86_64)
 
         File serviceDir = new File(serviceDirectory)
 
-        println "Send POST request to ${this.baseUrl}$url"
+        println("[Action] Sending POST request to ${this.baseUrl}$url.")
         restHelper.addRequestHeader("Accept", "application/zip")
         HttpResponse response = restHelper.doPostRequest(url, null)
 
@@ -689,24 +680,24 @@ public abstract class RestClient {
 
     public void deletePresence(String presenceId, boolean deleteAll) {
         if (deleteAll) {
-            println("Deleting all existing presences")
+            println("[Action] Deleting all existing presences.")
 
             def presencesData = getPresences()
 
-            println "Current presences: " + presencesData
+            println("[OK] Current presences: ${presencesData}.")
 
             presencesData.each { presence ->
                 String url = API_PRESENCES + "/" + presence.Id
-                println("Send DELETE request to ${baseUrl}$url")
-                println("Deleting presence with ID: " + presence.Id)
+                println("[Action] Sending DELETE request to ${baseUrl}$url.")
+                println("[Action] Deleting presence with ID: ${presence.Id}.")
 
                 restHelper.doDeleteRequest(url)
             }
         }
         else {
             String url = API_PRESENCES + "/${presenceId}"
-            println("Send DELETE request to ${baseUrl}$url.")
-            println("Deleting presence with ID: ${presenceId}.")
+            println("[Action] Sending DELETE request to ${baseUrl}$url.")
+            println("[Action] Deleting presence with ID: ${presenceId}.")
 
             restHelper.doDeleteRequest(url)
         }
@@ -729,89 +720,23 @@ public abstract class RestClient {
     }
 
     public boolean isDomainVerified(String urlToVerify) {
-        println "Verifying domain for url: " + urlToVerify
+        println("[Action] Verifying domain for url: ${urlToVerify}.")
 
         String url = API_DOMAIN_OWNERSHIP + Verify
 
         Properties props = new Properties()
         props.put("STP", urlToVerify)
-        println "Send POST request to ${this.baseUrl}$url: $props"
+        println("[Action] Sending POST request to ${this.baseUrl}$url: $props.")
         HttpResponse response = restHelper.doPostRequest(url, props)
 
-        println "Response status line: ${resp.statusLine}"
+        println("[OK] Response status line: ${response.statusLine}.")
 
         String responseText = response.entity.content.text
-        println "Response for url verification is: " + responseText
+        println("[OK] Response for url verification is: ${responseText}.")
 
         boolean result = Boolean.parseBoolean(responseText)
 
         return result
-    }
-
-    public void registerEmailDomain(String urlToRegister, AdminMailPrefix mailPrefix, String domainToRegister) {
-        println "Registering Email domain for url '${urlToRegister}' and domain '${domainToRegister}' with prefix '${mailPrefix}'"
-
-        String url = API_DOMAIN_OWNERSHIP + Register + DORegistrationType.Email
-
-        Properties props = new Properties()
-        props.putAll([stp: urlToRegister, mailprefix: mailPrefix, domain: domainToRegister])
-        println "Send POST request to ${this.baseUrl}$url: $props"
-        HttpResponse response = restHelper.doPostRequest(url, props)
-        println "Response status line: ${response.statusLine}"
-
-        String responseText = response.entity.content.text
-        println "Response for Email registration is: " + responseText
-    }
-
-    public File registerHtmlDomain(String urlToRegister, String domainToRegister) {
-        println "Registering Html domain for url '${urlToRegister}' and domain '${domainToRegister}'"
-
-        String url = API_DOMAIN_OWNERSHIP + Register + DORegistrationType.Html
-
-        Properties props = new Properties()
-        props.putAll([stp: urlToRegister, domain: domainToRegister])
-        println "Send POST request to ${this.baseUrl}$url: $props"
-
-        File domainVerificationHtml = null
-
-        HttpResponse response = restHelper.doPostRequest(url, props)
-
-        println "Response status line: ${response.statusLine}"
-
-        domainVerificationHtml = new File("IBMDomainVerification.html")
-
-        try {
-            if (domainVerificationHtml.exists()) {
-                println "Found existing html file, deleting"
-                domainVerificationHtml.delete()
-            }
-        } catch (Exception e) {
-            println "Failed deleting old html file ${domainVerificationHtml.getAbsolutePath()} with exception: ${e.getMessage()}"
-        }
-
-        ByteArrayOutputStream baos = new ByteArrayOutputStream()
-        response.getEntity().writeTo(baos)
-        byte[] bytes = baos.toByteArray()
-
-        println "Writing ${bytes.length} bytes to html file"
-
-        (domainVerificationHtml).withOutputStream {
-            it.write(bytes)
-        }
-
-        return domainVerificationHtml
-    }
-
-    public void confirmDomainEmail(String verificationToken) {
-        println "Confirming Email domain with token: " + verificationToken
-
-        String url = API_DOMAIN_OWNERSHIP + Confirm + verificationToken
-
-        println "Send GET request to ${this.baseUrl}$url"
-        HttpResponse response = restHelper.doGetRequest(url)
-        println "Response status line: ${response.statusLine}"
-
-        assert response.containsHeader("emailVerified"), "Failed confirming domain"
     }
 
     protected abstract def login()

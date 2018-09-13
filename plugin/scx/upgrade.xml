@@ -46,26 +46,50 @@
     <migrate to-version="10">
         <migrate-command name="Start Static Analyzer ASoC Scan">
             <migrate-properties>
+                <migrate-property name="applicationId" default="" />
                 <migrate-property name="keyId" default="" />
                 <migrate-property name="keySecret" default="" />
+                <migrate-property name="failOnPause" default="false" />
+                <migrate-property name="scanTimeout" default="-1" />
             </migrate-properties>
         </migrate-command>
         <migrate-command name="Start Dynamic Analyzer ASoC Scan">
             <migrate-properties>
+                <migrate-property name="applicationId" default="" />
                 <migrate-property name="keyId" default="" />
                 <migrate-property name="keySecret" default="" />
+                <migrate-property name="thirdCredential" default="" />
+                <migrate-property name="presenceId" default="" />
+                <migrate-property name="scanType" default="Production" />
+                <migrate-property name="scanFile" default="" />
+                <migrate-property name="failOnPause" default="false" />
+                <migrate-property name="scanTimeout" default="-1" />
             </migrate-properties>
         </migrate-command>
         <migrate-command name="Start iOS Analyzer ASoC Scan">
             <migrate-properties>
+                <migrate-property name="applicationId" default="" />
                 <migrate-property name="keyId" default="" />
                 <migrate-property name="keySecret" default="" />
+                <migrate-property name="scanUser" old="loginUsername" />
+                <migrate-property name="scanPassword" old="loginPassword" />
+                <migrate-property name="thirdCredential" default="" />
+                <migrate-property name="presenceId" default="" />
+                <migrate-property name="failOnPause" default="false" />
+                <migrate-property name="scanTimeout" default="-1" />
             </migrate-properties>
         </migrate-command>
         <migrate-command name="Start Android Mobile Analyzer ASoC Scan">
             <migrate-properties>
+                <migrate-property name="applicationId" default="" />
                 <migrate-property name="keyId" default="" />
                 <migrate-property name="keySecret" default="" />
+                <migrate-property name="scanUser" old="loginUsername" />
+                <migrate-property name="scanPassword" old="loginPassword" />
+                <migrate-property name="thirdCredential" default="" />
+                <migrate-property name="presenceId" default="" />
+                <migrate-property name="failOnPause" default="false" />
+                <migrate-property name="scanTimeout" default="-1" />
             </migrate-properties>
         </migrate-command>
     </migrate>

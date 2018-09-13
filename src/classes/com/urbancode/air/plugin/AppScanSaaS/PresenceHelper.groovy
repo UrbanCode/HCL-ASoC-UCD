@@ -20,7 +20,7 @@ class PresenceHelper {
     }
 
     public String createPresence(boolean start) {
-        println "Preparing Private Site Scanning Tunnel Server Setup."
+        println("[Action] Preparing Private Site Scanning Tunnel Server Setup.")
 
         String newPresenceId = restClient.createNewPresence()
 
@@ -58,7 +58,7 @@ class PresenceHelper {
             args.add(scriptFile.getAbsolutePath())
         }
 
-        println "Starting AppScan Presence with command: ${args}"
+        println("[Action] Starting AppScan Presence with command: ${args}.")
 
         Process process = args.execute(null, new File(serviceWorkingDirectory))
         if (isWindows) {
@@ -71,77 +71,51 @@ class PresenceHelper {
     }
 
     private void stopRunningPresence() {
-        println "Killing existing service..."
+        println("[Action] Killing existing service...")
 
-        //kill existing service just in case
+        killMatchingProcess(clientJar)
+        killMatchingProcess(agentServiceJar)
+    }
+
+    private void killMatchingProcess(String jarToMatch) {
         if (isWindows) {
             List<String> args = [
                 "wmic",
                 "Path",
                 "win32_process",
                 "Where",
-                "CommandLine Like '%-jar%${clientJar}%'",
+                "CommandLine Like '%-jar%${jarToMatch}%'",
                 "Call",
                 "Terminate"
             ]
             executeCommand(args)
+        }
+        else {
+            println("[Action] Searching for processes matching ${jarToMatch}.")
+            List<String> args = ["pgrep", "-f", jarToMatch]
+            String out = executeCommand(args)
 
-            args = [
-                "wmic",
-                "Path",
-                "win32_process",
-                "Where",
-                "CommandLine Like '%-jar%${agentServiceJar}%'",
-                "Call",
-                "Terminate"
-            ]
-            executeCommand(args)
-
-        } else {
-            String out = executeCommand("pgrep -f ${clientJar}")
             out.eachLine {
                 String pid = it
-                executeCommand("kill -s 15 ${pid}")
-            }
-
-            out = executeCommand("pgrep -f ${agentServiceJar}")
-            out.eachLine {
-                String pid = it
-                executeCommand("kill -s 15 ${pid}")
+                println("[OK] Found matching PID to kill: ${pid}")
+                args = ["kill", "-s", "15", pid]
+                executeCommand(args)
             }
         }
-    }
-
-    private String executeCommand(String command) {
-        println "Running command: '${command}'"
-
-        Process proc = command.execute()
-        return waitForProcess(proc, (int)TimeUnit.SECONDS.toMillis(5), true)
     }
 
     private String executeCommand(List args) {
-        println "Running command: '${args}'"
+        println("[Action] Running command: '${args.join(' ')}'.")
 
         Process proc = args.execute()
-        return waitForProcess(proc, (int)TimeUnit.SECONDS.toMillis(5), true)
+        return waitForProcess(proc, (int)TimeUnit.SECONDS.toMillis(5))
     }
 
-    private String waitForProcess(Process proc, int waitTime, boolean getExitCode) {
+    private String waitForProcess(Process proc, int waitTime) {
         StringBuffer sout = new StringBuffer()
         StringBuffer serr = new StringBuffer()
-        proc.consumeProcessOutput(sout, serr)
         proc.waitForOrKill(waitTime)
-        println "Command Output: $sout"
-        println "Command Error:  $serr"
-
-        if (getExitCode) {
-            try  {
-                int exitCode = proc.exitValue()
-                println "Command Exit Code:  $exitCode"
-            } catch (Exception e){
-                println "Failed to get Command Exit Code Failed: " + e.getMessage()
-            }
-        }
+        proc.consumeProcessOutput(sout, serr)
 
         return sout.toString()
     }

@@ -23,12 +23,15 @@ String scanType = props["scanType"]
 String scanFilePath = props["scanFile"]
 String presenceId = props["presenceId"]
 String testPolicy = props["testPolicy"]
+long scanTimeout = props["scanTimeout"] ? Long.parseLong(props["scanTimeout"]) : -1
+boolean failOnPause = Boolean.parseBoolean(props['failOnPause'])
 boolean validateReport = !issueCountString.isEmpty()   // Do not validate report if no fail condition
+int exitCode = 0
 
 SCXRestClient restClient = new SCXRestClient(props)
 
 if (startingUrl == null || startingUrl.isEmpty()){
-    println "Missing starting url"
+    println "[Error] Missing starting url."
     System.exit(1)
 }
 
@@ -48,7 +51,15 @@ airHelper.setOutputProperty("ScanId", scanId)
 airHelper.storeOutputProperties()
 
 if (validateReport) {
-    Long startTime = System.currentTimeMillis()
-    int exitCode = restClient.waitForScan(scanId, ScanType.DAST, startTime, issueCountString, props)
-    System.exit(exitCode)
+    long startTime = System.currentTimeMillis()
+    exitCode = restClient.waitForScan(scanId, ScanType.DAST, issueCountString, startTime, scanTimeout, failOnPause)
 }
+
+if (exitCode) {
+    println("[Error] Scan has failed validation.")
+}
+else {
+    println("[OK] Scan has completed successfully.")
+}
+
+System.exit(exitCode)

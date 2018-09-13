@@ -22,7 +22,12 @@ public class SastScanHelper {
 		File arsaToolBin = new File(arsaToolDir, 'bin')
 		String arsaExeName = isWindows? 'appscan.bat': 'appscan.sh'
 		File arsaExe = new File(arsaToolBin, arsaExeName)
-		assert arsaExe.exists(), "$arsaExe not found.  IRX file cannot be generated."
+
+        if (!arsaExe.exists()) {
+            println("[Error] $arsaExe not found.  IRX file cannot be generated.")
+            System.exit(1)
+        }
+
 		String arsaName = scanDirectory.getName()
 		File arsaFile = new File(scanDirectory, arsaName + '.irx')
 
@@ -34,22 +39,23 @@ public class SastScanHelper {
 
 		if (configFile) {
 			command.addAll(['-c', configFile])
-			println "Using configuration file $configFile"
+			println("[OK] Using configuration file $configFile.")
 		}
 
 		if (!encrypt) {
 			command.add('-ne')
 		}
 
-		println "Running the following command arguments: $command"
+		println("[Action] Running the following command arguments: $command.")
 		def process = command.execute(System.getenv().collect { k, v -> "$k=$v" }, scanDirectory)
 		process.waitFor()
 
 		def exitVal = process.exitValue()
 		if (!exitVal) {
-			println "Command ended with exitValue = $exitVal , process.text = ${process.text}"
+			println("[OK] Command ended with exitValue = $exitVal , process output:\n ${process.text}")
 		} else {
-			println "Command failed with exitValue = $exitVal , process.err.text = ${process.err.text}"
+			println "[Error] Command failed with exitValue = $exitVal , process error output:\n ${process.err.text}"
+            System.exit(1)
 		}
 
 		return arsaFile

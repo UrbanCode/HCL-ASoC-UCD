@@ -112,7 +112,6 @@ class RestClientHelper {
      * @param value
      */
     public void addRequestHeader(String name, String value) {
-        println("Adding new request header " + name + " with value " + value)
         this.requestHeaders.put(name, value)
     }
 

@@ -5,9 +5,6 @@
  * U.S. Government Users Restricted Rights:  Use, duplication or disclosure restricted by GSA ADP Schedule Contract with IBM Corp.
  */
 
-import java.util.Formatter.DateTime;
-import java.util.concurrent.TimeUnit;
-
 import com.urbancode.air.AirPluginTool
 import com.urbancode.air.plugin.AppScanSaaS.SCXRestClient
 import com.urbancode.air.plugin.AppScanSaaS.PresenceHelper
@@ -19,4 +16,4 @@ String presenceId = props['presenceId']
 PresenceHelper presenceHelper = new PresenceHelper(new SCXRestClient(props), airHelper.isWindows)
 presenceHelper.stopPresence(presenceId)
 
-println "Exiting with success."
+println "[OK] Presence has been successfully stopped."

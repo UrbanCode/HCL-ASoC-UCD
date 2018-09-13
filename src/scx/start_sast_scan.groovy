@@ -17,19 +17,22 @@ String appId = props["applicationId"]
 String parentjobid = props["parentScanId"]
 String sastFileLocation = props['sastFileLocation']
 String issueCountString = props['reportIssueCountValidation']
+long scanTimeout = props["scanTimeout"] ? Long.parseLong(props["scanTimeout"]) : -1
+boolean failOnPause = Boolean.parseBoolean(props['failOnPause'])
 boolean validateReport = !issueCountString.isEmpty()
+int exitCode = 0
 
 SCXRestClient restClient = new SCXRestClient(props)
 SastScanHelper scanHelper = new SastScanHelper()
 
 if (!sastFileLocation) {
-    println "sastFileLocation has not been specified."
+    println "[Error] IRX file/Scan directory has not been specified."
     System.exit 1
 }
 
 File arsaFile = new File(sastFileLocation)
 if (!arsaFile.exists()) {
-    println "SAST file $arsaFile doesn't exist."
+    println "[Error] SAST file $arsaFile doesn't exist."
     System.exit 1
 }
 
@@ -39,7 +42,7 @@ if (isGenerateARSA) {
     String arsaToolDir = props['arsaToolDir']
 
     if (!arsaToolDir) {
-        println "arsaToolDir has not been specified."
+        println "[Error] Static Analyzer Client Tool location has not been specified."
         System.exit 1
     }
 
@@ -51,7 +54,11 @@ if (isGenerateARSA) {
     }
 
     arsaFile = scanHelper.generateARSA(arsaToolDir, arsaFile, props["sastConfigFile"], encrypt)
-    assert arsaFile.exists(), 'IRX file generation failed.'
+    
+    if (!arsaFile.exists()) {
+        println("[Error] IRX file generation failed.")
+        System.exit(1)
+    }
 }
 
 String scanId = restClient.startStaticScan(arsaFile, parentjobid, appId)
@@ -64,7 +71,15 @@ airHelper.setOutputProperty("ScanId", scanId)
 airHelper.storeOutputProperties()
 
 if (validateReport){
-    Long startTime = System.currentTimeMillis()
-    int exitCode = restClient.waitForScan(scanId, ScanType.SAST, startTime, issueCountString, props)
-    System.exit(exitCode)
+    long startTime = System.currentTimeMillis()
+    exitCode = restClient.waitForScan(scanId, ScanType.SAST, issueCountString, startTime, scanTimeout, failOnPause)
 }
+
+if (exitCode) {
+    println("[Error] Scan has failed validation.")
+}
+else {
+    println("[OK] Scan has completed successfully.")
+}
+
+System.exit(exitCode)

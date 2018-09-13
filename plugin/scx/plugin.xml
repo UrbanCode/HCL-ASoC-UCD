@@ -72,6 +72,23 @@
                      label="Original scan ID"
                      description="If this is a rescan please enter the original scan id"/>
       </property>
+      <property name="failOnPause">
+        <property-ui type="checkBox"
+                     label="Fail Scan on Pause"
+                     hidden="true"
+                     default-value="false"
+                     description="Select this option to immediately fail the process if 
+                        the scan is paused. If unchecked, the process will continue running." />
+      </property>
+      <property name="scanTimeout">
+        <property-ui type="textBox"
+                     label="Scan Timeout (minutes)"
+                     hidden="true"
+                     default-value="-1"
+                     description="Please enter a timeout for the scan (relevant for only 
+                        when validating report). The default value of -1 will cause the 
+                        scan to run until it completes."/>
+      </property>
     </properties>
     <post-processing>
       <![CDATA[
@@ -184,6 +201,23 @@
         <value label="Application-Only">Application-Only</value>
         <value label="The Vital Few">The Vital Few</value>
       </property>
+      <property name="failOnPause">
+        <property-ui type="checkBox"
+                     label="Fail Scan on Pause"
+                     hidden="true"
+                     default-value="false"
+                     description="Select this option to immediately fail the process if 
+                        the scan is paused. If unchecked, the process will continue running." />
+      </property>
+      <property name="scanTimeout">
+        <property-ui type="textBox"
+                     label="Scan Timeout (minutes)"
+                     hidden="true"
+                     default-value="-1"
+                     description="Please enter a timeout for the scan (relevant for only 
+                        when validating report). The default value of -1 will cause the 
+                        scan to run until it completes."/>
+      </property>
     </properties>
     <post-processing>
       <![CDATA[
@@ -255,6 +289,23 @@
         <property-ui type="textBox"
         			 label="Original scan ID"
         			 description="If you have previously scanned the application, please enter the original scan ID here if you want to rescan it." />
+      </property>
+      <property name="failOnPause">
+        <property-ui type="checkBox"
+                     label="Fail Scan on Pause"
+                     hidden="true"
+                     default-value="false"
+                     description="Select this option to immediately fail the process if 
+                        the scan is paused. If unchecked, the process will continue running." />
+      </property>
+      <property name="scanTimeout">
+        <property-ui type="textBox"
+                     label="Scan Timeout (minutes)"
+                     hidden="true"
+                     default-value="-1"
+                     description="Please enter a timeout for the scan (relevant for only 
+                        when validating report). The default value of -1 will cause the 
+                        scan to run until it completes."/>
       </property>
     </properties>
     <post-processing>
@@ -340,6 +391,23 @@
         <property-ui type="textBox"
                      label="Original scan ID"
                      description="If this is a rescan please enter the original scan id"/>
+      </property>
+      <property name="failOnPause">
+        <property-ui type="checkBox"
+                     label="Fail Scan on Pause"
+                     hidden="true"
+                     default-value="false"
+                     description="Select this option to immediately fail the process if 
+                        the scan is paused. If unchecked, the process will continue running." />
+      </property>
+      <property name="scanTimeout">
+        <property-ui type="textBox"
+                     label="Scan Timeout (minutes)"
+                     hidden="true"
+                     default-value="-1"
+                     description="Please enter a timeout for the scan (relevant for only 
+                        when validating report). The default value of -1 will cause the 
+                        scan to run until it completes."/>
       </property>
     </properties>
     <post-processing>
