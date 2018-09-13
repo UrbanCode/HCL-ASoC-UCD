@@ -204,10 +204,8 @@ class RestClientHelper {
      * @return
      */
     public HttpResponse doDeleteRequest(String endpoint) {
-        HttpDelete request = new HttpDelete(endpoint)
+        HttpDelete request = new HttpDelete(getAbsoluteUrl(endpoint))
         HttpResponse response = doRequest(request)
-        def statusLine = response.getStatusLine()
-        def statusCode = statusLine.getStatusCode()
 
         return response
     }

@@ -81,9 +81,9 @@ public abstract class RestClient {
 
     private static final int MinReportSize = 1024
 
-	public RestClient(Properties props, boolean validateSSL, boolean useAsmGatewayAsDefault) {
+	public RestClient(Properties props) {
 		this.validateSSL = validateSSL
-		String userServer = props.containsKey("userServer") ? props["userServer"] : (useAsmGatewayAsDefault ? ASM_API_GATEWAY_DOMAIN : ANALYZERS_API_BM_DOMAIN)
+		String userServer = props.containsKey("userServer") ? props["userServer"] : ASM_API_GATEWAY_DOMAIN
 		String userServerPort = props.containsKey("userServerPort") ? props["userServerPort"] : "443"
 
 		this.baseUrl = "https://" + userServer + ":" +  userServerPort
@@ -98,7 +98,7 @@ public abstract class RestClient {
 	public File getIPAXGenerator(String dirName) {
 		String apiPath = getApiPath_V1(ScanType.IOS);
 		String url = "${apiPath}${API_METHOD_DOWNLOAD_TOOL_V1}"
-		println "Send POST request to ${this.baseUrl}$url"
+		println "Sending POST request to ${this.baseUrl}$url."
 
         restHelper.addRequestHeader("Accept", "application/zip")
 
@@ -116,7 +116,7 @@ public abstract class RestClient {
 		String url = getScanUrl(scanId, scanType)
 		def scan = null
 
-        println "Send GET request to ${this.baseUrl}$url"
+        println "Sending GET request to ${this.baseUrl}$url."
 
         HttpResponse response = restHelper.doGetRequest(url)
 
@@ -130,7 +130,7 @@ public abstract class RestClient {
 		String url = getAllScansUrl(scanType)
 		def scans = null
 
-        println "Send GET request to ${this.baseUrl}$url"
+        println "Sending GET request to ${this.baseUrl}$url."
 
         HttpResponse response = restHelper.doGetRequest(url)
         scans = restHelper.parseResponse(response)
@@ -142,10 +142,10 @@ public abstract class RestClient {
 	public void deleteScan(String scanId, ScanType scanType) {
 		String url = getDeleteScanUrl(scanId, scanType)
 
-		println "Send DELETE request to ${this.baseUrl}$url"
+		println "Sending DELETE request to ${this.baseUrl}$url."
 
         restHelper.doDeleteRequest(url)
-		println "scan Id ${scanId} deleted successfully"
+		println "Scan Id: ${scanId} deleted successfully"
 	}
 
 	protected String getApiPath_V1(ScanType scanType) {
@@ -166,9 +166,9 @@ public abstract class RestClient {
 		return String.format(apiPathFormat, apiEnvironment);
 	}
 
-	protected void validateScanIssues(def issuesJson, String scanName, String scanId, String issueCountString) {
+	protected int validateScanIssues(def issuesJson, String scanName, String scanId, String issueCountString) {
 		if (issueCountString == null || issueCountString.isEmpty()) {
-			return
+			return 0
 		}
 
 		String[] issueCount = issueCountString.split(",");
@@ -177,39 +177,35 @@ public abstract class RestClient {
 		int maxMediumSeverityIssues = issueCount.length > 1 ? Integer.parseInt(issueCount[1]) : Integer.MAX_VALUE;
 		int maxLowSeverityIssues = issueCount.length > 2 ? Integer.parseInt(issueCount[2]) : Integer.MAX_VALUE;
 		int maxInformationalSeverityIssues = issueCount.length > 3 ? Integer.parseInt(issueCount[3]) : Integer.MAX_VALUE;
-        String failureString
+        int exitCode = 0
 
-		println "Scan ${scanName} with id ${scanId} has ${issuesJson.NHighIssues} high severity issues"
-		if (issuesJson.NHighIssues <= maxHighSeverityIssues) {
-             failureString = "Scan failed to meet high issue count. Result: ${issuesJson.NHighIssues}. Max expected: ${maxHighSeverityIssues}"
-             println(failureString)
+		println "Scan ${scanName} with id ${scanId} has ${issuesJson.NHighIssues} high severity issues."
+		if (issuesJson.NHighIssues > maxHighSeverityIssues) {
+             println("Scan failed to meet high issue count. Result: ${issuesJson.NHighIssues}. Max expected: ${maxHighSeverityIssues}")
+             exitCode = 1
 		}
 
-		println "Scan ${scanName} with id ${scanId} has ${issuesJson.NMediumIssues} medium severity issues"
-		if (issuesJson.NMediumIssues <= maxMediumSeverityIssues) {
-            failureString = "Scan failed to meet medium issue count. Result: ${issuesJson.NMediumIssues}. Max expected: ${maxMediumSeverityIssues}"
-            println(failureString)
+		println "Scan ${scanName} with id ${scanId} has ${issuesJson.NMediumIssues} medium severity issues."
+		if (issuesJson.NMediumIssues > maxMediumSeverityIssues) {
+            println("Scan failed to meet medium issue count. Result: ${issuesJson.NMediumIssues}. Max expected: ${maxMediumSeverityIssues}")
+            exitCode = 1
 		}
 
 		println "Scan ${scanName} with id ${scanId} has ${issuesJson.NLowIssues} low severity issues"
 
-        if (issuesJson.NLowIssues <= maxLowSeverityIssues) {
-            failureString = "Scan failed to meet low issue count. Result: ${issuesJson.NLowIssues}. Max expected: ${maxLowSeverityIssues}"
-            println(failureString)
+        if (issuesJson.NLowIssues > maxLowSeverityIssues) {
+            println("Scan failed to meet low issue count. Result: ${issuesJson.NLowIssues}. Max expected: ${maxLowSeverityIssues}")
+            exitCode = 1
         }
 
 		println "Scan ${scanName} with id ${scanId} has ${issuesJson.NInfoIssues} informational severity issues"
 
-        if (issuesJson.NInfoIssues <= maxInformationalSeverityIssues) {
-            failureString = "Scan failed to meet informational issue count. Result: ${issuesJson.NInfoIssues}. Max expected: ${maxInformationalSeverityIssues}"
-            println(failureString)
+        if (issuesJson.NInfoIssues > maxInformationalSeverityIssues) {
+            println("Scan failed to meet informational issue count. Result: ${issuesJson.NInfoIssues}. Max expected: ${maxInformationalSeverityIssues}")
+            exitCode = 1
         }
 
-        /* Temporary feature... will return exitCode instead */
-        if (!failureString.isEmpty()) {
-
-            System.exit(1)
-        }
+        return exitCode
 	}
 
 	protected void unzip(InputStream inputStream, String filePattern, String targetDir) {
@@ -259,28 +255,6 @@ public abstract class RestClient {
 		assert token != null, "Login failed. Token is null"
 		authHeader = "Bearer " + token
         restHelper.addRequestHeader("Authorization", authHeader)
-	}
-
-	protected void bluemixLogin(String username, String password) {
-		token = null
-		authHeader = null
-		apiEnvironment = "BlueMix";
-
-		Properties props = new Properties()
-        props.put("Username", username)
-        props.put("Password", password)
-
-		String url = getBluemixLoginUrl()
-		println "Send POST request to ${baseUrl}$url: $props"
-
-        try{
-            HttpResponse response = restHelper.doPostRequest(url, props)
-            def jsonObj = restHelper.parseResponse(response)
-            token = jsonObj.Token
-        }
-        catch (Exception e) {
-            println "Failed bluemixLogin with exception: ${e.getMessage()}"
-        }
 	}
 
 	protected void scxLogin(String keyId, String keySecret) {
@@ -342,8 +316,13 @@ public abstract class RestClient {
     }
 
     /* Scan using an ARSA file for static scans, or an IPAX/APK file for IOS/Android scans */
-    private String fileBasedScan(ScanType scanType, String fileId, String parentjobid, Properties props) {
-        String url = null
+    private String fileBasedScan(
+        ScanType scanType,
+        String url,
+        String fileId,
+        String parentjobid,
+        Properties props)
+    {
         String scanId = null
         String lastExecutionId = null
         String TechName = scanType.toString()
@@ -526,7 +505,7 @@ public abstract class RestClient {
         props.putAll(AppId: appId, ApplicationFileId: fileId, ScanName: fileName, LoginUser: appUsername,
             LoginPassword: appPassword, ExtraField: thirdCredential, PresenceId: presenceId)
 
-        return fileBasedScan(scanType, fileId, parentjobid, props)
+        return fileBasedScan(scanType, url, fileId, parentjobid, props)
     }
 
     public String startStaticScan(File arsaFile, String parentjobid, String appId) {
@@ -534,13 +513,13 @@ public abstract class RestClient {
         String fileName = arsaFile.getName()
         String fileId = uploadFile(arsaFile)
         println "${fileName} was uploaded successfully. FileID: " + fileId
-        String url = String.format(SAST_API_PATH, API_METHOD_SCANS);
-        props.putAll([ARSAFileId: fileId, ScanName: fileName])
+        String url = String.format(SAST_API_PATH, API_METHOD_SCANS)
+        props.putAll([AppId: appId, ARSAFileId: fileId, ScanName: fileName])
 
-        return fileBasedScan(ScanType.SAST, fileId, parentjobid, props)
+        return fileBasedScan(ScanType.SAST, url, fileId, parentjobid, props)
     }
 
-    public void waitForScan(String scanId, ScanType scanType, Long scanTimeout, Long startTime, String issueCountString, Properties props) {
+    public int waitForScan(String scanId, ScanType scanType, Long startTime, String issueCountString, Properties props) {
         println "Waiting for scan with id '${scanId}'"
 
         def scan = null
@@ -564,12 +543,11 @@ public abstract class RestClient {
             if (!status.equalsIgnoreCase("Running") || (!toleratePendingSupport && executionProgress.equalsIgnoreCase("Paused"))) {
                 break
             }
-            assert !(System.currentTimeMillis() - startTime > scanTimeout), "Job running for more than ${TimeUnit.MILLISECONDS.toMinutes(scanTimeout)} minutes"
         }
         assert status.equalsIgnoreCase("Ready"), "Scan status is '$status' and not 'Ready'. (ExecutionProgress is '$executionProgress')"
 
         downloadReport(scanId, scanType)
-        validateScanIssues(scan.LastSuccessfulExecution, scan.Name, scanId, issueCountString)
+        return validateScanIssues(scan.LastSuccessfulExecution, scan.Name, scanId, issueCountString)
     }
 
     private void downloadSingleReportType(String scanId, String reportType) {
@@ -642,22 +620,6 @@ public abstract class RestClient {
         return API_APIKEY_LOGIN
     }
 
-    public void deleteAllPresences() {
-        println "Deleting all existing presences"
-
-        String url = API_PRESENCES
-
-        def presencesData = getPresences()
-
-        println "Current presences: " + presencesData
-
-        presencesData.each { presence ->
-            println "Deleting presence with id: " + presence.Id
-
-            HttpResponse response = restHelper.doPostRequest(url + "/" + presence.Id)
-        }
-    }
-
     public String createNewPresence() {
         println "Creating new presence"
 
@@ -723,6 +685,31 @@ public abstract class RestClient {
         InputStream zip = response.getEntity().getContent()
         serviceDir.deleteDir()
         unzip(zip, "", serviceDir.getName())
+    }
+
+    public void deletePresence(String presenceId, boolean deleteAll) {
+        if (deleteAll) {
+            println("Deleting all existing presences")
+
+            def presencesData = getPresences()
+
+            println "Current presences: " + presencesData
+
+            presencesData.each { presence ->
+                String url = API_PRESENCES + "/" + presence.Id
+                println("Send DELETE request to ${baseUrl}$url")
+                println("Deleting presence with ID: " + presence.Id)
+
+                restHelper.doDeleteRequest(url)
+            }
+        }
+        else {
+            String url = API_PRESENCES + "/${presenceId}"
+            println("Send DELETE request to ${baseUrl}$url.")
+            println("Deleting presence with ID: ${presenceId}.")
+
+            restHelper.doDeleteRequest(url)
+        }
     }
 
     public static enum DORegistrationType

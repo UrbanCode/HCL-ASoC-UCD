@@ -51,19 +51,21 @@
                      label="Presence ID"
                      description="Specify an ID of an existing presence, which allows you to run
                         scans on apps not connected to the internet or require a proxy server
-                        to make a connection."/>
+                        to make a connection. The presence must be accessible to the user."/>
       </property>
 	  <property name="reportIssueCountValidation" required="false">
         <property-ui type="textBox"
         			 label="Fail condition threshold (H, M, L, I)"
-        			 description="Please set the number of issues found (by severity) in a comma-separated list. If the threshold is reached during the scan, the scan will fail. In this field, you can specify the numbers for these severity levels: High (H), Medium (M), Low (L), and Informational (I). For example, a fail condition of '0,5,10,20' will cause the step to fail if the resulting scan has more than 0 High issues, 5 Medium issues, and so on. If this field is left empty, there will be no validation of results and the scan will not fail as a result of a fail condition."
+        			 description="Please set the number of issues found (by severity) in a 
+                        comma-separated list. If the threshold is reached during the scan, 
+                        the scan will fail. In this field, you can specify the numbers for 
+                        these severity levels: High (H), Medium (M), Low (L), and 
+                        Informational (I). For example, a fail condition of '0,5,10,20' 
+                        will cause the step to fail if the resulting scan has more than 0 
+                        High issues, 5 Medium issues, and so on. If this field is left 
+                        empty, there will be no validation of results and the scan will 
+                        not fail as a result of a fail condition."
         			 default-value="0,5,10,20" />
-      </property>
-	  <property name="scanTimeout" required="false">
-        <property-ui type="textBox"
-                     label="Scan Timeout (minutes)"
-                     description="Please enter a timeout for the scan (relevant for only when validating report)"
-					 default-value="360"/>
       </property>
       <property name="parentScanId" required="false">
         <property-ui type="textBox"
@@ -134,7 +136,7 @@
                      label="Presence ID"
                      description="Specify an ID of an existing presence, which allows you to run
                         scans on apps not connected to the internet or require a proxy server
-                        to make a connection."/>
+                        to make a connection. The presence must be accessible to the user."/>
       </property>
       <property name="scanType" required="false">
         <property-ui type="selectBox"
@@ -157,14 +159,16 @@
 	  <property name="reportIssueCountValidation" required="false">
         <property-ui type="textBox"
         			 label="Fail condition threshold (H, M, L, I)"
-        			 description="Please set the number of issues found (by severity) in a comma-separated list. If the threshold is reached during the scan, the scan will fail. In this field, you can specify the numbers for these severity levels: High (H), Medium (M), Low (L), and Informational (I). For example, a fail condition of '0,5,10,20' will cause the step to fail if the resulting scan has more than 0 High issues, 5 Medium issues, and so on. If this field is left empty, there will be no validation of results and the scan will not fail as a result of a fail condition."
+        			 description="Please set the number of issues found (by severity) in a 
+                        comma-separated list. If the threshold is reached during the scan, 
+                        the scan will fail. In this field, you can specify the numbers for 
+                        these severity levels: High (H), Medium (M), Low (L), and 
+                        Informational (I). For example, a fail condition of '0,5,10,20' 
+                        will cause the step to fail if the resulting scan has more than 0 
+                        High issues, 5 Medium issues, and so on. If this field is left 
+                        empty, there will be no validation of results and the scan will 
+                        not fail as a result of a fail condition."
         			 default-value="0,5,10,20" />
-      </property>
-	  <property name="scanTimeout" required="false">
-        <property-ui type="textBox"
-                     label="Scan Timeout (minutes)"
-                     description="Please enter a timeout for the scan (relevant for only when validating report)"
-					 default-value="360"/>
       </property>
       <property name="parentScanId" required="false">
         <property-ui type="textBox"
@@ -236,14 +240,16 @@
 	  <property name="reportIssueCountValidation" required="false">
         <property-ui type="textBox"
         			 label="Fail condition threshold (H, M, L, I)"
-        			 description="Please set the number of issues found (by severity) in a comma-separated list. If the threshold is reached during the scan, the scan will fail. In this field, you can specify the numbers for these severity levels: High (H), Medium (M), Low (L), and Informational (I). For example, a fail condition of '0,5,10,20' will cause the step to fail if the resulting scan has more than 0 High issues, 5 Medium issues, and so on. If this field is left empty, there will be no validation of results and the scan will not fail as a result of a fail condition."
+        			 description="Please set the number of issues found (by severity) in a 
+                        comma-separated list. If the threshold is reached during the scan, 
+                        the scan will fail. In this field, you can specify the numbers for 
+                        these severity levels: High (H), Medium (M), Low (L), and 
+                        Informational (I). For example, a fail condition of '0,5,10,20' 
+                        will cause the step to fail if the resulting scan has more than 0 
+                        High issues, 5 Medium issues, and so on. If this field is left 
+                        empty, there will be no validation of results and the scan will 
+                        not fail as a result of a fail condition."
         			 default-value="0,5,10,20" />
-      </property>
-	  <property name="scanTimeout" required="false">
-        <property-ui type="textBox"
-        			 label="Scan Timeout (minutes)"
-        			 description="Please enter the time in minutes to wait for the scan to end before it fails."
-        			 default-value="360" />
       </property>
       <property name="parentScanId" required="false">
         <property-ui type="textBox"
@@ -314,19 +320,21 @@
                      label="Presence ID"
                      description="Specify an ID of an existing presence, which allows you to run
                         scans on apps not connected to the internet or require a proxy server
-                        to make a connection."/>
+                        to make a connection. The presence must be accessible to the user."/>
       </property> 
 	  <property name="reportIssueCountValidation" required="false">
         <property-ui type="textBox"
         			 label="Fail condition threshold (H, M, L, I)"
-        			 description="Please set the number of issues found (by severity) in a comma-separated list. If the threshold is reached during the scan, the scan will fail. In this field, you can specify the numbers for these severity levels: High (H), Medium (M), Low (L), and Informational (I). For example, a fail condition of '0,5,10,20' will cause the step to fail if the resulting scan has more than 0 High issues, 5 Medium issues, and so on. If this field is left empty, there will be no validation of results and the scan will not fail as a result of a fail condition."
+        			 description="Please set the number of issues found (by severity) in a 
+                        comma-separated list. If the threshold is reached during the scan, 
+                        the scan will fail. In this field, you can specify the numbers 
+                        for these severity levels: High (H), Medium (M), Low (L), and 
+                        Informational (I). For example, a fail condition of '0,5,10,20' 
+                        will cause the step to fail if the resulting scan has more than 0 
+                        High issues, 5 Medium issues, and so on. If this field is left 
+                        empty, there will be no validation of results and the scan will 
+                        not fail as a result of a fail condition."
         			 default-value="0,5,10,20" />
-      </property>
-	  <property name="scanTimeout" required="false">
-        <property-ui type="textBox"
-                     label="Scan Timeout (minutes)"
-                     description="Please enter a timeout for the scan (relevant for only when validating report)"
-					 default-value="360"/>
       </property>
       <property name="parentScanId" required="false">
         <property-ui type="textBox"
@@ -416,7 +424,7 @@
                      label="Presence ID"
                      description="Specify an ID of an existing presence, which allows you to run
                         scans on apps not connected to the internet or require a proxy server
-                        to make a connection."/>
+                        to make a connection. The presence must be accessible to the user."/>
       </property>
       <property name="renewKey">
         <property-ui type="checkBox"
@@ -465,7 +473,7 @@
                      label="Presence ID"
                      description="Specify an ID of an existing presence, which allows you to run
                         scans on apps not connected to the internet or require a proxy server
-                        to make a connection."/>
+                        to make a connection. The presence must be accessible to the user."/>
       </property>
     </properties>
     <post-processing>
@@ -483,6 +491,53 @@
       <arg value="-cp"/>
       <arg path="classes:lib/HttpComponents-Util.jar:lib/CommonsUtil.jar:lib/log4j.jar:lib/commons-beanutils-1.9.2:lib/commons-collections-3.2.1.jar:lib/commons-fileupload-1.3.1.jar:lib/commons-logging-1.1.3.jar:lib/groovy-json-2.1.7.jar:lib/http-builder-0.7.2-uc.jar:lib/httpclient-4.3.5.jar:lib/httpclient-cache-4.3.5.jar:lib/httpcore-4.3.2.jar:lib/httpmime-4.3.5.jar:lib/json-lib-2.4-jdk15.jar:lib/resolver.jar" />
       <arg file="stop_presence.groovy"/>
+      <arg file="${PLUGIN_INPUT_PROPS}"/>
+      <arg file="${PLUGIN_OUTPUT_PROPS}"/>
+    </command>
+  </step-type>
+
+  <step-type name="Delete ASoC Presence">
+    <description>Delete an ASoC presence. The presence will be stopped on the 
+        agent machine on which it was originally started.</description>
+    <properties> 
+      <property name="keyId" required="true">
+        <property-ui type="textBox"
+                     label="Login Key ID"
+                     description="The key ID to authenticate with ASoC." />
+      </property>
+      <property name="keySecret" required="true">
+        <property-ui type="secureBox"
+                     label="Login Key Secret"
+                     description="The key secret to authenticate with ASoC." />
+      </property>
+      <property name="presenceId" required="false">
+        <property-ui type="textBox"
+                     label="Presence ID"
+                     description="Specify an ID of an existing presence that is accessible
+                        using the provided login credentials. "/>
+      </property>
+      <property name="deleteAll">
+        <property-ui type="checkBox"
+                     label="Delete All Presences"
+                     description="Select this box to remove all existing ASoC presences
+                        that can be accessed with the provided login credentials."/>
+      </property>
+    </properties>
+    <post-processing>
+      <![CDATA[
+        if (properties.get("exitCode") != 0) {
+            properties.put("Status", "Failure");
+        }
+        else {
+            properties.put("Status", "Success");
+        }
+     ]]>
+    </post-processing>
+
+    <command program="${GROOVY_HOME}/bin/groovy">
+      <arg value="-cp"/>
+      <arg path="classes:lib/HttpComponents-Util.jar:lib/CommonsUtil.jar:lib/log4j.jar:lib/commons-beanutils-1.9.2:lib/commons-collections-3.2.1.jar:lib/commons-fileupload-1.3.1.jar:lib/commons-logging-1.1.3.jar:lib/groovy-json-2.1.7.jar:lib/http-builder-0.7.2-uc.jar:lib/httpclient-4.3.5.jar:lib/httpclient-cache-4.3.5.jar:lib/httpcore-4.3.2.jar:lib/httpmime-4.3.5.jar:lib/json-lib-2.4-jdk15.jar:lib/resolver.jar" />
+      <arg file="delete_presence.groovy"/>
       <arg file="${PLUGIN_INPUT_PROPS}"/>
       <arg file="${PLUGIN_OUTPUT_PROPS}"/>
     </command>

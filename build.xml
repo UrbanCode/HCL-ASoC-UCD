@@ -30,10 +30,8 @@
 	<resources id="scx.release.src.files">
 		<resources refid="base.release.src.files" />
 		<string value="**/SCXRestClient.groovy" />
-		<string value="**/DastScanRunner.groovy" />
-		<string value="**/MAScanRunner.groovy" />
-		<string value="**/SastScanRunner.groovy" />
-		<string value="**/iOSScanRunner.groovy" />
+		<string value="**/SastScanHelper.groovy" />
+		<string value="**/IOSScanHelper.groovy" />
 		<string value="scx/**" />
 	</resources>
 

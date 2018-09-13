@@ -19,69 +19,10 @@ import java.util.Properties
 import com.urbancode.air.plugin.AppScanSaaS.RestClient
 import com.urbancode.air.plugin.AppScanSaaS.ScanType
 
-public class iOSScanRunner {
-	public static String runIOSScan(Properties props, RestClient restClient) {
-        String appUsername = props["appUsername"]
-        String appPassword = props["appPassword"]
-        String thirdCredential = props['thirdCredential']
-        String parentjobid = props["parentScanId"]
-        String appId = props["applicationId"]
-        String issueCountString = props['reportIssueCountValidation'];
-        boolean validateReport = !issueCountString.isEmpty();
+public class IOSScanHelper {
+    public IOSScanHelper() {}
 
-		File scanFile = null;
-
-		String ipaFileLocation = props["ipaFileLocation"];
-		if (ipaFileLocation!=null && ipaFileLocation.length() > 0) {
-			scanFile = new File(ipaFileLocation)
-			if (!scanFile.exists()){
-				println "Input ipa file does not exist"
-				System.exit 1
-			}
-			else{
-				println "Starting iOS scan based on the provided ipa file $ipaFileLocation"
-			}
-		}
-		else {
-			String projectLocation = props["projectLocation"];
-			if (projectLocation==null || projectLocation.length() <= 0) {
-				println "Not enough input was provided for this step. Please add a value to the required 'IPA file location' field ('ipaFileLocation')"
-				System.exit 1
-			}
-			File projectFile = new File(projectLocation)
-			if (!projectFile.exists()){
-				println "Project/Workspace doesn't exist"
-				System.exit 1
-			}
-
-			scanFile = generateIPAX(restClient, projectFile, props);
-		}
-
-		String scanId = restClient.startMobileScan(
-            ScanType.IOS,
-            scanFile,
-            appUsername,
-            appPassword,
-            thirdCredential,
-            parentjobid,
-            appId)
-
-		Long startTime = System.currentTimeMillis()
-		if (validateReport){
-			final def scanTimeout = 45
-			try {
-				scanTimeout = Integer.parseInt(props['scanTimeout'])
-			} catch (NumberFormatException){
-
-			}
-
-			restClient.waitForScan(scanId, ScanType.IOS, TimeUnit.MINUTES.toMillis(scanTimeout), startTime, issueCountString, props)
-		}
-
-		return scanId;
-	}
-
-	private static int cleanEntriesFromIPAX(String ipaxFileName, String postfixOfEntryToClean){
+	private int cleanEntriesFromIPAX(String ipaxFileName, String postfixOfEntryToClean){
 		assert ipaxFileName.endsWith(".ipax")
 		assert ipaxFileName.indexOf(".ipax") == ipaxFileName.length() - 5 // 5 is the length of ".ipax"
 
@@ -114,7 +55,7 @@ public class iOSScanRunner {
 		return numberOfDeletions
 	}
 
-	private static File generateIPAX(RestClient restClient, File projectFile, Properties props) {
+	private File generateIPAX(RestClient restClient, File projectFile, Properties props) {
 		String userName = props["loginUsername"]
 		String toolDirName = "IPAX_Generator_for_${userName}"
 		String ipaxOutputDirName = "IPAX_Generator_Output_for_${userName}"

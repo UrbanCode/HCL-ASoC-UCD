@@ -14,7 +14,7 @@ public class SCXRestClient extends RestClient {
     private String keySecret
 
 	public SCXRestClient(Properties props) {
-		super(props, true, true)
+		super(props)
         this.keyId = props['keyId']
         this.keySecret = props['keySecret']
         login()
