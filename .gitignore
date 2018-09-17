@@ -16,3 +16,4 @@ plugin-build.xml
 /dist
 /ecbin
 /bin
+i18n-scraper.groovy

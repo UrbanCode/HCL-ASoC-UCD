@@ -1,0 +1,613 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<plugin xmlns="http://www.urbancode.com/PluginXMLSchema_v1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <header>
+    <identifier id="com.urbancode.air.plugin.IBMSecurity.scx" version="10" name="IBM Application Security on Cloud"/>
+    <description>
+    This plugin enables you to use IBM Application Security on Cloud (ASoC) easily from UrbanCode
+</description>
+    <tag>Utilities/IBM Application Security on Cloud</tag>
+  </header>
+  <step-type name="Start Android Mobile Analyzer ASoC Scan">
+    <description>Starts a new Android Mobile Analyzer ASoC Scan, using IBM Application Security on Cloud</description>
+    <properties>
+      <property name="applicationId" required="true">
+        <property-ui type="textBox"
+                     label="ASoC Application ID"
+                     description="The ID of the application in ASoC."/>
+      </property>
+      <property name="keyId" required="true">
+        <property-ui type="textBox"
+                     label="Login Key ID"
+                     description="The key ID to authenticate with ASoC." />
+      </property>
+      <property name="keySecret" required="true">
+        <property-ui type="secureBox"
+                     label="Login Key Secret"
+                     description="The key secret to authenticate with ASoC." />
+      </property>
+      <property name="apkFileLocation" required="true">
+        <property-ui type="textBox"
+                     label="APK file location"
+                     description="Please point to an apk file" />
+      </property> 
+      <property name="scanUser" required="false">
+        <property-ui type="textBox"
+                     label="Application Username"
+                     description="Username for the scanned application if it contains a login." />
+      </property> 
+      <property name="scanPassword" required="false">
+        <property-ui type="secureBox"
+                     label="Application Password"
+                     description="Password for the scanned application if it contains a login." />
+      </property> 
+      <property name="thirdCredential" required="false">
+        <property-ui type="secureBox"
+                     label="Third Application Credential"
+                     description="Provide this field if your application requires a third
+                        credential." />
+      </property>	  	
+      <property name="presenceId">
+        <property-ui type="textBox"
+                     label="Presence ID"
+                     description="Specify an ID of an existing presence, which allows you to run
+                        scans on apps not connected to the internet or require a proxy server
+                        to make a connection. The presence must be accessible to the user."/>
+      </property>
+	  <property name="reportIssueCountValidation" required="false">
+        <property-ui type="textBox"
+        			 label="Fail condition threshold (H, M, L, I)"
+        			 description="Please set the number of issues found (by severity) in a 
+                        comma-separated list. If the threshold is reached during the scan, 
+                        the scan will fail. In this field, you can specify the numbers for 
+                        these severity levels: High (H), Medium (M), Low (L), and 
+                        Informational (I). For example, a fail condition of '0,5,10,20' 
+                        will cause the step to fail if the resulting scan has more than 0 
+                        High issues, 5 Medium issues, and so on. If this field is left 
+                        empty, there will be no validation of results and the scan will 
+                        not fail as a result of a fail condition."
+        			 default-value="0,5,10,20" />
+      </property>
+      <property name="parentScanId" required="false">
+        <property-ui type="textBox"
+                     label="Original scan ID"
+                     description="If this is a rescan please enter the original scan id"/>
+      </property>
+      <property name="failOnPause">
+        <property-ui type="checkBox"
+                     label="Fail Scan on Pause"
+                     hidden="true"
+                     default-value="false"
+                     description="Select this option to immediately fail the process if 
+                        the scan is paused. If unchecked, the process will continue running." />
+      </property>
+      <property name="scanTimeout">
+        <property-ui type="textBox"
+                     label="Scan Timeout (minutes)"
+                     hidden="true"
+                     default-value="-1"
+                     description="Please enter a timeout for the scan (relevant for only 
+                        when validating report). The default value of -1 will cause the 
+                        scan to run until it completes."/>
+      </property>
+    </properties>
+    <post-processing>
+      <![CDATA[
+        if (properties.get("exitCode") != 0) {
+            properties.put("Status", "Failure");
+        }
+        else {
+            properties.put("Status", "Success");
+        }
+     ]]>
+    </post-processing>
+
+    <command program="${GROOVY_HOME}/bin/groovy">
+	  <arg value="-cp"/>
+      <arg path="classes:lib/HttpComponents-Util.jar:lib/securedata.jar:lib/CommonsUtil.jar:lib/log4j.jar:lib/commons-logging.jar:lib/httpclient.jar:lib/httpcore.jar:lib/httpmime.jar" />
+      <arg file="start_ma_scan.groovy"/>
+      <arg file="${PLUGIN_INPUT_PROPS}"/>
+      <arg file="${PLUGIN_OUTPUT_PROPS}"/>
+    </command>
+  </step-type>
+  <step-type name="Start Dynamic Analyzer ASoC Scan">
+    <description>Starts a new Dynamic Analyzer Scan, using IBM Application Security on Cloud.</description>
+    <properties>
+      <property name="applicationId" required="true">
+        <property-ui type="textBox"
+                     label="ASoC Application ID"
+                     description="The ID of the application in ASoC."/>
+      </property>
+      <property name="keyId" required="true">
+        <property-ui type="textBox"
+                     label="Login Key ID"
+                     description="The key ID to authenticate with ASoC." />
+      </property>
+      <property name="keySecret" required="true">
+        <property-ui type="secureBox"
+                     label="Login Key Secret"
+                     description="The key secret to authenticate with ASoC." />
+      </property>
+      <property name="startingUrl" required="true">
+        <property-ui type="textBox"
+                     label="Starting url"
+                     description="Please enter a url to scan. (You must complete Domain Verification through the UI, as it is not currently supported by this plugin.)" />
+      </property> 
+      <property name="scanUser" required="false">
+        <property-ui type="textBox"
+                     label="Application Username"
+                     description="Username for the scanned application if it contains a login." />
+      </property> 
+      <property name="scanPassword" required="false">
+        <property-ui type="secureBox"
+                     label="Application Password"
+                     description="Password for the scanned application if it contains a login." />
+      </property> 
+      <property name="thirdCredential" required="false">
+        <property-ui type="secureBox"
+                     label="Third Application Credential"
+                     description="Provide this field if your application requires a third
+                        credential." />
+      </property> 
+      <property name="presenceId" required="false">
+        <property-ui type="textBox"
+                     label="Presence ID"
+                     description="Specify an ID of an existing presence, which allows you to run
+                        scans on apps not connected to the internet or require a proxy server
+                        to make a connection. The presence must be accessible to the user."/>
+      </property>
+      <property name="scanType" required="false">
+        <property-ui type="selectBox"
+                     label="Scan Type"
+                     description="Select the type of scan. Staging scans are more comprehensive
+                        and designed to scan sites before production. Production scans are 
+                        designed to scan live sites."
+                     default-value="Production"/>
+        <value label="Production">Production</value>
+        <value label="Staging">Staging</value>
+      </property>
+      <property name="scanFile" required="false">
+        <property-ui type="textBox"
+                     label="Scan/Template File"
+                     description="The path to a configuration (SCAN or SCANT) file. Use 
+                        this field if you have specific configuration requirements. The 
+                        Starting URL that you enter above must be identical to the 
+                        Starting URL in the file."/>
+      </property>
+	  <property name="reportIssueCountValidation" required="false">
+        <property-ui type="textBox"
+        			 label="Fail condition threshold (H, M, L, I)"
+        			 description="Please set the number of issues found (by severity) in a 
+                        comma-separated list. If the threshold is reached during the scan, 
+                        the scan will fail. In this field, you can specify the numbers for 
+                        these severity levels: High (H), Medium (M), Low (L), and 
+                        Informational (I). For example, a fail condition of '0,5,10,20' 
+                        will cause the step to fail if the resulting scan has more than 0 
+                        High issues, 5 Medium issues, and so on. If this field is left 
+                        empty, there will be no validation of results and the scan will 
+                        not fail as a result of a fail condition."
+        			 default-value="0,5,10,20" />
+      </property>
+      <property name="parentScanId" required="false">
+        <property-ui type="textBox"
+                     label="Original scan ID"
+                     description="If this is a rescan please enter the original scan id"/>
+      </property>
+      <property name="testPolicy" required="false">
+        <property-ui type="selectBox"
+          default-value="Default"
+          description="A predefined set of tests for AppScan to use. Here is a short description for each option: Comprehensive (Default) -> This is the most thorough Test Set and is used by default. Application-Only -> This Test Set includes all application level tests except invasive and port listener tests. The Vital Few -> This Test Set includes a selection of tests that have a high probability of success. This can be useful for evaluating a site when time is limited."
+          label="Test Policy"/>
+        <value label="Comprehensive (Default)">Default</value>
+        <value label="Application-Only">Application-Only</value>
+        <value label="The Vital Few">The Vital Few</value>
+      </property>
+      <property name="failOnPause">
+        <property-ui type="checkBox"
+                     label="Fail Scan on Pause"
+                     hidden="true"
+                     default-value="false"
+                     description="Select this option to immediately fail the process if 
+                        the scan is paused. If unchecked, the process will continue running." />
+      </property>
+      <property name="scanTimeout">
+        <property-ui type="textBox"
+                     label="Scan Timeout (minutes)"
+                     hidden="true"
+                     default-value="-1"
+                     description="Please enter a timeout for the scan (relevant for only 
+                        when validating report). The default value of -1 will cause the 
+                        scan to run until it completes."/>
+      </property>
+    </properties>
+    <post-processing>
+      <![CDATA[
+        if (properties.get("exitCode") != 0) {
+            properties.put("Status", "Failure");
+        }
+        else {
+            properties.put("Status", "Success");
+        }
+     ]]>
+    </post-processing>
+
+    <command program="${GROOVY_HOME}/bin/groovy">
+	  <arg value="-cp"/>
+      <arg path="classes:lib/HttpComponents-Util.jar:lib/securedata.jar:lib/CommonsUtil.jar:lib/log4j.jar:lib/commons-logging.jar:lib/httpclient.jar:lib/httpcore.jar:lib/httpmime.jar" />
+      <arg file="start_dast_scan.groovy"/>
+      <arg file="${PLUGIN_INPUT_PROPS}"/>
+      <arg file="${PLUGIN_OUTPUT_PROPS}"/>
+    </command>
+  </step-type>
+    <step-type name="Start Static Analyzer ASoC Scan">
+    <description>Starts a new Static Analyzer ASoC Scan, using IBM Application Security on Cloud</description>
+    <properties>
+      <property name="applicationId" required="true">
+        <property-ui type="textBox"
+                     label="ASoC Application ID"
+                     description="The ID of the application in ASoC."/>
+      </property>
+      <property name="keyId" required="true">
+        <property-ui type="textBox"
+                     label="Login Key ID"
+                     description="The key ID to authenticate with ASoC." />
+      </property>
+      <property name="keySecret" required="true">
+        <property-ui type="secureBox"
+                     label="Login Key Secret"
+                     description="The key secret to authenticate with ASoC." />
+      </property>
+      <property name="sastFileLocation" required="true">
+        <property-ui type="textBox"
+			         label="IRX file/Scan directory"
+			         description="Please point to the IRX file to be uploaded for scanning, or the directory that contains the files or other locations to scan. The files and locations that can be specified in this field include: .jar files, .war files, .ear files, Eclipse workspaces, and scan configuration files. For example, 'c:\build_output\testapp.irx' or 'c:\build_output'." />
+      </property> 
+      <property name="sastConfigFile" required="false">
+        <property-ui type="textBox"
+        			 label="Scan configuration file"
+        			 description="Please point to the path and file name of a scan configuration file. This overrides any scan configuration files which may exist in the scan directory. For example, 'c:\build_output\appscan-config.xml'." />
+      </property> 
+	  <property name="arsaToolDir" required="true">
+        <property-ui type="textBox"
+        			 label="Static Analyzer Client Tool location"
+        			 description="Please point to the directory that the client tool was unzipped to. For example, C:\SAClientUtil." />
+      </property>
+	  <property name="reportIssueCountValidation" required="false">
+        <property-ui type="textBox"
+        			 label="Fail condition threshold (H, M, L, I)"
+        			 description="Please set the number of issues found (by severity) in a 
+                        comma-separated list. If the threshold is reached during the scan, 
+                        the scan will fail. In this field, you can specify the numbers for 
+                        these severity levels: High (H), Medium (M), Low (L), and 
+                        Informational (I). For example, a fail condition of '0,5,10,20' 
+                        will cause the step to fail if the resulting scan has more than 0 
+                        High issues, 5 Medium issues, and so on. If this field is left 
+                        empty, there will be no validation of results and the scan will 
+                        not fail as a result of a fail condition."
+        			 default-value="0,5,10,20" />
+      </property>
+      <property name="parentScanId" required="false">
+        <property-ui type="textBox"
+        			 label="Original scan ID"
+        			 description="If you have previously scanned the application, please enter the original scan ID here if you want to rescan it." />
+      </property>
+      <property name="failOnPause">
+        <property-ui type="checkBox"
+                     label="Fail Scan on Pause"
+                     hidden="true"
+                     default-value="false"
+                     description="Select this option to immediately fail the process if 
+                        the scan is paused. If unchecked, the process will continue running." />
+      </property>
+      <property name="scanTimeout">
+        <property-ui type="textBox"
+                     label="Scan Timeout (minutes)"
+                     hidden="true"
+                     default-value="-1"
+                     description="Please enter a timeout for the scan (relevant for only 
+                        when validating report). The default value of -1 will cause the 
+                        scan to run until it completes."/>
+      </property>
+    </properties>
+    <post-processing>
+      <![CDATA[
+        if (properties.get("exitCode") != 0) {
+            properties.put("Status", "Failure");
+        }
+        else {
+            properties.put("Status", "Success");
+        }
+     ]]>
+    </post-processing>
+
+    <command program="${GROOVY_HOME}/bin/groovy">
+	  <arg value="-cp"/>
+      <arg path="classes:lib/HttpComponents-Util.jar:lib/securedata.jar:lib/CommonsUtil.jar:lib/log4j.jar:lib/commons-logging.jar:lib/httpclient.jar:lib/httpcore.jar:lib/httpmime.jar" />
+      <arg file="start_sast_scan.groovy"/>
+      <arg file="${PLUGIN_INPUT_PROPS}"/>
+      <arg file="${PLUGIN_OUTPUT_PROPS}"/>
+    </command>
+  </step-type>
+  <step-type name="Start iOS Analyzer ASoC Scan">
+	<description>Starts a new iOS Analyzer ASoC Scan, using IBM Application Security on Cloud</description>
+    <properties>
+      <property name="applicationId" required="true">
+        <property-ui type="textBox"
+                     label="ASoC Application ID"
+                     description="The ID of the application in ASoC."/>
+      </property>
+      <property name="keyId" required="true">
+        <property-ui type="textBox"
+                     label="Login Key ID"
+                     description="The key ID to authenticate with ASoC." />
+      </property>
+      <property name="keySecret" required="true">
+        <property-ui type="secureBox"
+                     label="Login Key Secret"
+                     description="The key secret to authenticate with ASoC." />
+      </property>
+      <property name="ipaFileLocation" required="true">
+        <property-ui type="textBox"
+                     label="IPA file location"
+                     description="The path to the ipa file." />
+      </property>
+      <property name="scanUser" required="false">
+        <property-ui type="textBox"
+                     label="Application Username"
+                     description="Username for the scanned application if it contains a login." />
+      </property> 
+      <property name="scanPassword" required="false">
+        <property-ui type="secureBox"
+                     label="Application Password"
+                     description="Password for the scanned application if it contains a login." />
+      </property> 
+      <property name="thirdCredential" required="false">
+        <property-ui type="secureBox"
+                     label="Third Application Credential"
+                     description="Provide this field if your application requires a third
+                        credential." />
+      </property>
+      <property name="presenceId">
+        <property-ui type="textBox"
+                     label="Presence ID"
+                     description="Specify an ID of an existing presence, which allows you to run
+                        scans on apps not connected to the internet or require a proxy server
+                        to make a connection. The presence must be accessible to the user."/>
+      </property> 
+	  <property name="reportIssueCountValidation" required="false">
+        <property-ui type="textBox"
+        			 label="Fail condition threshold (H, M, L, I)"
+        			 description="Please set the number of issues found (by severity) in a 
+                        comma-separated list. If the threshold is reached during the scan, 
+                        the scan will fail. In this field, you can specify the numbers 
+                        for these severity levels: High (H), Medium (M), Low (L), and 
+                        Informational (I). For example, a fail condition of '0,5,10,20' 
+                        will cause the step to fail if the resulting scan has more than 0 
+                        High issues, 5 Medium issues, and so on. If this field is left 
+                        empty, there will be no validation of results and the scan will 
+                        not fail as a result of a fail condition."
+        			 default-value="0,5,10,20" />
+      </property>
+      <property name="parentScanId" required="false">
+        <property-ui type="textBox"
+                     label="Original scan ID"
+                     description="If this is a rescan please enter the original scan id"/>
+      </property>
+      <property name="failOnPause">
+        <property-ui type="checkBox"
+                     label="Fail Scan on Pause"
+                     hidden="true"
+                     default-value="false"
+                     description="Select this option to immediately fail the process if 
+                        the scan is paused. If unchecked, the process will continue running." />
+      </property>
+      <property name="scanTimeout">
+        <property-ui type="textBox"
+                     label="Scan Timeout (minutes)"
+                     hidden="true"
+                     default-value="-1"
+                     description="Please enter a timeout for the scan (relevant for only 
+                        when validating report). The default value of -1 will cause the 
+                        scan to run until it completes."/>
+      </property>
+    </properties>
+    <post-processing>
+      <![CDATA[
+        if (properties.get("exitCode") != 0) {
+            properties.put("Status", "Failure");
+        }
+        else {
+            properties.put("Status", "Success");
+        }
+     ]]>
+    </post-processing>
+
+    <command program="${GROOVY_HOME}/bin/groovy">
+	  <arg value="-cp"/>
+      <arg path="classes:lib/HttpComponents-Util.jar:lib/securedata.jar:lib/CommonsUtil.jar:lib/log4j.jar:lib/commons-logging.jar:lib/httpclient.jar:lib/httpcore.jar:lib/httpmime.jar" />
+      <arg file="start_ios_scan.groovy"/>
+      <arg file="${PLUGIN_INPUT_PROPS}"/>
+      <arg file="${PLUGIN_OUTPUT_PROPS}"/>
+    </command>
+  </step-type>
+
+  <step-type name="Create ASoC Presence">
+    <description>Create and start a new presence. To access a private site server you must 
+        create the presence in an environment that has local access to the server. The 'PresenceId'
+        output property generated can be used to run scans in environments that do not have
+        access to the private site.</description>
+    <properties> 
+      <property name="keyId" required="true">
+        <property-ui type="textBox"
+                     label="Login Key ID"
+                     description="The key ID to authenticate with ASoC." />
+      </property>
+      <property name="keySecret" required="true">
+        <property-ui type="secureBox"
+                     label="Login Key Secret"
+                     description="The key secret to authenticate with ASoC." />
+      </property>
+      <property name="startPresence">
+        <property-ui type="checkBox"
+                     label="Start Presence"
+                     default-value="true"
+                     description="Select this option to start the presence after it 
+                        is created." />
+      </property>
+    </properties>
+    <post-processing>
+      <![CDATA[
+        if (properties.get("exitCode") != 0) {
+            properties.put("Status", "Failure");
+        }
+        else {
+            properties.put("Status", "Success");
+        }
+     ]]>
+    </post-processing>
+
+    <command program="${GROOVY_HOME}/bin/groovy">
+      <arg value="-cp"/>
+      <arg path="classes:lib/HttpComponents-Util.jar:lib/securedata.jar:lib/CommonsUtil.jar:lib/log4j.jar:lib/commons-logging.jar:lib/httpclient.jar:lib/httpcore.jar:lib/httpmime.jar" />
+      <arg file="create_presence.groovy"/>
+      <arg file="${PLUGIN_INPUT_PROPS}"/>
+      <arg file="${PLUGIN_OUTPUT_PROPS}"/>
+    </command>
+  </step-type>
+  <step-type name="Start ASoC Presence">
+    <description>Start an existing ASoC presence. The presence will be started on the 
+        agent machine that runs the step.</description>
+    <properties> 
+      <property name="keyId" required="true">
+        <property-ui type="textBox"
+                     label="Login Key ID"
+                     description="The key ID to authenticate with ASoC." />
+      </property>
+      <property name="keySecret" required="true">
+        <property-ui type="secureBox"
+                     label="Login Key Secret"
+                     description="The key secret to authenticate with ASoC." />
+      </property>
+      <property name="presenceId" required="false">
+        <property-ui type="textBox"
+                     label="Presence ID"
+                     description="Specify an ID of an existing presence, which allows you to run
+                        scans on apps not connected to the internet or require a proxy server
+                        to make a connection. The presence must be accessible to the user."/>
+      </property>
+      <property name="renewKey">
+        <property-ui type="checkBox"
+                     label="Renew Presence Key"
+                     default-value="true"
+                     description="Select this option to renew the key before 
+                        starting the presence." />
+      </property>
+    </properties>
+    <post-processing>
+      <![CDATA[
+        if (properties.get("exitCode") != 0) {
+            properties.put("Status", "Failure");
+        }
+        else {
+            properties.put("Status", "Success");
+        }
+     ]]>
+    </post-processing>
+
+    <command program="${GROOVY_HOME}/bin/groovy">
+      <arg value="-cp"/>
+      <arg path="classes:lib/HttpComponents-Util.jar:lib/securedata.jar:lib/CommonsUtil.jar:lib/log4j.jar:lib/commons-logging.jar:lib/httpclient.jar:lib/httpcore.jar:lib/httpmime.jar" />
+      <arg file="start_presence.groovy"/>
+      <arg file="${PLUGIN_INPUT_PROPS}"/>
+      <arg file="${PLUGIN_OUTPUT_PROPS}"/>
+    </command>
+  </step-type>
+
+  <step-type name="Stop ASoC Presence">
+    <description>Stop a running ASoC presence. The presence will be stopped on the 
+        agent machine on which it was originally started.</description>
+    <properties> 
+      <property name="keyId" required="true">
+        <property-ui type="textBox"
+                     label="Login Key ID"
+                     description="The key ID to authenticate with ASoC." />
+      </property>
+      <property name="keySecret" required="true">
+        <property-ui type="secureBox"
+                     label="Login Key Secret"
+                     description="The key secret to authenticate with ASoC." />
+      </property>
+      <property name="presenceId" required="false">
+        <property-ui type="textBox"
+                     label="Presence ID"
+                     description="Specify an ID of an existing presence, which allows you to run
+                        scans on apps not connected to the internet or require a proxy server
+                        to make a connection. The presence must be accessible to the user."/>
+      </property>
+    </properties>
+    <post-processing>
+      <![CDATA[
+        if (properties.get("exitCode") != 0) {
+            properties.put("Status", "Failure");
+        }
+        else {
+            properties.put("Status", "Success");
+        }
+     ]]>
+    </post-processing>
+
+    <command program="${GROOVY_HOME}/bin/groovy">
+      <arg value="-cp"/>
+      <arg path="classes:lib/HttpComponents-Util.jar:lib/securedata.jar:lib/CommonsUtil.jar:lib/log4j.jar:lib/commons-logging.jar:lib/httpclient.jar:lib/httpcore.jar:lib/httpmime.jar" />
+      <arg file="stop_presence.groovy"/>
+      <arg file="${PLUGIN_INPUT_PROPS}"/>
+      <arg file="${PLUGIN_OUTPUT_PROPS}"/>
+    </command>
+  </step-type>
+
+  <step-type name="Delete ASoC Presence">
+    <description>Delete an ASoC presence. The presence will be stopped on the 
+        agent machine on which it was originally started.</description>
+    <properties> 
+      <property name="keyId" required="true">
+        <property-ui type="textBox"
+                     label="Login Key ID"
+                     description="The key ID to authenticate with ASoC." />
+      </property>
+      <property name="keySecret" required="true">
+        <property-ui type="secureBox"
+                     label="Login Key Secret"
+                     description="The key secret to authenticate with ASoC." />
+      </property>
+      <property name="presenceId" required="false">
+        <property-ui type="textBox"
+                     label="Presence ID"
+                     description="Specify an ID of an existing presence that is accessible
+                        using the provided login credentials. "/>
+      </property>
+      <property name="deleteAll">
+        <property-ui type="checkBox"
+                     label="Delete All Presences"
+                     description="Select this box to remove all existing ASoC presences
+                        that can be accessed with the provided login credentials."/>
+      </property>
+    </properties>
+    <post-processing>
+      <![CDATA[
+        if (properties.get("exitCode") != 0) {
+            properties.put("Status", "Failure");
+        }
+        else {
+            properties.put("Status", "Success");
+        }
+     ]]>
+    </post-processing>
+
+    <command program="${GROOVY_HOME}/bin/groovy">
+      <arg value="-cp"/>
+      <arg path="classes:lib/HttpComponents-Util.jar:lib/securedata.jar:lib/CommonsUtil.jar:lib/log4j.jar:lib/commons-logging.jar:lib/httpclient.jar:lib/httpcore.jar:lib/httpmime.jar" />
+      <arg file="delete_presence.groovy"/>
+      <arg file="${PLUGIN_INPUT_PROPS}"/>
+      <arg file="${PLUGIN_OUTPUT_PROPS}"/>
+    </command>
+  </step-type>
+</plugin>
