@@ -1,5 +1,0 @@
-IBM Application Security Testing services on Bluemix allows you to run security scans on your Bluemix hosted web applications, Android applications or Java applications.
-
-Upload this plugin to IBM UrbanCode Deploy to get access to steps for working with IBM Application Security Testing services on Bluemix.
-
-This plug-in is developed and supported by the UrbanCode Deploy Community on the IBM DevOps Services platform. Click the “Visit Project” button at the top of the page to navigate to the project for further information.
