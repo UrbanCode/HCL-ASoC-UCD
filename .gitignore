@@ -13,6 +13,7 @@ plugin-build.xml
 
 # ignore compilation related directories in the root of the project
 /build
+/lib
 /dist
 /ecbin
 /bin
