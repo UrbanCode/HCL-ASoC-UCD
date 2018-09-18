@@ -145,7 +145,6 @@ task gatherI18n(type: JavaExec) {
 task cleanAll(dependsOn: ['clean', 'cleanCopyDeps', 'cleanDistPlugin', 'cleanGatherI18n'])
 
 String stripVersion(String fileNameWithVersion) {
-    println(fileNameWithVersion)
     String ext = fileNameWithVersion.substring(fileNameWithVersion.lastIndexOf("."),fileNameWithVersion.length())
     int end = fileNameWithVersion.lastIndexOf("-"); //assumes that: name-version.ext. Will not work with name-version-SNAPSHOT.ext
     return fileNameWithVersion.substring(0, end) + ext
