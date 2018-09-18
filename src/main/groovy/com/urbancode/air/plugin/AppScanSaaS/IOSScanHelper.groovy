@@ -20,6 +20,11 @@ import java.util.Properties
 import com.urbancode.air.plugin.AppScanSaaS.RestClient
 import com.urbancode.air.plugin.AppScanSaaS.ScanType
 
+/**
+ * Helper class that provides functions to create/delete the iOS package file used during
+ * a mobile iOS application scan. This class is currently unused, but the logic for creating
+ * the IPAX file is here in case the need ever arises.
+ */
 public class IOSScanHelper {
     public IOSScanHelper() {}
 

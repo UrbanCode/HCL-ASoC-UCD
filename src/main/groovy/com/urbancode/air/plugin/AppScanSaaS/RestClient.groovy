@@ -20,6 +20,9 @@ import org.apache.http.entity.mime.HttpMultipartMode
 import org.apache.http.entity.mime.MultipartEntityBuilder
 import org.apache.http.entity.mime.content.InputStreamBody
 
+/**
+ * Class that provides functions to make HTTP calls to the ASoC REST API.
+ */
 public abstract class RestClient {
     protected RestClientHelper restHelper
 	protected boolean validateSSL

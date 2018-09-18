@@ -10,6 +10,9 @@ package com.urbancode.air.plugin.AppScanSaaS
 
 import java.util.Properties
 
+/**
+ * Class used to initiate the login to the ASoC server.
+ */
 public class SCXRestClient extends RestClient {
     private String keyId
     private String keySecret

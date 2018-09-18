@@ -10,6 +10,10 @@ import java.util.concurrent.TimeUnit
 import java.util.List
 import java.util.Properties
 
+/**
+ * Helper class that provides all of the functions for running shell (Linux/Mac) or console (Windows)
+ * commands to start and stop presences on the agent machine.
+ */
 class PresenceHelper {
     private final String serviceWorkingDirectory = "AppscanPresenceService"
     private final String agentServiceJar = "agentService.jar"

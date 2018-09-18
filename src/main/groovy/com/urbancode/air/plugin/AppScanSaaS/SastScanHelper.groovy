@@ -15,6 +15,9 @@ import com.urbancode.air.AirPluginTool;
 import com.urbancode.air.plugin.AppScanSaaS.RestClient
 import com.urbancode.air.plugin.AppScanSaaS.ScanType
 
+/**
+ * Helper class used to generate the IRX file used in static scans.
+ */
 public class SastScanHelper {
     public SastScanHelper() {}
 

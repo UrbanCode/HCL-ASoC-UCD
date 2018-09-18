@@ -11,7 +11,6 @@ import com.urbancode.air.plugin.AppScanSaaS.SCXRestClient
 import com.urbancode.air.plugin.AppScanSaaS.IOSScanHelper
 import com.urbancode.air.plugin.AppScanSaaS.ScanType
 
-
 final def airHelper = new AirPluginTool(args[0], args[1])
 final Properties props = airHelper.getStepProperties()
 
@@ -43,7 +42,8 @@ if (ipaFileLocation!=null && ipaFileLocation.length() > 0) {
     }
 }
 else {
-    String projectLocation = props["projectLocation"];
+    /* Currently an unused feature that will be added in a later iteration */
+    String projectLocation = props["projectLocation"]
     if (projectLocation==null || projectLocation.length() <= 0) {
         println "[Error] Not enough input was provided for this step. Please add a value to the required "
             + "'IPA file location' field ('ipaFileLocation')."

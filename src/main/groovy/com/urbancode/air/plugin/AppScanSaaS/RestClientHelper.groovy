@@ -26,7 +26,9 @@ import org.apache.http.Header
 import org.apache.http.HttpEntity
 import org.apache.http.HttpResponse
 
-
+/**
+ * Helper class used to generate an apache HTTP client, and execute HTTP methods.
+ */
 class RestClientHelper {
     protected CloseableHttpClientBuilder clientBuilder  // Configuration for building a client
     protected CloseableHttpClient client    // Client will be built in the constructor
