@@ -1,3 +1,9 @@
+/**
+ * (c) Copyright HCL Technologies Ltd. 2018. All Rights Reserved.
+ * This is licensed under the following license.
+ * The Eclipse Public 1.0 License (http://www.eclipse.org/legal/epl-v10.html)
+ */
+
 package com.urbancode.air.plugin.AppScanSaaS
 
 import java.util.concurrent.TimeUnit

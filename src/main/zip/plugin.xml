@@ -1,4 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!--
+    (c) Copyright IBM Corporation 2015.
+    (c) Copyright HCL Technologies Ltd. 2018. All Rights Reserved.
+    This is licensed under the following license.
+    The Eclipse Public 1.0 License (http://www.eclipse.org/legal/epl-v10.html)
+    U.S. Government Users Restricted Rights:  Use, duplication or disclosure restricted by GSA ADP Schedule Contract with IBM Corp.
+-->
 <plugin xmlns="http://www.urbancode.com/PluginXMLSchema_v1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <header>
     <identifier id="com.urbancode.air.plugin.IBMSecurity.scx" version="10" name="IBM Application Security on Cloud"/>
@@ -8,7 +15,8 @@
     <tag>Utilities/IBM Application Security on Cloud</tag>
   </header>
   <step-type name="Start Android Mobile Analyzer ASoC Scan">
-    <description>Starts a new Android Mobile Analyzer ASoC Scan, using IBM Application Security on Cloud</description>
+    <description>Starts a new Android Mobile Analyzer ASoC Scan, using IBM Application 
+        Security on Cloud. This step will generate the 'ScanId' output property.</description>
     <properties>
       <property name="applicationId" required="true">
         <property-ui type="textBox"
@@ -18,17 +26,17 @@
       <property name="keyId" required="true">
         <property-ui type="textBox"
                      label="Login Key ID"
-                     description="The key ID to authenticate with ASoC." />
+                     description="The API key ID to authenticate with ASoC." />
       </property>
       <property name="keySecret" required="true">
         <property-ui type="secureBox"
                      label="Login Key Secret"
-                     description="The key secret to authenticate with ASoC." />
+                     description="The API key secret to authenticate with ASoC." />
       </property>
       <property name="apkFileLocation" required="true">
         <property-ui type="textBox"
-                     label="APK file location"
-                     description="Please point to an apk file" />
+                     label="APK File Location"
+                     description="The path to the Android package (APK) file." />
       </property> 
       <property name="scanUser" required="false">
         <property-ui type="textBox"
@@ -110,7 +118,8 @@
     </command>
   </step-type>
   <step-type name="Start Dynamic Analyzer ASoC Scan">
-    <description>Starts a new Dynamic Analyzer Scan, using IBM Application Security on Cloud.</description>
+    <description>Starts a new Dynamic Analyzer Scan, using IBM Application Security on Cloud.
+        This step will generate the 'ScanId' output property.</description>
     <properties>
       <property name="applicationId" required="true">
         <property-ui type="textBox"
@@ -120,12 +129,12 @@
       <property name="keyId" required="true">
         <property-ui type="textBox"
                      label="Login Key ID"
-                     description="The key ID to authenticate with ASoC." />
+                     description="The API key ID to authenticate with ASoC." />
       </property>
       <property name="keySecret" required="true">
         <property-ui type="secureBox"
                      label="Login Key Secret"
-                     description="The key secret to authenticate with ASoC." />
+                     description="The API key secret to authenticate with ASoC." />
       </property>
       <property name="startingUrl" required="true">
         <property-ui type="textBox"
@@ -239,7 +248,8 @@
     </command>
   </step-type>
     <step-type name="Start Static Analyzer ASoC Scan">
-    <description>Starts a new Static Analyzer ASoC Scan, using IBM Application Security on Cloud</description>
+    <description>Starts a new Static Analyzer ASoC Scan, using IBM Application Security 
+        on Cloud. This step will generate the 'ScanId' output property.</description>
     <properties>
       <property name="applicationId" required="true">
         <property-ui type="textBox"
@@ -249,12 +259,12 @@
       <property name="keyId" required="true">
         <property-ui type="textBox"
                      label="Login Key ID"
-                     description="The key ID to authenticate with ASoC." />
+                     description="The API key ID to authenticate with ASoC." />
       </property>
       <property name="keySecret" required="true">
         <property-ui type="secureBox"
                      label="Login Key Secret"
-                     description="The key secret to authenticate with ASoC." />
+                     description="The API key secret to authenticate with ASoC." />
       </property>
       <property name="sastFileLocation" required="true">
         <property-ui type="textBox"
@@ -328,7 +338,8 @@
     </command>
   </step-type>
   <step-type name="Start iOS Analyzer ASoC Scan">
-	<description>Starts a new iOS Analyzer ASoC Scan, using IBM Application Security on Cloud</description>
+	<description>Starts a new iOS Analyzer ASoC Scan, using IBM Application Security on 
+        Cloud. This step will generate the 'ScanId' output property.</description>
     <properties>
       <property name="applicationId" required="true">
         <property-ui type="textBox"
@@ -338,12 +349,12 @@
       <property name="keyId" required="true">
         <property-ui type="textBox"
                      label="Login Key ID"
-                     description="The key ID to authenticate with ASoC." />
+                     description="The API key ID to authenticate with ASoC." />
       </property>
       <property name="keySecret" required="true">
         <property-ui type="secureBox"
                      label="Login Key Secret"
-                     description="The key secret to authenticate with ASoC." />
+                     description="The API key secret to authenticate with ASoC." />
       </property>
       <property name="ipaFileLocation" required="true">
         <property-ui type="textBox"
@@ -432,19 +443,19 @@
 
   <step-type name="Create ASoC Presence">
     <description>Create and start a new presence. To access a private site server you must 
-        create the presence in an environment that has local access to the server. The 'PresenceId'
+        start the presence in an environment that has local access to the server. The 'PresenceId'
         output property generated can be used to run scans in environments that do not have
         access to the private site.</description>
     <properties> 
       <property name="keyId" required="true">
         <property-ui type="textBox"
                      label="Login Key ID"
-                     description="The key ID to authenticate with ASoC." />
+                     description="The API key ID to authenticate with ASoC." />
       </property>
       <property name="keySecret" required="true">
         <property-ui type="secureBox"
                      label="Login Key Secret"
-                     description="The key secret to authenticate with ASoC." />
+                     description="The API key secret to authenticate with ASoC." />
       </property>
       <property name="startPresence">
         <property-ui type="checkBox"
@@ -480,12 +491,12 @@
       <property name="keyId" required="true">
         <property-ui type="textBox"
                      label="Login Key ID"
-                     description="The key ID to authenticate with ASoC." />
+                     description="The API key ID to authenticate with ASoC." />
       </property>
       <property name="keySecret" required="true">
         <property-ui type="secureBox"
                      label="Login Key Secret"
-                     description="The key secret to authenticate with ASoC." />
+                     description="The API key secret to authenticate with ASoC." />
       </property>
       <property name="presenceId" required="false">
         <property-ui type="textBox"
@@ -523,18 +534,18 @@
   </step-type>
 
   <step-type name="Stop ASoC Presence">
-    <description>Stop a running ASoC presence. The presence will be stopped on the 
-        agent machine on which it was originally started.</description>
+    <description>Stop a running ASoC presence. This step must be run on the 
+        agent machine on which the presence was originally started.</description>
     <properties> 
       <property name="keyId" required="true">
         <property-ui type="textBox"
                      label="Login Key ID"
-                     description="The key ID to authenticate with ASoC." />
+                     description="The API key ID to authenticate with ASoC." />
       </property>
       <property name="keySecret" required="true">
         <property-ui type="secureBox"
                      label="Login Key Secret"
-                     description="The key secret to authenticate with ASoC." />
+                     description="The API key secret to authenticate with ASoC." />
       </property>
       <property name="presenceId" required="false">
         <property-ui type="textBox"
@@ -565,30 +576,31 @@
   </step-type>
 
   <step-type name="Delete ASoC Presence">
-    <description>Delete an ASoC presence. The presence will be stopped on the 
-        agent machine on which it was originally started.</description>
+    <description>Delete an ASoC presence. The presence will subsequently be stopped on any
+        machine where it is currently running.</description>
     <properties> 
       <property name="keyId" required="true">
         <property-ui type="textBox"
                      label="Login Key ID"
-                     description="The key ID to authenticate with ASoC." />
+                     description="The API key ID to authenticate with ASoC." />
       </property>
       <property name="keySecret" required="true">
         <property-ui type="secureBox"
                      label="Login Key Secret"
-                     description="The key secret to authenticate with ASoC." />
+                     description="The API key secret to authenticate with ASoC." />
       </property>
       <property name="presenceId" required="false">
         <property-ui type="textBox"
                      label="Presence ID"
                      description="Specify an ID of an existing presence that is accessible
-                        using the provided login credentials. "/>
+                        using the provided login credentials. This field will be ignored if
+                        the 'Delete All Presences' box is checked."/>
       </property>
       <property name="deleteAll">
         <property-ui type="checkBox"
                      label="Delete All Presences"
                      description="Select this box to remove all existing ASoC presences
-                        that can be accessed with the provided login credentials."/>
+                        that can be accessed with the provided login credentials. "/>
       </property>
     </properties>
     <post-processing>

@@ -1,5 +1,6 @@
 /**
- * � Copyright IBM Corporation 2015.
+ * (c) Copyright IBM Corporation 2015.
+ * (c) Copyright HCL Technologies Ltd. 2018. All Rights Reserved.
  * This is licensed under the following license.
  * The Eclipse Public 1.0 License (http://www.eclipse.org/legal/epl-v10.html)
  * U.S. Government Users Restricted Rights:  Use, duplication or disclosure restricted by GSA ADP Schedule Contract with IBM Corp.
@@ -256,7 +257,7 @@ public abstract class RestClient {
         props.put("KeySecret", keySecret)
 
 		String url = getScxLoginUrl()
-		println("[Action] Send POST request to ${baseUrl}$url: $props.")
+		println("[Action] Sending POST request to ${baseUrl}$url: $props.")
 
         HttpResponse response = restHelper.doPostRequest(url, props)
         def jsonObj = restHelper.parseResponse(response)
@@ -663,7 +664,7 @@ public abstract class RestClient {
     }
 
     public void downloadAppscanPresence(String serviceDirectory, boolean isWindows, String presenceId) {
-        println("[Action] Downloading latest Appscan Presence.")
+        println("[Action] Downloading Appscan Presence with ID ${presenceId}.")
 
         String url = API_PRESENCES + "/${presenceId}/Download" + (isWindows ? Win_x86_64 : Linux_x86_64)
 
@@ -694,12 +695,16 @@ public abstract class RestClient {
                 restHelper.doDeleteRequest(url)
             }
         }
-        else {
+        else if (!"".equals(presenceId)){
             String url = API_PRESENCES + "/${presenceId}"
             println("[Action] Sending DELETE request to ${baseUrl}$url.")
             println("[Action] Deleting presence with ID: ${presenceId}.")
 
             restHelper.doDeleteRequest(url)
+        }
+        else {
+            println("[Warning] You have neither specified a presence ID nor checked the "
+                + "'Delete All Presences' checkbox. No action will be taken.")
         }
     }
 
