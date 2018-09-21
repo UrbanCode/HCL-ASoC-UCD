@@ -28,7 +28,7 @@ public class SastScanHelper {
 		File arsaExe = new File(arsaToolBin, arsaExeName)
 
         if (!arsaExe.exists()) {
-            println("[Error] $arsaExe not found.  IRX file cannot be generated.")
+            println("[Error] $arsaExe not found. IRX file cannot be generated.")
             System.exit(1)
         }
 

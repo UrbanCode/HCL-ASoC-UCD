@@ -28,9 +28,9 @@ public abstract class RestClient {
 	protected boolean validateSSL
 	protected String token
 	protected String authHeader
-
 	protected String baseUrl
 	protected String apiEnvironment
+    protected String clientType
 
 	protected static final String ANALYZERS_API_BM_DOMAIN = "appscan.bluemix.net"
 	protected static final String ASM_API_GATEWAY_DOMAIN = "appscan.ibmcloud.com"
@@ -76,8 +76,21 @@ public abstract class RestClient {
 		String userServerPort = props.containsKey("userServerPort") ? props["userServerPort"] : "443"
 
 		this.baseUrl = "https://" + userServer + ":" +  userServerPort
-
         this.restHelper =  new RestClientHelper(baseUrl, false)
+
+        String os = System.getProperty('os.name')
+        clientType = "urbancode"
+
+        /* Configure ClientType to submit scan origin to ASoC team */
+        if ((os =~ /(?i)windows/).find()) {
+            clientType += "-windows"
+        }
+        else if ((os =~ /(?i)mac/).find()) {
+            clientType += "-mac"
+        }
+        else {
+            clientType += "-linux"
+        }
 	}
 
 	public getBaseUrl() {
@@ -313,6 +326,7 @@ public abstract class RestClient {
             scanId = parentjobid
         }
 
+        props.put("ClientType", clientType) // Configure clientType for both new scans and re-scans
         println "[Action] Sending POST request to ${this.baseUrl}$url , with the following parameters: $props."
         restHelper.addRequestHeader("Content-Type", "application/json")
         def response = restHelper.doPostRequest(url, props)
@@ -447,6 +461,7 @@ public abstract class RestClient {
                 testPolicy : testPolicyForPostRequest, ScanType: scanType])
         }
 
+        props.put("ClientType", clientType) // Configure clientType for both new scans and re-scans
         println("[Action] Sending POST request to ${this.baseUrl}$url , with the following parameters: $props.")
 
         HttpResponse response = restHelper.doPostRequest(url, props)
