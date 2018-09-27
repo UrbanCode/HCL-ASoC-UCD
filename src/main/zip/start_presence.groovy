@@ -13,8 +13,9 @@ import com.urbancode.air.plugin.AppScanSaaS.PresenceHelper
 final def airHelper = new AirPluginTool(args[0], args[1])
 final Properties props = airHelper.getStepProperties()
 String presenceId = props['presenceId']
+boolean renewKey = Boolean.parseBoolean(props['renewKey'])
 
 PresenceHelper presenceHelper = new PresenceHelper(new SCXRestClient(props), airHelper.isWindows)
-presenceHelper.startPresence(presenceId)
+presenceHelper.startPresence(presenceId, renewKey)
 
 println "[OK] Presence has started successfully."
