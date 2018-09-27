@@ -403,7 +403,8 @@ public abstract class RestClient {
         String testPolicy,
         String appId,
         String scanType,
-        String scanFilePath)
+        String scanFilePath,
+        boolean mailNotification)
     {
         Properties props = new Properties()
         String url = null
@@ -458,7 +459,7 @@ public abstract class RestClient {
             /* Empty fields are ignored */
             props.putAll([ AppId: appId, ScanName : startingUrl, StartingUrl : startingUrl, LoginUser : loginUsername,
                 LoginPassword : loginPassword, ExtraField: thirdCredential, PresenceId : presenceId,
-                testPolicy : testPolicyForPostRequest, ScanType: scanType])
+                testPolicy : testPolicyForPostRequest, ScanType: scanType, EnableMailNotification: mailNotification])
         }
 
         props.put("ClientType", clientType) // Configure clientType for both new scans and re-scans
@@ -493,7 +494,8 @@ public abstract class RestClient {
         String thirdCredential,
         String parentjobid,
         String appId,
-        String presenceId)
+        String presenceId,
+        boolean mailNotification)
     {
         Properties props = new Properties()
         String fileName = scanFile.getName()
@@ -501,18 +503,20 @@ public abstract class RestClient {
         println("[OK] ${fileName} was uploaded successfully. FileID: ${fileId}.")
         String url = String.format(MOBILE_API_PATH, API_METHOD_SCANS);
         props.putAll([AppId: appId, ApplicationFileId: fileId, ScanName: fileName, LoginUser: appUsername,
-            LoginPassword: appPassword, ExtraField: thirdCredential, PresenceId: presenceId])
+            LoginPassword: appPassword, ExtraField: thirdCredential, PresenceId: presenceId,
+            EnableMailNotification: mailNotification])
 
         return fileBasedScan(scanType, url, fileId, parentjobid, props)
     }
 
-    public String startStaticScan(File arsaFile, String parentjobid, String appId) {
+    public String startStaticScan(File arsaFile, String parentjobid, String appId, boolean mailNotification) {
         Properties props = new Properties()
         String fileName = arsaFile.getName()
         String fileId = uploadFile(arsaFile)
         println("[OK] ${fileName} was uploaded successfully. FileID: ${fileId}.")
         String url = String.format(SAST_API_PATH, API_METHOD_SCANS)
-        props.putAll([AppId: appId, ARSAFileId: fileId, ScanName: fileName])
+        props.putAll([AppId: appId, ARSAFileId: fileId, ScanName: fileName,
+            EnableMailNotification: mailNotification])
 
         return fileBasedScan(ScanType.SAST, url, fileId, parentjobid, props)
     }

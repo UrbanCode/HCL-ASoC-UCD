@@ -21,6 +21,7 @@ String appId = props["applicationId"]
 String presenceId = props["presenceId"]
 String issueCountString = props['reportIssueCountValidation']
 long scanTimeout = props["scanTimeout"] ? Long.parseLong(props["scanTimeout"]) : -1
+boolean mailNotification = props['mailNotification']
 boolean failOnPause = Boolean.parseBoolean(props['failOnPause'])
 boolean validateReport = !issueCountString.isEmpty()
 int exitCode = 0
@@ -41,7 +42,8 @@ String scanId = restClient.startMobileScan(
     thirdCredential,
     parentjobid,
     appId,
-    presenceId)
+    presenceId,
+    mailNotification)
 
 airHelper.setOutputProperty("ScanId", scanId)
 airHelper.storeOutputProperties()

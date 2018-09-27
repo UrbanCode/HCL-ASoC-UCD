@@ -80,6 +80,12 @@
                      label="Original scan ID"
                      description="If this is a rescan please enter the original scan id"/>
       </property>
+      <property name="mailNotification">
+        <property-ui type="checkBox"
+                     label="Enable Mail Notification"
+                     default-value="true"
+                     description="Select this option to notify email IDs configured in ASoC." />
+      </property>
       <property name="failOnPause">
         <property-ui type="checkBox"
                      label="Fail Scan on Pause"
@@ -201,6 +207,12 @@
                      label="Original scan ID"
                      description="If this is a rescan please enter the original scan id"/>
       </property>
+      <property name="mailNotification">
+        <property-ui type="checkBox"
+                     label="Enable Mail Notification"
+                     default-value="true"
+                     description="Select this option to notify email IDs configured in ASoC." />
+      </property>
       <property name="testPolicy" required="false">
         <property-ui type="selectBox"
           default-value="Default"
@@ -299,6 +311,12 @@
         <property-ui type="textBox"
         			 label="Original scan ID"
         			 description="If you have previously scanned the application, please enter the original scan ID here if you want to rescan it." />
+      </property>
+      <property name="mailNotification">
+        <property-ui type="checkBox"
+                     label="Enable Mail Notification"
+                     default-value="true"
+                     description="Select this option to notify email IDs configured in ASoC." />
       </property>
       <property name="failOnPause">
         <property-ui type="checkBox"
@@ -402,6 +420,12 @@
         <property-ui type="textBox"
                      label="Original scan ID"
                      description="If this is a rescan please enter the original scan id"/>
+      </property>
+      <property name="mailNotification">
+        <property-ui type="checkBox"
+                     label="Enable Mail Notification"
+                     default-value="true"
+                     description="Select this option to notify email IDs configured in ASoC." />
       </property>
       <property name="failOnPause">
         <property-ui type="checkBox"

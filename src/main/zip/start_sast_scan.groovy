@@ -19,6 +19,7 @@ String parentjobid = props["parentScanId"]
 String sastFileLocation = props['sastFileLocation']
 String issueCountString = props['reportIssueCountValidation']
 long scanTimeout = props["scanTimeout"] ? Long.parseLong(props["scanTimeout"]) : -1
+boolean mailNotification = props['mailNotification']
 boolean failOnPause = Boolean.parseBoolean(props['failOnPause'])
 boolean validateReport = !issueCountString.isEmpty()
 int exitCode = 0
@@ -62,7 +63,7 @@ if (isGenerateARSA) {
     }
 }
 
-String scanId = restClient.startStaticScan(arsaFile, parentjobid, appId)
+String scanId = restClient.startStaticScan(arsaFile, parentjobid, appId, mailNotification)
 
 if (isGenerateARSA) {
     arsaFile.delete()

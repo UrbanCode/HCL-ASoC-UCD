@@ -25,6 +25,7 @@ String scanFilePath = props["scanFile"]
 String presenceId = props["presenceId"]
 String testPolicy = props["testPolicy"]
 long scanTimeout = props["scanTimeout"] ? Long.parseLong(props["scanTimeout"]) : -1
+boolean mailNotification = props['mailNotification']
 boolean failOnPause = Boolean.parseBoolean(props['failOnPause'])
 boolean validateReport = !issueCountString.isEmpty()   // Do not validate report if no fail condition
 int exitCode = 0
@@ -46,7 +47,8 @@ String scanId = restClient.startDastScan(
     testPolicy,
     appId,
     scanType,
-    scanFilePath)
+    scanFilePath,
+    mailNotification)
 
 airHelper.setOutputProperty("ScanId", scanId)
 airHelper.storeOutputProperties()
