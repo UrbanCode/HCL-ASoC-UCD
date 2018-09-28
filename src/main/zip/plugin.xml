@@ -281,17 +281,27 @@
       <property name="sastFileLocation" required="true">
         <property-ui type="textBox"
 			         label="IRX file/Scan directory"
-			         description="Please point to the IRX file to be uploaded for scanning, or the directory that contains the files or other locations to scan. The files and locations that can be specified in this field include: .jar files, .war files, .ear files, Eclipse workspaces, and scan configuration files. For example, 'c:\build_output\testapp.irx' or 'c:\build_output'." />
+			         description="Please point to the IRX file to be uploaded for scanning, 
+                        or the directory that contains the files or other locations to scan. 
+                        The files and locations that can be specified in this field include: 
+                        .jar files, .war files, .ear files, Eclipse workspaces, and 
+                        scan configuration files. For example, 'c:\build_output\testapp.irx' 
+                        or 'c:\build_output'." />
       </property> 
       <property name="sastConfigFile" required="false">
         <property-ui type="textBox"
         			 label="Scan configuration file"
-        			 description="Please point to the path and file name of a scan configuration file. This overrides any scan configuration files which may exist in the scan directory. For example, 'c:\build_output\appscan-config.xml'." />
+        			 description="Please point to the path and file name of a scan 
+                        configuration file. This overrides any scan configuration files 
+                        which may exist in the scan directory. For example, 
+                        'c:\build_output\appscan-config.xml'." />
       </property> 
-	  <property name="arsaToolDir" required="true">
+	  <property name="arsaToolDir" required="false">
         <property-ui type="textBox"
         			 label="Static Analyzer Client Tool location"
-        			 description="Please point to the directory that the client tool was unzipped to. For example, C:\SAClientUtil." />
+        			 description="Please point to the directory that the client tool 
+                        was unzipped to. For example, C:\SAClientUtil. This property must 
+                        be supplied if you need to generate the IRX file." />
       </property>
 	  <property name="reportIssueCountValidation" required="false">
         <property-ui type="textBox"
@@ -310,7 +320,8 @@
       <property name="parentScanId" required="false">
         <property-ui type="textBox"
         			 label="Original scan ID"
-        			 description="If you have previously scanned the application, please enter the original scan ID here if you want to rescan it." />
+        			 description="If you have previously scanned the application, please 
+                        enter the original scan ID here if you want to rescan it." />
       </property>
       <property name="mailNotification">
         <property-ui type="checkBox"
