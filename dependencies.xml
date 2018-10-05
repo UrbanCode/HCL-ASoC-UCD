@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    (c) Copyright HCL Technologies Ltd. 2018. All Rights Reserved.
+    This is licensed under the following license.
+    The Eclipse Public 1.0 License (http://www.eclipse.org/legal/epl-v10.html)
+-->
+<project xmlns="http://www.urbancode.com/schema/cs/project-dependencies/1.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        name="WebSphereMessageBroker-CMP" workflow="build workflow [air]">
+
+  <dependencies conflictStrategy="FAIL">
+
+    <!-- ############################################################ -->
+    <!-- RUNTIME                                                      -->
+    <!-- ############################################################ -->
+
+    <!-- the plugin-build.xml -->
+    <dependency>
+      <ah-project name="air-plugin-build-script" workflow="build workflow [master]"/>
+      <criteria status="success"/>
+      <delivery artifact-set="Dist">
+        <directory>.</directory>
+      </delivery>
+    </dependency>
+
+    <dependency>
+      <ah-project name="air-plugin-ant-tasks" workflow="build workflow [master]"/>
+      <criteria status="success"/>
+      <delivery artifact-set="Dist">
+        <directory>lib/build</directory>
+      </delivery>
+    </dependency>
+
+    <dependency>
+      <ah-project name="air-plugin-server-common" workflow="build workflow [master]"/>
+      <criteria status="success"/>
+      <delivery artifact-set="Dist">
+        <directory>lib/build</directory>
+      </delivery>
+    </dependency>
+
+    <!-- gives us the CommandHelper and XTrust groovies -->
+    <dependency>
+      <ah-project name="plugins" workflow="build workflow [master]"/>
+      <criteria status="success"/>
+      <delivery artifact-set="Source">
+        <directory>lib/build/classes</directory>
+      </delivery>
+      <delivery artifact-set="Dist">
+        <directory>lib/test</directory>
+      </delivery>
+    </dependency>
+
+    <dependency>                                                                    
+      <cs-project name="Apache-log4j"/>                                             
+      <criteria status="success"/>                                                  
+      <delivery artifact-set="Default">                                             
+        <directory>lib</directory>                                             
+      </delivery>                                                                   
+    </dependency>
+
+    <dependency>
+      <cs-project name="Jakarta Commons Logging" />
+      <criteria status="success" />
+      <delivery artifact-set="Default">
+        <directory>lib</directory>
+      </delivery>
+    </dependency>
+
+    <dependency>
+      <cs-project name="Apache HttpComponents"/>
+      <criteria status="success"/>
+      <delivery artifact-set="lib">
+        <directory>lib</directory>
+      </delivery>
+    </dependency>
+
+    <dependency>
+      <ah-project name='HttpComponents-Util' workflow='build workflow [master]' />
+      <criteria status='success' />
+      <delivery artifact-set='Library'>
+        <directory>lib</directory>
+      </delivery>
+    </dependency>
+
+    <dependency>
+      <ah-project name="Commons-Util" workflow="build workflow [master]"/>
+      <criteria status="success"/>
+      <delivery artifact-set="Library">
+        <directory>lib</directory>
+        <directory>lib/test</directory>
+      </delivery>
+    </dependency>
+
+    <dependency>
+      <cs-project name="Jettison" />
+      <criteria status="success" />
+      <delivery artifact-set="Library">
+        <directory>lib</directory>
+      </delivery>
+    </dependency>
+
+    <dependency>
+      <ah-project name='securedata' workflow='build workflow [master]' />
+      <criteria status='success' />
+      <delivery artifact-set='Dist'>
+        <directory>lib</directory>
+      </delivery>
+    </dependency>
+
+    <!-- ############################################################ -->
+    <!-- BUILD                                                        -->
+    <!-- ############################################################ -->
+
+    <dependency>
+      <cs-project name="Groovy"/>
+      <criteria status="success"/>
+      <delivery artifact-set="lib">
+        <directory>lib/build</directory>
+      </delivery>
+    </dependency>
+
+    <!-- ############################################################ -->
+    <!-- TEST                                                         -->
+    <!-- ############################################################ -->
+
+    <dependency>                                                                    
+      <cs-project name="JUnit"/>                                                    
+      <criteria status="success"/>                                                  
+      <delivery artifact-set="Default">                                             
+        <directory>lib/test</directory>                                             
+      </delivery>                                                                   
+    </dependency>
+
+  </dependencies>
+</project>
