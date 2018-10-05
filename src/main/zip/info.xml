@@ -166,7 +166,16 @@ Add "testPolicy" to "Start Dynamic Analyzer ASoC Scan" step. Migrate the "Start 
 Remove old deprecated "projectLocation" and "workspaceScheme" fields from "Start iOS Scan" step ("ipaFileLocation" already replaced them)
 	  </release-note>
       <release-note plugin-version="10">
-Added application ID.
+<ul>
+<li>Complete rewrite of former plugin to fix broken scan steps.</li>
+<li>Added Application ID property to scan steps.</li>
+<li>Changed authentication to API tokens as opposed to IBM IDs.</li>
+<li>Added support for scan templates for DAST/MAST scans.</li>
+<li>Added steps for creating, deleting, starting, and stopping presences.</li>
+<li>Added support for running scans on private applications using presences.</li>
+<li>Added third credential for DAST/MAST scans.</li>
+<li>Added support for Staging and Production DAST scans.</li>
+</ul>
       </release-note>
   </release-notes>
 </pluginInfo>
