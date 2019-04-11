@@ -8,7 +8,7 @@
 -->
 <plugin xmlns="http://www.urbancode.com/PluginXMLSchema_v1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <header>
-    <identifier id="com.urbancode.air.plugin.IBMSecurity.scx" version="10" name="IBM Application Security on Cloud"/>
+    <identifier id="com.urbancode.air.plugin.IBMSecurity.scx" version="11" name="IBM Application Security on Cloud"/>
     <description>
     This plugin enables you to use IBM Application Security on Cloud (ASoC) easily from UrbanCode
 </description>
@@ -201,6 +201,14 @@
                         empty, there will be no validation of results and the scan will 
                         not fail as a result of a fail condition."
         			 default-value="0,5,10,20" />
+      </property>
+      <property name="outputIssues">
+        <property-ui type="checkBox"
+                     label="Set Issue Count Output Properties"
+                     default-value="true"
+                     description="Selecting this will wait for the scan results and set the 
+                        highIssueCount, medIssueCount, lowIssueCount, and infoIssueCount output
+                        properties." />
       </property>
       <property name="parentScanId" required="false">
         <property-ui type="textBox"

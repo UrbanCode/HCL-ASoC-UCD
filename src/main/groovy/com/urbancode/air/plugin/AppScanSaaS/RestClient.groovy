@@ -521,10 +521,9 @@ public abstract class RestClient {
         return fileBasedScan(ScanType.SAST, url, fileId, parentjobid, props)
     }
 
-    public int waitForScan(
+    public def waitForScan(
         String scanId,
         ScanType scanType,
-        String issueCountString,
         long startTime,
         long timeout,
         boolean failOnPause)
@@ -557,7 +556,8 @@ public abstract class RestClient {
         }
 
         downloadReport(scanId, scanType)
-        return validateScanIssues(scan.LastSuccessfulExecution, scan.Name, scanId, issueCountString)
+
+        return scan
     }
 
     private void downloadSingleReportType(String scanId, String reportType) {

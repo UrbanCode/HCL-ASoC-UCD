@@ -74,7 +74,9 @@ airHelper.storeOutputProperties()
 
 if (validateReport){
     long startTime = System.currentTimeMillis()
-    exitCode = restClient.waitForScan(scanId, ScanType.SAST, issueCountString, startTime, scanTimeout, failOnPause)
+    def scan = restClient.waitForScan(scanId, ScanType.SAST, startTime, scanTimeout, failOnPause)
+    def issuesJson = scan.LastSuccessfulExecution
+    exitCode = restClient.validateScanIssues(issuesJson, scan.Name, scanId, issueCountString)
 }
 
 if (exitCode) {

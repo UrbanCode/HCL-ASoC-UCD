@@ -177,5 +177,8 @@ Remove old deprecated "projectLocation" and "workspaceScheme" fields from "Start
 <li>Added support for Staging and Production DAST scans.</li>
 </ul>
       </release-note>
+      <release-note plugin-version="11">
+Set high, medium, low, informational issue count output properties on dynamic scan.
+      </release-note>
   </release-notes>
 </pluginInfo>
