@@ -24,10 +24,11 @@ String scanType = props["scanType"]
 String scanFilePath = props["scanFile"]
 String presenceId = props["presenceId"]
 String testPolicy = props["testPolicy"]
+boolean outputIssues = Boolean.parseBoolean(props['outputIssues'])
 long scanTimeout = props["scanTimeout"] ? Long.parseLong(props["scanTimeout"]) : -1
 boolean mailNotification = props['mailNotification']
 boolean failOnPause = Boolean.parseBoolean(props['failOnPause'])
-boolean validateReport = !issueCountString.isEmpty()   // Do not validate report if no fail condition
+boolean validateReport = !issueCountString.isEmpty() || outputIssues
 int exitCode = 0
 
 SCXRestClient restClient = new SCXRestClient(props)
@@ -55,7 +56,32 @@ airHelper.storeOutputProperties()
 
 if (validateReport) {
     long startTime = System.currentTimeMillis()
-    exitCode = restClient.waitForScan(scanId, ScanType.DAST, issueCountString, startTime, scanTimeout, failOnPause)
+    def scan = restClient.waitForScan(scanId, ScanType.DAST, startTime, scanTimeout, failOnPause)
+    def issuesJson = scan.LastSuccessfulExecution
+
+    /* Fail if issue count exceeds the set threshhold */
+    if (!issueCountString.isEmpty()) {
+        exitCode = restClient.validateScanIssues(issuesJson, scan.Name, scanId, issueCountString)
+
+    }
+    if (outputIssues) {
+        String highIssueCount = issuesJson.NHighIssues
+        String medIssueCount = issuesJson.NMediumIssues
+        String lowIssueCount = issuesJson.NLowIssues
+        String infoIssueCount = issuesJson.NInfoIssues
+
+        try {
+            println("Setting the following output properties on the step: highIssueCount, " +
+                + "medIssueCount, lowIssueCount, infoIssueCount.")
+            airHelper.setOutputProperty("highIssueCount", highIssueCount)
+            airHelper.setOutputProperty("medIssueCount", medIssueCount)
+            airHelper.setOutputProperty("lowIssueCount", lowIssueCount)
+            airHelper.setOutputProperty("infoIssueCount", infoIssueCount)
+        }
+        finally {
+            airHelper.storeOutputProperties()
+        }
+    }
 }
 
 if (exitCode) {

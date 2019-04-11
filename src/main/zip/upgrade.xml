@@ -100,4 +100,11 @@
             </migrate-properties>
         </migrate-command>
     </migrate>
+    <migrate to-version="11">
+        <migrate-command name="Start Dynamic Analyzer ASoC Scan">
+            <migrate-properties>
+                <migrate-property name="outputIssues" default="false" />
+            </migrate-properties>
+        </migrate-command>
+    </migrate>
 </plugin-upgrade>
