@@ -72,7 +72,7 @@ if (validateReport) {
 
         try {
             println("Setting the following output properties on the step: highIssueCount, " +
-                + "medIssueCount, lowIssueCount, infoIssueCount.")
+                "medIssueCount, lowIssueCount, infoIssueCount.")
             airHelper.setOutputProperty("highIssueCount", highIssueCount)
             airHelper.setOutputProperty("medIssueCount", medIssueCount)
             airHelper.setOutputProperty("lowIssueCount", lowIssueCount)
