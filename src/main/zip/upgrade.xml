@@ -107,4 +107,5 @@
             </migrate-properties>
         </migrate-command>
     </migrate>
+    <migrate to-version="12"/>
 </plugin-upgrade>
