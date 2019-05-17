@@ -180,5 +180,7 @@ Remove old deprecated "projectLocation" and "workspaceScheme" fields from "Start
       <release-note plugin-version="11">
 Set high, medium, low, informational issue count output properties on dynamic scan.
       </release-note>
+      <release-note plugin-version="12">
+Updated to the new ASoC domain 'cloud.appscan.com'.
   </release-notes>
 </pluginInfo>

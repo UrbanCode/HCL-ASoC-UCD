@@ -33,7 +33,7 @@ public abstract class RestClient {
     protected String clientType
 
 	protected static final String ANALYZERS_API_BM_DOMAIN = "appscan.bluemix.net"
-	protected static final String ASM_API_GATEWAY_DOMAIN = "appscan.ibmcloud.com"
+	protected static final String ASM_API_GATEWAY_DOMAIN = "cloud.appscan.com"
 	protected static final String MOBILE_API_PATH_V1 = "/api/%s/MobileAnalyzer/"
 	protected static final String SAST_API_PATH_V1 = "/api/%s/StaticAnalyzer/"
 	protected static final String DAST_API_PATH_V1 = "/api/%s/DynamicAnalyzer/"
