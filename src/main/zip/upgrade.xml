@@ -108,4 +108,5 @@
         </migrate-command>
     </migrate>
     <migrate to-version="12"/>
+    <migrate to-version="13"/>
 </plugin-upgrade>

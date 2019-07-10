@@ -183,5 +183,8 @@ Set high, medium, low, informational issue count output properties on dynamic sc
       <release-note plugin-version="12">
 Updated to the new ASoC domain 'cloud.appscan.com'.
       </release-note>
+      <release-note plugin-version="13">
+Remove IBM from name and descriptions.
+      </release-note>
   </release-notes>
 </pluginInfo>

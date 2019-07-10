@@ -8,14 +8,14 @@
 -->
 <plugin xmlns="http://www.urbancode.com/PluginXMLSchema_v1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <header>
-    <identifier id="com.urbancode.air.plugin.IBMSecurity.scx" version="12" name="IBM Application Security on Cloud"/>
+    <identifier id="com.urbancode.air.plugin.IBMSecurity.scx" version="13" name="Application Security on Cloud"/>
     <description>
-    This plugin enables you to use IBM Application Security on Cloud (ASoC) easily from UrbanCode
+    This plugin enables you to use Application Security on Cloud (ASoC) easily from UrbanCode
 </description>
-    <tag>Utilities/IBM Application Security on Cloud</tag>
+    <tag>Utilities/Application Security on Cloud</tag>
   </header>
   <step-type name="Start Android Mobile Analyzer ASoC Scan">
-    <description>Starts a new Android Mobile Analyzer ASoC Scan, using IBM Application 
+    <description>Starts a new Android Mobile Analyzer ASoC Scan, using Application 
         Security on Cloud. This step will generate the 'ScanId' output property.</description>
     <properties>
       <property name="applicationId" required="true">
@@ -124,7 +124,7 @@
     </command>
   </step-type>
   <step-type name="Start Dynamic Analyzer ASoC Scan">
-    <description>Starts a new Dynamic Analyzer Scan, using IBM Application Security on Cloud.
+    <description>Starts a new Dynamic Analyzer Scan, using Application Security on Cloud.
         This step will generate the 'ScanId' output property.</description>
     <properties>
       <property name="applicationId" required="true">
@@ -268,7 +268,7 @@
     </command>
   </step-type>
     <step-type name="Start Static Analyzer ASoC Scan">
-    <description>Starts a new Static Analyzer ASoC Scan, using IBM Application Security 
+    <description>Starts a new Static Analyzer ASoC Scan, using Application Security 
         on Cloud. This step will generate the 'ScanId' output property.</description>
     <properties>
       <property name="applicationId" required="true">
@@ -375,7 +375,7 @@
     </command>
   </step-type>
   <step-type name="Start iOS Analyzer ASoC Scan">
-	<description>Starts a new iOS Analyzer ASoC Scan, using IBM Application Security on 
+	<description>Starts a new iOS Analyzer ASoC Scan, using Application Security on 
         Cloud. This step will generate the 'ScanId' output property.</description>
     <properties>
       <property name="applicationId" required="true">
