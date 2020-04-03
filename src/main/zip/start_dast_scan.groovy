@@ -1,6 +1,6 @@
 /**
  * (c) Copyright IBM Corporation 2015.
- * (c) Copyright HCL Technologies Ltd. 2018. All Rights Reserved.
+ * (c) Copyright HCL Technologies Ltd. 2018, 2020. All Rights Reserved.
  * This is licensed under the following license.
  * The Eclipse Public 1.0 License (http://www.eclipse.org/legal/epl-v10.html)
  * U.S. Government Users Restricted Rights:  Use, duplication or disclosure restricted by GSA ADP Schedule Contract with IBM Corp.
@@ -15,6 +15,7 @@ final Properties props = airHelper.getStepProperties()
 
 String appId = props["applicationId"]
 String startingUrl = props["startingUrl"]
+String scanName = props["scanName"]?:startingUrl
 String issueCountString = props['reportIssueCountValidation'] // Fail count threshold
 String scanUser = props["scanUser"]
 String scanPassword = props["scanPassword"]
@@ -39,6 +40,7 @@ if (startingUrl == null || startingUrl.isEmpty()){
 }
 
 String scanId = restClient.startDastScan(
+    scanName,
     startingUrl,
     scanUser,
     scanPassword,
