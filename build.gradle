@@ -1,10 +1,10 @@
 /**
- * (c) Copyright HCL Technologies Ltd. 2018. All Rights Reserved.
+ * (c) Copyright HCL Technologies Ltd. 2018, 2020. All Rights Reserved.
  * This is licensed under the following license.
  * The Eclipse Public 1.0 License (http://www.eclipse.org/legal/epl-v10.html)
  */
 
-def pluginName="IBM-ASoC-UCD-open"
+def pluginName="HCL-ASoC-UCD-open"
 
 apply plugin: 'groovy'
 

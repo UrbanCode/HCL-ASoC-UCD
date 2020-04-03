@@ -1,4 +1,4 @@
-# IBM ASoC plug-in for IBM UrbanCode Deploy
+# HCL ASoC plug-in for UrbanCode Deploy
 ---
 Note: This is not the plugin distributable! This is the source code. To find the installable plugin, go to the plug-in page on the [UrbanCode Plug-ins microsite](https://developer.ibm.com/urbancode/plugins).
 
@@ -6,7 +6,7 @@ Note: This is not the plugin distributable! This is the source code. To find the
 This plug-in is protected under the [Eclipse Public 1.0 License](http://www.eclipse.org/legal/epl-v10.html)
 
 ### Overview
-IBM Application Security on Cloud is an application security offering that allows you to scan
+HCL AppScan on Cloud (ASoC) is an application security offering that allows you to scan
 on prem, web, and mobile applications for security vulnerabilities. The plugin allows you to 
 run all supported types of scans and manage ASoC presences. Presences allow you to run
 scans on apps not connected to the internet or require a proxy server to make a connection.

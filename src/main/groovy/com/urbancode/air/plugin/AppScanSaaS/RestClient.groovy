@@ -1,6 +1,6 @@
 /**
  * (c) Copyright IBM Corporation 2015.
- * (c) Copyright HCL Technologies Ltd. 2018. All Rights Reserved.
+ * (c) Copyright HCL Technologies Ltd. 2018, 2020. All Rights Reserved.
  * This is licensed under the following license.
  * The Eclipse Public 1.0 License (http://www.eclipse.org/legal/epl-v10.html)
  * U.S. Government Users Restricted Rights:  Use, duplication or disclosure restricted by GSA ADP Schedule Contract with IBM Corp.
@@ -394,6 +394,7 @@ public abstract class RestClient {
     }
 
     public String startDastScan(
+        String scanName,
         String startingUrl,
         String loginUsername,
         String loginPassword,
@@ -457,7 +458,7 @@ public abstract class RestClient {
             }
 
             /* Empty fields are ignored */
-            props.putAll([ AppId: appId, ScanName : startingUrl, StartingUrl : startingUrl, LoginUser : loginUsername,
+            props.putAll([ AppId: appId, ScanName : scanName, StartingUrl : startingUrl, LoginUser : loginUsername,
                 LoginPassword : loginPassword, ExtraField: thirdCredential, PresenceId : presenceId,
                 testPolicy : testPolicyForPostRequest, ScanType: scanType, EnableMailNotification: mailNotification])
         }
@@ -534,9 +535,17 @@ public abstract class RestClient {
         String status = null
         String executionProgress = null
 
+        int count = 0
         while (true) {
             Thread.sleep(TimeUnit.MINUTES.toMillis(1))
-
+            
+            // If your scan takes longer than 2 hours, your token will timeout.
+            // Proactively renew token after 60 minutes.
+            if (++count % 60 == 0) {
+                println "[Action] Renewing token..."
+                login()
+            }
+            
             scan = getScan(scanId, scanType)
             status = scan.LatestExecution.Status
             executionProgress = scan.LatestExecution.ExecutionProgress
