@@ -145,7 +145,7 @@
         <property-ui type="textBox"
                      label="Scan Name"
                      description="Enter a name for the scan. If empty, the Starting URL will be used." 
-                     default-value="${p:component.name} - ${p?:version.name}"/>
+                     default-value="${p?:component.name} ${p?:version.name} Scan"/>
       </property>
       <property name="startingUrl" required="true">
         <property-ui type="textBox"

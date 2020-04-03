@@ -15,7 +15,8 @@ final Properties props = airHelper.getStepProperties()
 
 String appId = props["applicationId"]
 String startingUrl = props["startingUrl"]
-String scanName = props["scanName"]?:startingUrl
+String scanName = props["scanName"]?.trim()
+scanName = scanName?:startingUrl
 String issueCountString = props['reportIssueCountValidation'] // Fail count threshold
 String scanUser = props["scanUser"]
 String scanPassword = props["scanPassword"]
