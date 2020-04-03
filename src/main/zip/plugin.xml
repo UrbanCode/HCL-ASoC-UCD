@@ -141,7 +141,7 @@
                      label="Login Key Secret"
                      description="The API key secret to authenticate with ASoC." />
       </property>
-      <property name="scanName" 
+      <property name="scanName" required="false">
         <property-ui type="textBox"
                      label="Scan Name"
                      description="Enter a name for the scan. If empty, the Starting URL will be used." 
