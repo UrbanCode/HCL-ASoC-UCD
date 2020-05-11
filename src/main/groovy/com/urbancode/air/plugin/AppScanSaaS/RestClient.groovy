@@ -15,6 +15,9 @@ import java.util.concurrent.TimeUnit
 import java.util.zip.ZipEntry
 import java.util.zip.ZipInputStream
 
+import groovy.xml.MarkupBuilder
+import groovy.util.*
+
 import org.apache.http.HttpResponse
 import org.apache.http.entity.mime.HttpMultipartMode
 import org.apache.http.entity.mime.MultipartEntityBuilder
@@ -81,20 +84,50 @@ public abstract class RestClient {
         String os = System.getProperty('os.name')
         clientType = "urbancode"
 
+		String pluginVersion = getPluginVersion()
+		
         /* Configure ClientType to submit scan origin to ASoC team */
         if ((os =~ /(?i)windows/).find()) {
-            clientType += "-windows"
+            clientType += "-windows" + "-" + pluginVersion
         }
         else if ((os =~ /(?i)mac/).find()) {
-            clientType += "-mac"
+            clientType += "-mac" + "-" + pluginVersion
         }
         else {
-            clientType += "-linux"
+            clientType += "-linux" + "-" + pluginVersion
         }
+		println("clientType :"  + clientType)
 	}
 
 	public getBaseUrl() {
 		return this.baseUrl
+	}
+	
+	public String getPluginVersion() {
+		
+		String pluginVersion = null
+		
+		def PATH_TO_SCRIPTS = new File(getClass().protectionDomain.codeSource.location.path).parent
+		
+		try {
+			 def pluginXml = new File(PATH_TO_SCRIPTS + System.getProperty("file.separator") + "plugin.xml")
+			 
+			 def parser = new XmlParser().parseText(pluginXml.text)
+			 
+			 pluginVersion = parser.header.identifier.@version
+			 pluginVersion = pluginVersion.substring(1,pluginVersion.length()-1)
+		 
+		} catch (FileNotFoundException ex) {
+			  
+			 println("File not found :" + pluginXml )
+			 println(ex.toString())
+		   
+		} catch (Exception ex) {
+			 println(ex.toString())
+		}
+		
+		return pluginVersion
+		
 	}
 
 	public File getIPAXGenerator(String dirName) {
