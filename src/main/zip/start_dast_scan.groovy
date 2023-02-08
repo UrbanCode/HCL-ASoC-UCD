@@ -10,6 +10,10 @@ import com.urbancode.air.AirPluginTool
 import com.urbancode.air.plugin.AppScanSaaS.SCXRestClient
 import com.urbancode.air.plugin.AppScanSaaS.ScanType
 
+import java.io.*
+import groovy.json.JsonSlurper
+import groovy.json.JsonOutput
+
 final def airHelper = new AirPluginTool(args[0], args[1])
 final Properties props = airHelper.getStepProperties()
 

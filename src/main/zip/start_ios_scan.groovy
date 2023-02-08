@@ -11,6 +11,10 @@ import com.urbancode.air.plugin.AppScanSaaS.SCXRestClient
 import com.urbancode.air.plugin.AppScanSaaS.IOSScanHelper
 import com.urbancode.air.plugin.AppScanSaaS.ScanType
 
+import java.io.*
+import groovy.json.JsonSlurper
+import groovy.json.JsonOutput
+
 final def airHelper = new AirPluginTool(args[0], args[1])
 final Properties props = airHelper.getStepProperties()
 
@@ -87,7 +91,7 @@ if (validateReport){
     def issuesJson2 = slurper.parseText(issuesJson1)
     println("result required")
     println(issuesJson2.NHighIssues)
-    
+
     exitCode = restClient.validateScanIssues(issuesJson2, scan.Name, scanId, issueCountString)
 }
 
