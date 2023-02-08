@@ -51,8 +51,19 @@ airHelper.storeOutputProperties()
 if (validateReport){
     long startTime = System.currentTimeMillis()
     def scan = restClient.waitForScan(scanId, ScanType.Android, startTime, scanTimeout, failOnPause)
-    def issuesJson = scan.LastSuccessfulExecution
-    exitCode = restClient.validateScanIssues(issuesJson, scan.Name, scanId, issueCountString)
+    println("scan");
+    println(scan);
+    println(scan.getClass());
+    def issuesJson = scan.LatestExecution
+    println(issuesJson)
+    def issuesJson1 = JsonOutput.toJson(issuesJson)
+    println(issuesJson1)
+    def slurper = new JsonSlurper();
+    def issuesJson2 = slurper.parseText(issuesJson1)
+    println("result required")
+    println(issuesJson2.NHighIssues)
+
+    exitCode = restClient.validateScanIssues(issuesJson2, scan.Name, scanId, issueCountString)
 }
 
 if (exitCode) {
