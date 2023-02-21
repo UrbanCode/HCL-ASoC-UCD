@@ -22,6 +22,11 @@
                      label="ASoC Application ID"
                      description="The ID of the application in ASoC."/>
       </property>
+      <property name="baseUrlApp" required="true">
+        <property-ui type="textBox"
+                     label="Base Appscan URL"
+                     description="Please enter a base Appscan URL to scan" />
+      </property>
       <property name="keyId" required="true">
         <property-ui type="textBox"
                      label="Login Key ID"
@@ -123,13 +128,18 @@
     </command>
   </step-type>
   <step-type name="Start Dynamic Analyzer ASoC Scan">
-    <description>Starts a new Dynamic Analyzer Scan, using HCL AppScan on Cloud.
+    <description>Starts a new Dynamic Analyzer ASoC Scan, using HCL AppScan on Cloud.
         This step will generate the 'ScanId' output property.</description>
     <properties>
       <property name="applicationId" required="true">
         <property-ui type="textBox"
                      label="ASoC Application ID"
                      description="The ID of the application in ASoC."/>
+      </property>
+      <property name="baseUrlApp" required="true">
+        <property-ui type="textBox"
+                     label="Base Appscan URL"
+                     description="Please enter a base Appscan URL to scan" />
       </property>
       <property name="keyId" required="true">
         <property-ui type="textBox"
@@ -281,6 +291,11 @@
                      label="ASoC Application ID"
                      description="The ID of the application in ASoC."/>
       </property>
+      <property name="baseUrlApp" required="true">
+        <property-ui type="textBox"
+                     label="Base Appscan URL"
+                     description="Please enter a base Appscan URL to scan" />
+      </property>
       <property name="keyId" required="true">
         <property-ui type="textBox"
                      label="Login Key ID"
@@ -387,6 +402,11 @@
         <property-ui type="textBox"
                      label="ASoC Application ID"
                      description="The ID of the application in ASoC."/>
+      </property>
+      <property name="baseUrlApp" required="true">
+        <property-ui type="textBox"
+                     label="Base Appscan URL"
+                     description="Please enter a base Appscan URL to scan" />
       </property>
       <property name="keyId" required="true">
         <property-ui type="textBox"

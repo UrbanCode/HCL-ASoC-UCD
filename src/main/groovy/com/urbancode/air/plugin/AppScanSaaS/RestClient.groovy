@@ -72,12 +72,17 @@ public abstract class RestClient {
 
 	public RestClient(Properties props) {
 		this.validateSSL = validateSSL
-		String userServer = props.containsKey("userServer") ? props["userServer"] : ASM_API_GATEWAY_DOMAIN
-		String userServerPort = props.containsKey("userServerPort") ? props["userServerPort"] : "443"
+		String userServer = props.containsKey("userServer") ? props["userServer"] : props["baseUrlApp"]
+        if (userServer.substring(userServer.length() - 2, userServer.length()) != 'eu') {
+            		String userServerPort = props.containsKey("userServerPort") ? props["userServerPort"] : "443"
+                    this.baseUrl = "https://" + userServer + ":" +  userServerPort
+                    this.restHelper =  new RestClientHelper(baseUrl, false)
+        } else {
+            this.baseUrl = "https://" + userServer
+            this.restHelper =  new RestClientHelper(baseUrl, false)            
+        }
 
-		this.baseUrl = "https://" + userServer + ":" +  userServerPort
-        this.restHelper =  new RestClientHelper(baseUrl, false)
-
+		
         String os = System.getProperty('os.name')
         clientType = "urbancode"
 
