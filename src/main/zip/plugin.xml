@@ -25,7 +25,7 @@
       <property name="baseUrlApp" required="true">
         <property-ui type="textBox"
                      label="Base Appscan URL"
-                     description="Please enter a base Appscan URL to scan" />
+                     description="Please enter a base Appscan URL to scan. Ex- cloud.appscan.com, cloud.appscan.com/eu." />
       </property>
       <property name="keyId" required="true">
         <property-ui type="textBox"
@@ -139,7 +139,7 @@
       <property name="baseUrlApp" required="true">
         <property-ui type="textBox"
                      label="Base Appscan URL"
-                     description="Please enter a base Appscan URL to scan" />
+                     description="Please enter a base Appscan URL to scan. Ex- cloud.appscan.com, cloud.appscan.com/eu." />
       </property>
       <property name="keyId" required="true">
         <property-ui type="textBox"
@@ -294,7 +294,7 @@
       <property name="baseUrlApp" required="true">
         <property-ui type="textBox"
                      label="Base Appscan URL"
-                     description="Please enter a base Appscan URL to scan" />
+                     description="Please enter a base Appscan URL to scan. Ex- cloud.appscan.com, cloud.appscan.com/eu." />
       </property>
       <property name="keyId" required="true">
         <property-ui type="textBox"
@@ -406,7 +406,7 @@
       <property name="baseUrlApp" required="true">
         <property-ui type="textBox"
                      label="Base Appscan URL"
-                     description="Please enter a base Appscan URL to scan" />
+                     description="Please enter a base Appscan URL to scan. Ex- cloud.appscan.com, cloud.appscan.com/eu." />
       </property>
       <property name="keyId" required="true">
         <property-ui type="textBox"
