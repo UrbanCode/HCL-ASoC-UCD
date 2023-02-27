@@ -194,7 +194,7 @@ Updated to the new ASoC domain 'cloud.appscan.com'.
 <ul>
 <li>Fixed a json parser related issue.</li>
 <li>Base appscan url property added for all steps</li>
-<ul>
+</ul>
 	    </release-note>
   </release-notes>
 </pluginInfo>
