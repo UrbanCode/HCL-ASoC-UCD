@@ -8,7 +8,7 @@
 -->
 <plugin xmlns="http://www.urbancode.com/PluginXMLSchema_v1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <header>
-    <identifier id="com.urbancode.air.plugin.IBMSecurity.scx" version="13" name="HCL AppScan on Cloud (ASoC)"/>
+    <identifier id="com.urbancode.air.plugin.IBMSecurity.scx" version="14" name="HCL AppScan on Cloud (ASoC)"/>
     <description>
     This plugin enables you to use HCL AppScan on Cloud (ASoC) easily from UrbanCode
 </description>
