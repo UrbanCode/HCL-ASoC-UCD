@@ -10,6 +10,10 @@ import com.urbancode.air.AirPluginTool
 import com.urbancode.air.plugin.AppScanSaaS.SCXRestClient
 import com.urbancode.air.plugin.AppScanSaaS.ScanType
 
+import java.io.*
+import groovy.json.JsonSlurper
+import groovy.json.JsonOutput
+
 final def airHelper = new AirPluginTool(args[0], args[1])
 final Properties props = airHelper.getStepProperties()
 
@@ -51,8 +55,19 @@ airHelper.storeOutputProperties()
 if (validateReport){
     long startTime = System.currentTimeMillis()
     def scan = restClient.waitForScan(scanId, ScanType.Android, startTime, scanTimeout, failOnPause)
-    def issuesJson = scan.LastSuccessfulExecution
-    exitCode = restClient.validateScanIssues(issuesJson, scan.Name, scanId, issueCountString)
+    println("scan");
+    println(scan);
+    println(scan.getClass());
+    def issuesJson = scan.LatestExecution
+    println(issuesJson)
+    def issuesJson1 = JsonOutput.toJson(issuesJson)
+    println(issuesJson1)
+    def slurper = new JsonSlurper();
+    def issuesJson2 = slurper.parseText(issuesJson1)
+    println("result required")
+    println(issuesJson2.NHighIssues)
+
+    exitCode = restClient.validateScanIssues(issuesJson2, scan.Name, scanId, issueCountString)
 }
 
 if (exitCode) {

@@ -190,5 +190,11 @@ Updated to the new ASoC domain 'cloud.appscan.com'.
 <li>Added new 'Scan Name' property to the Start Dynamic Analyzer ASoC Scan step.</li>
 </ul>
       </release-note>
+      <release-note plugin-version="14">
+<ul>
+<li>Fixed a json parser related issue.</li>
+<li>Base appscan url property added for all steps</li>
+</ul>
+	    </release-note>
   </release-notes>
 </pluginInfo>
