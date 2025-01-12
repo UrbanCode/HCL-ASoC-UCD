@@ -6,7 +6,7 @@
  * U.S. Government Users Restricted Rights:  Use, duplication or disclosure restricted by GSA ADP Schedule Contract with IBM Corp.
  */
 
-import com.urbancode.air.AirPluginTool
+import com.urbancode.air.plugin.AppScanSaaS.NewAirPluginTool
 import com.urbancode.air.plugin.AppScanSaaS.SCXRestClient
 import com.urbancode.air.plugin.AppScanSaaS.ScanType
 
@@ -14,8 +14,8 @@ import java.io.*
 import groovy.json.JsonSlurper
 import groovy.json.JsonOutput
 
-final def airHelper = new AirPluginTool(args[0], args[1])
-final Properties props = airHelper.getStepProperties()
+def airHelper = new NewAirPluginTool(args[0], args[1])
+Properties props = airHelper.getStepProperties()
 
 String appId = props["applicationId"]
 String startingUrl = props["startingUrl"]
@@ -96,9 +96,7 @@ if (validateReport) {
             airHelper.setOutputProperty("lowIssueCount", lowIssueCount)
             airHelper.setOutputProperty("infoIssueCount", infoIssueCount)
         }
-        finally {
-            airHelper.storeOutputProperties()
-        }
+        airHelper.storeOutputProperties()
     }
 }
 
