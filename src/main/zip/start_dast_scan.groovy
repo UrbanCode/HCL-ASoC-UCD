@@ -81,21 +81,17 @@ if (validateReport) {
         exitCode = restClient.validateScanIssues(issuesJson2, scan.Name, scanId, issueCountString)
 
     }
-    if (outputIssues) {
-               
+    if (outputIssues) {              
         String highIssueCount = issuesJson2.NHighIssues
         String medIssueCount = issuesJson2.NMediumIssues
         String lowIssueCount = issuesJson2.NLowIssues
         String infoIssueCount = issuesJson2.NInfoIssues
-
-        try {
-            println("Setting the following output properties on the step: highIssueCount, " +
+        println("Setting the following output properties on the step: highIssueCount, " +
                 "medIssueCount, lowIssueCount, infoIssueCount.")
-            airHelper.setOutputProperty("highIssueCount", highIssueCount)
-            airHelper.setOutputProperty("medIssueCount", medIssueCount)
-            airHelper.setOutputProperty("lowIssueCount", lowIssueCount)
-            airHelper.setOutputProperty("infoIssueCount", infoIssueCount)
-        }
+        airHelper.setOutputProperty("highIssueCount", highIssueCount)
+        airHelper.setOutputProperty("medIssueCount", medIssueCount)
+        airHelper.setOutputProperty("lowIssueCount", lowIssueCount)
+        airHelper.setOutputProperty("infoIssueCount", infoIssueCount)
         airHelper.storeOutputProperties()
     }
 }
