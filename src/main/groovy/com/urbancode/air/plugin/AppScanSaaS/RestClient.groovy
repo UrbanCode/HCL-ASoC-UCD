@@ -36,29 +36,29 @@ public abstract class RestClient {
 	protected static final String ASM_API_GATEWAY_DOMAIN = "cloud.appscan.com"
 	protected static final String MOBILE_API_PATH_V1 = "/api/%s/MobileAnalyzer/"
 	protected static final String SAST_API_PATH_V1 = "/api/%s/StaticAnalyzer/"
-	protected static final String DAST_API_PATH_V1 = "/api/%s/DynamicAnalyzer/"
+	protected static final String DAST_API_PATH_V1 = "/api/%s/Dast/"
 	protected static final String IOS_API_PATH_V1 = "/api/%s/iOS/"
 
 	protected static final String API_METHOD_DOWNLOAD_TOOL_V1 = "DownloadTool"
 
-    private static final String API_V2 = "/api/v2/%s"
-    private static final String API_BLUEMIX_LOGIN = "/api/V2/Account/BluemixLogin"
-    private static final String API_APIKEY_LOGIN = "/api/V2/Account/ApiKeyLogin"
+    private static final String API_V2 = "/api/V4/%s"
+    private static final String API_BLUEMIX_LOGIN = "/api/V4/Account/BluemixLogin"
+    private static final String API_APIKEY_LOGIN = "/api/v4/Account/ApiKeyLogin"
     private static final String REPORT_TYPE_XML = "Xml"
     private static final String REPORT_TYPE_PDF = "Pdf"
     private static final String REPORT_TYPE_HTML = "Html"
     private static final String REPORT_TYPE_COMPLIANCE_PDF = "CompliancePdf"
-    private static final String API_DOWNLOAD_REPORT = "/api/v2/Scans/%s/Report/%s"
-    private static final String API_FILE_UPLOAD = "/api/v2/FileUpload"
-    private static final String MOBILE_API_PATH = "/api/v2/%s/MobileAnalyzer"
-    private static final String SAST_API_PATH = "/api/v2/%s/StaticAnalyzer"
-    private static final String DAST_API_PATH = "/api/v2/%s/DynamicAnalyzer"
-    protected static final String DAST_FILE_API_PATH = "/api/v2/%s/DynamicAnalyzerWithFile"
+    private static final String API_DOWNLOAD_REPORT = "/api/V4/Scans/%s/Report/%s"
+    private static final String API_FILE_UPLOAD = "/api/V4/FileUpload"
+    private static final String MOBILE_API_PATH = "/api/V4/%s/MobileAnalyzer"
+    private static final String SAST_API_PATH = "/api/V4/%s/StaticAnalyzer"
+    private static final String DAST_API_PATH = "/api/v4/%s/Dast"
+    protected static final String DAST_FILE_API_PATH = "/api/V4/%s/DynamicAnalyzerWithFile"
     private static final String API_METHOD_SCANS = "Scans"
-    private static final String API_RE_SCAN = "/api/v2/Scans/%s/Executions"
-    private static final String API_PRESENCES = "/api/v2/Presences"
+    private static final String API_RE_SCAN = "/api/V4/Scans/%s/Executions"
+    private static final String API_PRESENCES = "/api/V4/Presences"
 
-    private static final String API_DOMAIN_OWNERSHIP = "/api/v2/DomainOwnership"
+    private static final String API_DOMAIN_OWNERSHIP = "/api/V4/DomainOwnership"
     private static final String Verify = "/Verify"
     private static final String Register = "/Register/"
     private static final String Confirm = "/Confirm/"
@@ -463,9 +463,37 @@ public abstract class RestClient {
             }
 
             /* Empty fields are ignored */
-            props.putAll([ AppId: appId, ScanName : scanName, StartingUrl : startingUrl, LoginUser : loginUsername,
-                LoginPassword : loginPassword, ExtraField: thirdCredential, PresenceId : presenceId,
-                testPolicy : testPolicyForPostRequest, ScanType: scanType, EnableMailNotification: mailNotification])
+            props.putAll([
+                ScanName : scanName,
+                EnableMailNotification: mailNotification,
+                Locale : "string",
+                AppId: appId,
+                Execute : true,
+                FullyAutomatic : true,
+                Personal : true,
+                Comment : "Test",
+                ScanConfiguration : [
+                    Target              : [
+                        StartingUrl                  : startingUrl,
+                        ShouldScanBelowThisDirectory: true,
+                        UseCaseSensitivePaths       : true
+                    ],
+                    Tests               : [
+                        PredefinedTestPolicy        : "Complete",
+                        TestOptimizationLevel       : "NoOptimization",
+                        TestLoginPages              : true,
+                        TestLoginPagesWithoutSessionIds: true,
+                        TestLogoutPages             : true,
+                        DetectVulnerableComponents  : true
+                    ],
+                    ApplicationElements : [
+                        EnableAutomaticFormFill     : true
+                    ]
+                ],
+                IncludeVerifiedDomains  : true,
+                OnlyFullResults         : true,
+                TestOperation           : "None"
+            ])
         }
 
         props.put("ClientType", clientType) // Configure clientType for both new scans and re-scans
