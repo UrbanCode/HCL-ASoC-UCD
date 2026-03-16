@@ -41,24 +41,25 @@ public abstract class RestClient {
 
 	protected static final String API_METHOD_DOWNLOAD_TOOL_V1 = "DownloadTool"
 
-    private static final String API_V2 = "/api/V4/%s"
-    private static final String API_BLUEMIX_LOGIN = "/api/V4/Account/BluemixLogin"
+    private static final String API_V2 = "/api/v4/%s"
+    private static final String API_BLUEMIX_LOGIN = "/api/v4/Account/BluemixLogin"
     private static final String API_APIKEY_LOGIN = "/api/v4/Account/ApiKeyLogin"
     private static final String REPORT_TYPE_XML = "Xml"
     private static final String REPORT_TYPE_PDF = "Pdf"
     private static final String REPORT_TYPE_HTML = "Html"
     private static final String REPORT_TYPE_COMPLIANCE_PDF = "CompliancePdf"
-    private static final String API_DOWNLOAD_REPORT = "/api/V4/Scans/%s/Report/%s"
-    private static final String API_FILE_UPLOAD = "/api/V4/FileUpload"
-    private static final String MOBILE_API_PATH = "/api/V4/%s/MobileAnalyzer"
-    private static final String SAST_API_PATH = "/api/V4/%s/StaticAnalyzer"
+    private static final String API_DOWNLOAD_REPORT = "/api/v4/Scans/%s/Report/%s"
+    private static final String API_FILE_UPLOAD = "/api/v4/FileUpload"
+    private static final String MOBILE_API_PATH = "/api/v4/%s/MobileAnalyzer"
+    private static final String SAST_API_PATH = "/api/v4/%s/StaticAnalyzer"
     private static final String DAST_API_PATH = "/api/v4/%s/Dast"
-    protected static final String DAST_FILE_API_PATH = "/api/V4/%s/DynamicAnalyzerWithFile"
+    protected static final String DAST_FILE_API_PATH = "/api/v4/%s/DynamicAnalyzerWithFile"
     private static final String API_METHOD_SCANS = "Scans"
-    private static final String API_RE_SCAN = "/api/V4/Scans/%s/Executions"
-    private static final String API_PRESENCES = "/api/V4/Presences"
+    private static final String API_RE_SCAN = "/api/v4/Scans/%s/Executions"
+    private static final String API_PRESENCE = "/api/v4/Presence"
+    private static final String API_PRESENCES = "/api/v4/Presences"
 
-    private static final String API_DOMAIN_OWNERSHIP = "/api/V4/DomainOwnership"
+    private static final String API_DOMAIN_OWNERSHIP = "/api/v4/DomainOwnership"
     private static final String Verify = "/Verify"
     private static final String Register = "/Register/"
     private static final String Confirm = "/Confirm/"
@@ -73,9 +74,25 @@ public abstract class RestClient {
 	public RestClient(Properties props) {
 		this.validateSSL = validateSSL
 		String userServer = props.containsKey("userServer") ? props["userServer"] : props["baseUrlApp"]
-        if (userServer.substring(userServer.length() - 2, userServer.length()) != 'eu') {
+        if (userServer == null || userServer.trim().isEmpty()) {
+            userServer = ASM_API_GATEWAY_DOMAIN
+        }
+
+        userServer = userServer.trim()
+        if (userServer.startsWith("http://")) {
+            userServer = userServer.substring("http://".length())
+        }
+        else if (userServer.startsWith("https://")) {
+            userServer = userServer.substring("https://".length())
+        }
+
+        if (userServer.endsWith("/")) {
+            userServer = userServer.substring(0, userServer.length() - 1)
+        }
+
+        if (!userServer.toLowerCase().endsWith("eu")) {
             		String userServerPort = props.containsKey("userServerPort") ? props["userServerPort"] : "443"
-                    this.baseUrl = "https://" + userServer + ":" +  userServerPort
+                    this.baseUrl = "https://" + userServer
                     this.restHelper =  new RestClientHelper(baseUrl, false)
         } else {
             this.baseUrl = "https://" + userServer
