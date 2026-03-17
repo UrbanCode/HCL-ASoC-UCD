@@ -56,7 +56,6 @@ public abstract class RestClient {
     protected static final String DAST_FILE_API_PATH = "/api/v4/%s/DynamicAnalyzerWithFile"
     private static final String API_METHOD_SCANS = "Scans"
     private static final String API_RE_SCAN = "/api/v4/Scans/%s/Executions"
-    private static final String API_PRESENCE = "/api/v4/Presence"
     private static final String API_PRESENCES = "/api/v4/Presences"
 
     private static final String API_DOMAIN_OWNERSHIP = "/api/v4/DomainOwnership"
@@ -66,8 +65,8 @@ public abstract class RestClient {
 
     private static final String NEW_KEY = "NewKey"
 
-    private static final String Linux_x86_64 = "/Linux_x86_64"
-    private static final String Win_x86_64 = "/Win_x86_64"
+    private static final String Linux_x64 = "/linux_x64"
+    private static final String Win_x64 = "/win_x64"
 
     private static final int MinReportSize = 1024
 
@@ -390,8 +389,14 @@ public abstract class RestClient {
 
             println("[OK] Current presences: ${presencesData}.")
 
+            def presencesList = (presencesData instanceof Map && presencesData.containsKey("Items"))
+                ? (presencesData.Items ?: [])
+                : (presencesData ?: [])
+
             //verify that expected presence exists and online
-            boolean idExists = presencesData.any( { presence -> return (presence.Id == presenceId && presence.Status == "Active") })
+            boolean idExists = presencesList.any({ presence ->
+                return (presence?.Id == presenceId && presence?.Status == "Active")
+            })
 
             if (idExists) {
                 println "[OK] Found active presence with id: ${presenceId}."
@@ -718,8 +723,8 @@ public abstract class RestClient {
 
         String url = API_PRESENCES + "/" + presenceId + "/" + NEW_KEY
 
-        println("[Action] Sending POST request to ${this.baseUrl}$url.")
-        HttpResponse response = restHelper.doPostRequest(url, null)
+        println("[Action] Sending GET request to ${this.baseUrl}$url.")
+        HttpResponse response = restHelper.doGetRequest(url)
 
         println("[OK] Response status line: ${response.statusLine}.")
 
@@ -729,12 +734,14 @@ public abstract class RestClient {
 
         File keyFile = new File(serviceDirectory, "AppScanPresence.key")
         try {
-            boolean deleted = keyFile.delete();
-            if (deleted) {
-                println("[OK] Deleted presence key file ${keyFile.getAbsolutePath()}.")
-                keyFile.getParentFile().mkdirs();
-                keyFile.createNewFile();
+            if (keyFile.exists()) {
+                boolean deleted = keyFile.delete();
+                if (deleted) {
+                    println("[OK] Deleted presence key file ${keyFile.getAbsolutePath()}.")
+                }
             }
+            keyFile.getParentFile().mkdirs();
+            keyFile.createNewFile();
         } catch (Exception e) {
             println "Failed deleting old presence key file ${keyFile.getAbsolutePath()} with exception: ${e.getMessage()}"
         }
@@ -747,13 +754,13 @@ public abstract class RestClient {
     public void downloadAppscanPresence(String serviceDirectory, boolean isWindows, String presenceId) {
         println("[Action] Downloading Appscan Presence with ID ${presenceId}.")
 
-        String url = API_PRESENCES + "/${presenceId}/Download" + (isWindows ? Win_x86_64 : Linux_x86_64)
+        String url = API_PRESENCES + "/${presenceId}/Download" + (isWindows ? Win_x64 : Linux_x64)
 
         File serviceDir = new File(serviceDirectory)
 
-        println("[Action] Sending POST request to ${this.baseUrl}$url.")
         restHelper.addRequestHeader("Accept", "application/zip")
-        HttpResponse response = restHelper.doPostRequest(url, null)
+        println("[Action] Sending GET request to ${this.baseUrl}$url.")
+        HttpResponse response = restHelper.doGetRequest(url)
 
         InputStream zip = response.getEntity().getContent()
         serviceDir.deleteDir()
@@ -765,10 +772,13 @@ public abstract class RestClient {
             println("[Action] Deleting all existing presences.")
 
             def presencesData = getPresences()
+            def presencesList = (presencesData instanceof Map && presencesData.containsKey("Items"))
+                ? (presencesData.Items ?: [])
+                : (presencesData ?: [])
 
-            println("[OK] Current presences: ${presencesData}.")
+            println("[OK] Current presences: ${presencesList}.")
 
-            presencesData.each { presence ->
+            presencesList.each { presence ->
                 String url = API_PRESENCES + "/" + presence.Id
                 println("[Action] Sending DELETE request to ${baseUrl}$url.")
                 println("[Action] Deleting presence with ID: ${presence.Id}.")
