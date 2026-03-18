@@ -268,7 +268,6 @@ class RestClientHelper {
         }
 
         HttpResponse response = client.execute(request)
-
         def statusLine = response.getStatusLine()
         def statusCode = statusLine.getStatusCode()
 

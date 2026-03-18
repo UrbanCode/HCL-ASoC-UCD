@@ -10,9 +10,11 @@ import com.urbancode.air.AirPluginTool
 import com.urbancode.air.plugin.AppScanSaaS.SCXRestClient
 import com.urbancode.air.plugin.AppScanSaaS.PresenceHelper
 
+
 final def airHelper = new AirPluginTool(args[0], args[1])
 final Properties props = airHelper.getStepProperties()
 boolean start = Boolean.parseBoolean(props['startPresence'])
+
 
 PresenceHelper presenceHelper = new PresenceHelper(new SCXRestClient(props), airHelper.isWindows)
 String presenceId = presenceHelper.createPresence(start)

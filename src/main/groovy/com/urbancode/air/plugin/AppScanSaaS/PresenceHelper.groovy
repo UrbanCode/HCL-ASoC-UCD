@@ -19,7 +19,11 @@ class PresenceHelper {
     private final String agentServiceJar = "agentService.jar"
     private final String clientJar = "TunnelClient.jar"
     private final String windowsScript = "startPresence.vbs"
+    private final String windowsServiceScript = "StartPresenceAsService.bat"
+    private final String windowsPresenceExe = "Presence.exe"
+    private final String windowsPresenceUpdaterExe = "PresenceUpdater.exe"
     private final String unixScript = "startPresence.sh"
+    private final String linuxPresenceBinary = "Presence"
 
     private RestClient restClient
     private boolean isWindows
@@ -58,14 +62,40 @@ class PresenceHelper {
         /* Start java agent service */
         List<String> args = new ArrayList<String>()
         if (isWindows) {
-            File scriptFile = new File(serviceWorkingDirectory, windowsScript)
-            args.add("cscript.exe")
-            args.add(scriptFile.getAbsolutePath())
+            File serviceScriptFile = new File(serviceWorkingDirectory, windowsServiceScript)
+            File legacyScriptFile = new File(serviceWorkingDirectory, windowsScript)
+            File windowsPresenceExecutable = new File(serviceWorkingDirectory, windowsPresenceExe)
+
+            if (serviceScriptFile.exists()) {
+                args.add("cmd.exe")
+                args.add("/c")
+                args.add(serviceScriptFile.getAbsolutePath())
+            }
+            else if (legacyScriptFile.exists()) {
+                args.add("cscript.exe")
+                args.add(legacyScriptFile.getAbsolutePath())
+            }
+            else if (windowsPresenceExecutable.exists()) {
+                args.add(windowsPresenceExecutable.getAbsolutePath())
+            }
+            else {
+                assert false, "Presence launcher not found in ${serviceWorkingDirectory}. Expected one of ${windowsServiceScript}, ${windowsScript}, ${windowsPresenceExe}."
+            }
         } else {
             File scriptFile = new File(serviceWorkingDirectory, unixScript)
-            scriptFile.setExecutable(true)
-            args.add("/bin/sh")
-            args.add(scriptFile.getAbsolutePath())
+            File linuxPresenceExecutable = new File(serviceWorkingDirectory, linuxPresenceBinary)
+            if (scriptFile.exists()) {
+                scriptFile.setExecutable(true)
+                args.add("/bin/sh")
+                args.add(scriptFile.getAbsolutePath())
+            }
+            else if (linuxPresenceExecutable.exists()) {
+                linuxPresenceExecutable.setExecutable(true)
+                args.add(linuxPresenceExecutable.getAbsolutePath())
+            }
+            else {
+                assert false, "Presence launcher not found in ${serviceWorkingDirectory}. Expected one of ${unixScript}, ${linuxPresenceBinary}."
+            }
         }
 
         println("[Action] Starting AppScan Presence with command: ${args}.")
@@ -83,26 +113,37 @@ class PresenceHelper {
     private void stopRunningPresence() {
         println("[Action] Killing existing service...")
 
+        if (isWindows) {
+            killMatchingProcess(windowsPresenceExe)
+            killMatchingProcess(windowsPresenceUpdaterExe)
+        }
+
         killMatchingProcess(clientJar)
         killMatchingProcess(agentServiceJar)
     }
 
-    private void killMatchingProcess(String jarToMatch) {
+    private void killMatchingProcess(String processToMatch) {
         if (isWindows) {
-            List<String> args = [
-                "wmic",
-                "Path",
-                "win32_process",
-                "Where",
-                "CommandLine Like '%-jar%${jarToMatch}%'",
-                "Call",
-                "Terminate"
-            ]
+            List<String> args
+            if (processToMatch.toLowerCase().endsWith(".jar")) {
+                args = [
+                    "wmic",
+                    "Path",
+                    "win32_process",
+                    "Where",
+                    "CommandLine Like '%-jar%${processToMatch}%'",
+                    "Call",
+                    "Terminate"
+                ]
+            }
+            else {
+                args = ["taskkill", "/F", "/IM", processToMatch]
+            }
             executeCommand(args)
         }
         else {
-            println("[Action] Searching for processes matching ${jarToMatch}.")
-            List<String> args = ["pgrep", "-f", jarToMatch]
+            println("[Action] Searching for processes matching ${processToMatch}.")
+            List<String> args = ["pgrep", "-f", processToMatch]
             String out = executeCommand(args)
 
             out.eachLine {
@@ -128,5 +169,9 @@ class PresenceHelper {
         proc.consumeProcessOutput(sout, serr)
 
         return sout.toString()
+    }
+
+    private String waitForProcess(Process proc, int waitTime, boolean waitForSpawnOnly) {
+        return waitForProcess(proc, waitTime)
     }
 }
