@@ -51,63 +51,108 @@ class PresenceHelper {
     }
 
     private String startPresence(String presenceId, boolean renewKey) {
-        restClient.downloadAppscanPresence(serviceWorkingDirectory, isWindows, presenceId)
+
+        println("[DEBUG] Starting Presence for ID: " + presenceId);
+        println("[DEBUG] Working Directory: " + serviceWorkingDirectory);
+
+        restClient.downloadAppscanPresence(serviceWorkingDirectory, isWindows, presenceId);
+        println("[DEBUG] Presence package downloaded.");
+
+        File dir = new File(serviceWorkingDirectory);
+
+        File[] files = dir.listFiles();
+        if (files != null) {
+            for (File f : files) {
+                if (f.getName().toLowerCase().contains("key")) {
+                    println("[DEBUG] Deleting old key file: " + f.getAbsolutePath());
+                    f.delete();
+                }
+            }
+        }
 
         if (renewKey) {
-            restClient.renewPresenceKeyFile(serviceWorkingDirectory, presenceId)
+            println("[DEBUG] Renewing Presence key...");
+            restClient.renewPresenceKeyFile(serviceWorkingDirectory, presenceId);
+            println("[DEBUG] Presence key renewed.");
         }
 
-        stopRunningPresence()
+        File newKey = new File(serviceWorkingDirectory, "AppScanPresence.key");
+        File expectedKey = new File(serviceWorkingDirectory, "Presence.key");
 
-        /* Start java agent service */
-        List<String> args = new ArrayList<String>()
+        if (newKey.exists()) {
+            println("[DEBUG] Renaming key file to Presence.key");
+            newKey.renameTo(expectedKey);
+        }
+
+        if (!expectedKey.exists() || expectedKey.length() == 0) {
+            throw new RuntimeException("Valid Presence.key file not found!");
+        }
+
+        println("[DEBUG] Key file ready: " + expectedKey.getAbsolutePath());
+
+        println("[DEBUG] Stopping any running Presence...");
+        stopRunningPresence();
+
+        List<String> args = new ArrayList<>();
+        boolean launchedDirectProcess = false;
+
         if (isWindows) {
-            File serviceScriptFile = new File(serviceWorkingDirectory, windowsServiceScript)
-            File legacyScriptFile = new File(serviceWorkingDirectory, windowsScript)
-            File windowsPresenceExecutable = new File(serviceWorkingDirectory, windowsPresenceExe)
+            File windowsPresenceExecutable = new File(serviceWorkingDirectory, windowsPresenceExe);
 
-            if (serviceScriptFile.exists()) {
-                args.add("cmd.exe")
-                args.add("/c")
-                args.add(serviceScriptFile.getAbsolutePath())
+            if (!windowsPresenceExecutable.exists()) {
+                throw new RuntimeException("Presence.exe not found in " + serviceWorkingDirectory);
             }
-            else if (legacyScriptFile.exists()) {
-                args.add("cscript.exe")
-                args.add(legacyScriptFile.getAbsolutePath())
-            }
-            else if (windowsPresenceExecutable.exists()) {
-                args.add(windowsPresenceExecutable.getAbsolutePath())
-            }
-            else {
-                assert false, "Presence launcher not found in ${serviceWorkingDirectory}. Expected one of ${windowsServiceScript}, ${windowsScript}, ${windowsPresenceExe}."
-            }
+
+            args.add(windowsPresenceExecutable.getAbsolutePath());
+            launchedDirectProcess = true;
+
+            println("[DEBUG] Using Presence.exe directly: " + windowsPresenceExecutable.getAbsolutePath());
+
         } else {
-            File scriptFile = new File(serviceWorkingDirectory, unixScript)
-            File linuxPresenceExecutable = new File(serviceWorkingDirectory, linuxPresenceBinary)
-            if (scriptFile.exists()) {
-                scriptFile.setExecutable(true)
-                args.add("/bin/sh")
-                args.add(scriptFile.getAbsolutePath())
+            File linuxPresenceExecutable = new File(serviceWorkingDirectory, linuxPresenceBinary);
+
+            if (!linuxPresenceExecutable.exists()) {
+                throw new RuntimeException("Presence binary not found in " + serviceWorkingDirectory);
             }
-            else if (linuxPresenceExecutable.exists()) {
-                linuxPresenceExecutable.setExecutable(true)
-                args.add(linuxPresenceExecutable.getAbsolutePath())
-            }
-            else {
-                assert false, "Presence launcher not found in ${serviceWorkingDirectory}. Expected one of ${unixScript}, ${linuxPresenceBinary}."
-            }
+
+            linuxPresenceExecutable.setExecutable(true);
+            args.add(linuxPresenceExecutable.getAbsolutePath());
+
+            println("[DEBUG] Using Linux binary: " + linuxPresenceExecutable.getAbsolutePath());
         }
 
-        println("[Action] Starting AppScan Presence with command: ${args}.")
+        println("[ACTION] Starting AppScan Presence with command: " + args);
 
-        Process process = args.execute(null, new File(serviceWorkingDirectory))
-        if (isWindows) {
-            /* The windows batch file starts the presence in a new shell window, so we wait for
-             * the current shell to finish. We give it some time to extract the Java zip. */
-            waitForProcess(process, (int)TimeUnit.MINUTES.toMillis(10), true)
+        try {
+            Process process = args.execute(null, new File(serviceWorkingDirectory));
+
+            println("[DEBUG] Process started. Capturing output...");
+
+            Thread.startDaemon {
+                process.inputStream.eachLine { line ->
+                    println("[PRESENCE-OUT] " + line);
+                }
+            }
+
+            Thread.startDaemon {
+                process.errorStream.eachLine { line ->
+                    println("[PRESENCE-ERR] " + line);
+                }
+            }
+
+            Thread.sleep(10000);
+
+        } catch (Exception e) {
+            println("[ERROR] Failed to start Presence: " + e.getMessage());
+            e.printStackTrace();
+            throw e;
         }
 
-        restClient.verifyPresenceId(presenceId)
+        println("[DEBUG] Verifying Presence ID with server...");
+        restClient.verifyPresenceId(presenceId);
+
+        println("[SUCCESS] Presence started successfully.");
+        return presenceId;
     }
 
     private void stopRunningPresence() {
@@ -172,6 +217,16 @@ class PresenceHelper {
     }
 
     private String waitForProcess(Process proc, int waitTime, boolean waitForSpawnOnly) {
+        if (waitForSpawnOnly) {
+            StringBuffer sout = new StringBuffer()
+            StringBuffer serr = new StringBuffer()
+            long sleepTime = Math.min(waitTime, (int)TimeUnit.SECONDS.toMillis(5))
+            sleep(sleepTime)
+            proc.consumeProcessOutput(sout, serr)
+
+            return sout.toString()
+        }
+
         return waitForProcess(proc, waitTime)
     }
 }

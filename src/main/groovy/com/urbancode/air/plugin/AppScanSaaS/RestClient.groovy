@@ -387,16 +387,23 @@ public abstract class RestClient {
 
             def presencesData = getPresences()
 
-            println("[OK] Current presences: ${presencesData}.")
-
             def presencesList = (presencesData instanceof Map && presencesData.containsKey("Items"))
                 ? (presencesData.Items ?: [])
                 : (presencesData ?: [])
 
+            def targetPresence = presencesList.find { presence ->
+                presence?.Id == presenceId
+            }
+
+            if (targetPresence != null) {
+                println("[OK] Presence status for ${presenceId}: ${targetPresence?.Status}.")
+            }
+            else {
+                println("[OK] Presence id ${presenceId} not found in current poll.")
+            }
+
             //verify that expected presence exists and online
-            boolean idExists = presencesList.any({ presence ->
-                return (presence?.Id == presenceId && presence?.Status == "Active")
-            })
+            boolean idExists = (targetPresence?.Status == "Active")
 
             if (idExists) {
                 println "[OK] Found active presence with id: ${presenceId}."
@@ -406,6 +413,7 @@ public abstract class RestClient {
             assert !(System.currentTimeMillis() - startTime > waitTimeout), "Cannot find active presence with id: " + presenceId
         }
     }
+
 
     protected def getPresences() {
         String url = API_PRESENCES
@@ -418,6 +426,22 @@ public abstract class RestClient {
         presencesData = restHelper.parseResponse(response)
 
         return presencesData
+    }
+
+    protected String summarizePresences(def presencesList) {
+        int total = (presencesList instanceof Collection) ? presencesList.size() : 0
+        if (total == 0) {
+            return "count=0"
+        }
+
+        def sample = presencesList.take(5).collect { presence ->
+            String id = presence?.Id ?: "<no-id>"
+            String name = presence?.PresenceName ?: "<no-name>"
+            String status = presence?.Status ?: "<no-status>"
+            return "${name}(${status}, ${id})"
+        }
+
+        return "count=${total}, sample=${sample}"
     }
 
     public String startDastScan(
@@ -776,7 +800,7 @@ public abstract class RestClient {
                 ? (presencesData.Items ?: [])
                 : (presencesData ?: [])
 
-            println("[OK] Current presences: ${presencesList}.")
+            println("[OK] Current presences summary: ${summarizePresences(presencesList)}.")
 
             presencesList.each { presence ->
                 String url = API_PRESENCES + "/" + presence.Id
