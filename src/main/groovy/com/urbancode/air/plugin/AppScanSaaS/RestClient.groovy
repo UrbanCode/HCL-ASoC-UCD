@@ -19,6 +19,7 @@ import org.apache.http.HttpResponse
 import org.apache.http.entity.mime.HttpMultipartMode
 import org.apache.http.entity.mime.MultipartEntityBuilder
 import org.apache.http.entity.mime.content.InputStreamBody
+import org.apache.http.entity.mime.content.FileBody
 
 /**
  * Class that provides functions to make HTTP calls to the ASoC REST API.
@@ -49,9 +50,11 @@ public abstract class RestClient {
     private static final String REPORT_TYPE_HTML = "Html"
     private static final String REPORT_TYPE_COMPLIANCE_PDF = "CompliancePdf"
     private static final String API_DOWNLOAD_REPORT = "/api/v4/Scans/%s/Report/%s"
+    private static final long REPORT_DOWNLOAD_MAX_WAIT_MS = TimeUnit.MINUTES.toMillis(20)
+    private static final long REPORT_DOWNLOAD_RETRY_DELAY_MS = TimeUnit.SECONDS.toMillis(15)
     private static final String API_FILE_UPLOAD = "/api/v4/FileUpload"
     private static final String MOBILE_API_PATH = "/api/v4/%s/MobileAnalyzer"
-    private static final String SAST_API_PATH = "/api/v4/%s/StaticAnalyzer"
+    private static final String SAST_API_PATH = "/api/v4/%s/Sast"
     private static final String DAST_API_PATH = "/api/v4/%s/Dast"
     protected static final String DAST_FILE_API_PATH = "/api/v4/%s/DynamicAnalyzerWithFile"
     private static final String API_METHOD_SCANS = "Scans"
@@ -304,13 +307,14 @@ public abstract class RestClient {
     private String uploadFile(File file) {
         MultipartEntityBuilder entityBuilder = MultipartEntityBuilder.create()
 
-        FileInputStream fileStream = new FileInputStream(file)
         entityBuilder.setMode(HttpMultipartMode.BROWSER_COMPATIBLE)
-        entityBuilder.addPart("fileToUpload", new InputStreamBody(fileStream, "application/zip", file.getName()))
+        entityBuilder.addPart("uploadedFile", new FileBody(file))
 
         String fileId = null
         String url = API_FILE_UPLOAD
+        BigDecimal fileSizeMb = (file.length() / (1024 * 1024)).setScale(2, BigDecimal.ROUND_HALF_UP)
         println("[Action] Sending POST request to ${this.baseUrl}$url.")
+        println("[Action] Uploading file '${file.name}' (${fileSizeMb} MB).")
 
         restHelper.removeRequestHeader("Content-Type")  // browser must determine correct multipart entity content type
         def response = restHelper.doPostRequest(url, entityBuilder.build())
@@ -595,7 +599,7 @@ public abstract class RestClient {
         String fileId = uploadFile(arsaFile)
         println("[OK] ${fileName} was uploaded successfully. FileID: ${fileId}.")
         String url = String.format(SAST_API_PATH, API_METHOD_SCANS)
-        props.putAll([AppId: appId, ARSAFileId: fileId, ScanName: fileName,
+        props.putAll([AppId: appId, ApplicationFileId: fileId, ScanName: fileName,
             EnableMailNotification: mailNotification])
 
         return fileBasedScan(ScanType.SAST, url, fileId, parentjobid, props)
@@ -648,33 +652,69 @@ public abstract class RestClient {
         return scan
     }
 
-    private void downloadSingleReportType(String scanId, String reportType) {
+    private boolean isReportNotFound(Exception ex) {
+        return ex != null && ex.message != null && ex.message.contains("response code of 404")
+    }
+
+    private void downloadSingleReportType(String scanId, String reportType, boolean failIfUnavailable) {
         String url =  String.format(API_DOWNLOAD_REPORT, scanId, reportType)
+        long waitStartTime = System.currentTimeMillis()
+        int attempt = 1
 
-        println("[Action] Sending GET request to ${this.baseUrl}$url.")
+        while (true) {
+            println("[Action] Sending GET request to ${this.baseUrl}$url.")
 
-        def response = restHelper.doGetRequest(url)
+            try {
+                def response = restHelper.doGetRequest(url)
 
-        ByteArrayOutputStream baos = new ByteArrayOutputStream()
-        response.getEntity().writeTo(baos)
-        byte[] bytes = baos.toByteArray()
+                ByteArrayOutputStream baos = new ByteArrayOutputStream()
+                response.getEntity().writeTo(baos)
+                byte[] bytes = baos.toByteArray()
 
-        println("[OK] Response status line: ${response.statusLine}.")
-        if (bytes.length <= RestClient.MinReportSize) {
-            println("[Error] Report size '${bytes.length}' is invalid.")
-            System.exit(1)
+                println("[OK] Response status line: ${response.statusLine}.")
+                if (bytes.length <= RestClient.MinReportSize) {
+                    println("[Error] Report size '${bytes.length}' is invalid.")
+                    System.exit(1)
+                }
+
+                println("[OK] Report type ${reportType} downloaded successfully.")
+                return
+            }
+            catch (Exception ex) {
+                if (!isReportNotFound(ex)) {
+                    throw ex
+                }
+
+                long elapsed = System.currentTimeMillis() - waitStartTime
+                if (elapsed < REPORT_DOWNLOAD_MAX_WAIT_MS) {
+                    long remainingMs = REPORT_DOWNLOAD_MAX_WAIT_MS - elapsed
+                    long remainingSeconds = (remainingMs > 0L) ? (remainingMs / 1000L) : 0L
+                    println("[Action] Report type ${reportType} is not available yet for scan '${scanId}'. Retrying in 15 seconds. Attempt ${attempt}, remaining wait ${remainingSeconds} seconds.")
+                    Thread.sleep(REPORT_DOWNLOAD_RETRY_DELAY_MS)
+                    attempt++
+                    continue
+                }
+
+                String message = "Report type ${reportType} is not available for scan '${scanId}'."
+                if (failIfUnavailable) {
+                    println("[Error] ${message}")
+                    System.exit(1)
+                }
+
+                println("[Warn] ${message} Continuing without downloading the report.")
+                return
+            }
         }
-
-        println("[OK] Report type ${reportType} downloaded successfully.")
     }
 
     public void downloadReport(String scanId, ScanType scanType) {
-        downloadSingleReportType(scanId, REPORT_TYPE_XML)
+        boolean requireReportDownload = (scanType != ScanType.SAST)
+        downloadSingleReportType(scanId, REPORT_TYPE_XML, requireReportDownload)
         if (scanType == ScanType.SAST) {
-            downloadSingleReportType(scanId, REPORT_TYPE_HTML)
+            downloadSingleReportType(scanId, REPORT_TYPE_HTML, false)
         }
         else {
-            downloadSingleReportType(scanId, REPORT_TYPE_PDF)
+            downloadSingleReportType(scanId, REPORT_TYPE_PDF, true)
         }
     }
 
