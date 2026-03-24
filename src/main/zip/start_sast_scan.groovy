@@ -12,8 +12,6 @@ import com.urbancode.air.plugin.AppScanSaaS.SastScanHelper
 import com.urbancode.air.plugin.AppScanSaaS.ScanType
 
 import java.io.*
-import groovy.json.JsonSlurper
-import groovy.json.JsonOutput
 
 final def airHelper = new AirPluginTool(args[0], args[1])
 final Properties props = airHelper.getStepProperties()
@@ -25,7 +23,7 @@ String issueCountString = props['reportIssueCountValidation']
 long scanTimeout = props["scanTimeout"] ? Long.parseLong(props["scanTimeout"]) : -1
 boolean mailNotification = props['mailNotification']
 boolean failOnPause = Boolean.parseBoolean(props['failOnPause'])
-boolean validateReport = !issueCountString.isEmpty()
+boolean validateReport = issueCountString != null && !issueCountString.isEmpty()
 int exitCode = 0
 
 SCXRestClient restClient = new SCXRestClient(props)
@@ -79,19 +77,9 @@ airHelper.storeOutputProperties()
 if (validateReport){
     long startTime = System.currentTimeMillis()
     def scan = restClient.waitForScan(scanId, ScanType.SAST, startTime, scanTimeout, failOnPause)
-    println("scan");
-    println(scan);
-    println(scan.getClass());
     def issuesJson = scan.LatestExecution
-    println(issuesJson)
-    def issuesJson1 = JsonOutput.toJson(issuesJson)
-    println(issuesJson1)
-    def slurper = new JsonSlurper();
-    def issuesJson2 = slurper.parseText(issuesJson1)
-    println("result required")
-    println(issuesJson2.NHighIssues)
 
-    exitCode = restClient.validateScanIssues(issuesJson2, scan.Name, scanId, issueCountString)
+    exitCode = restClient.validateScanIssues(issuesJson, scan.Name, scanId, issueCountString)
 }
 
 if (exitCode) {
